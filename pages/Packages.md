@@ -1,0 +1,19 @@
+- Mediums
+	- Super 8 [Perfect Highlight Film]
+	- Dad Cam [Every Moment Feels Right]
+	- Modern Digital [Nostagically Correct]
+- Experiences
+	- Just Shoot It [ Raw Footage Wedding Only - 6 Hours ]
+	- All Day Coverage [ All Day Wedding Coverage ~8 Hours ] [ Date Night ]
+	- Day and a Half Coverage [ +2-4 Hours at Rehearsal Dinner ] [ Date Night ]
+	- All Weekend Coverage [ +2-4 Hours at Sunday Brunch ] [ Date Night ]
+- Options
+	- Wedding Week Dad Cam
+	- Social Media Teaser
+	- BYOM - Bring Your Own Media
+	- Mixed Media Highlight Film
+	- Borrow-A-Projector
+	-
+-
+- Pricing
+	- 1 Medium starting at $3200 for Saturdays in 2026
