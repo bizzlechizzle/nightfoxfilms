@@ -54,12 +54,16 @@
 
 ### Quick Answer: What's Actually Set Up?
 
-**NOTHING IS IMPLEMENTED.**
+**NOTHING IS IMPLEMENTED - BUT PLATFORM DECISION MADE** ✅
 
 This repository is documentation-only. There is no live website, no CMS, no inquiry forms, no email automation, no domain, no hosting.
 
-**What exists:** Excellent planning documents for what SHOULD be built
-**What's missing:** All technical implementation
+**What exists:**
+- Excellent planning documents for what SHOULD be built
+- Complete open-source technology stack selected (Next.js + Cloudflare Pages + Decap CMS)
+- Step-by-step implementation guide ready (see OPEN-SOURCE-STACK.md)
+
+**What's missing:** All technical implementation (but now unblocked and ready to begin)
 
 ### Detailed Infrastructure Audit
 
@@ -72,9 +76,11 @@ See `INFRASTRUCTURE-STATUS.md` for complete breakdown of:
 - Lead nurture automation: ✅ Sequence written (5 emails) but ❌ not configured
 
 **Content Management:**
-- CMS platform: ❌ NOT CHOSEN (options: Squarespace, WordPress, Sanity/Contentful)
-- Content: ✅ All written as markdown, needs to be imported to CMS
-- Admin interface: ❌ Does not exist
+- CMS platform: ✅ CHOSEN - Decap CMS (git-based, open-source, free)
+- Frontend: ✅ CHOSEN - Next.js 14+ (App Router)
+- Hosting: ✅ CHOSEN - Cloudflare Pages (free tier, unlimited bandwidth)
+- Content: ✅ All written as markdown, ready to import
+- Admin interface: ❌ Not yet deployed (will be at /admin)
 
 **Email Infrastructure:**
 - Domain email: ❌ Domain not purchased
@@ -101,16 +107,30 @@ See `INFRASTRUCTURE-STATUS.md` for complete breakdown of:
 - CI/CD: ❌ Not configured
 - Deployment: ❌ No website to deploy
 
-### Critical Blocker: Platform Decision
+### Platform Decision MADE ✅
 
-**Everything is blocked by ONE decision:**
+**DECISION: Next.js + Open-Source Stack** (2025-11-18)
 
-Must choose website platform:
-- **Option A:** Squarespace ($23/month) - Easiest, all-in-one
-- **Option B:** WordPress ($10-15/month) - Traditional CMS
-- **Option C:** Custom Next.js + Sanity ($0-10/month) - Most control, requires coding
+Everything is now unblocked and ready to implement.
 
-See `INFRASTRUCTURE-STATUS.md` for detailed comparison and recommendations.
+**Chosen Stack:**
+- Frontend: Next.js 14+ (App Router)
+- Hosting: Cloudflare Pages (free tier)
+- CMS: Decap CMS (git-based, open-source)
+- Forms: Web3Forms (100% free)
+- Booking: Cal.com (self-hosted, open-source)
+- Analytics: Umami (self-hosted, privacy-focused)
+- Email: Resend (free tier) → Listmonk (self-hosted)
+- **Total Cost:** $12/year (domain only)
+
+**Why This Stack:**
+- User requirement: "Free and open source"
+- User requirement: "Breaking up with the corporate overlords"
+- Zero vendor lock-in
+- Professional quality (same tools as Netflix, Uber)
+- Complete ownership and control
+
+See `OPEN-SOURCE-STACK.md` for complete 600+ line step-by-step implementation guide.
 
 ### What CAN Be Done Right Now
 
@@ -129,37 +149,40 @@ See `INFRASTRUCTURE-STATUS.md` for detailed comparison and recommendations.
 - Cannot track analytics (no tracking code)
 - Cannot deploy anything (nothing to deploy)
 
-### Implementation Timeline (Once Decision Made)
+### Implementation Timeline (Next.js + Open-Source Stack)
 
-**If Squarespace:**
-- Week 1: Sign up, choose template, add home page
-- Week 2-3: Add all service pages
-- Week 4: Set up forms, Calendly, email
-- Week 5-6: SEO optimization, testing
-- Week 7-8: Launch publicly
-- **Total: 8 weeks to launch**
+**Week 1: Foundation**
+- Day 1-2: Set up Next.js project, deploy to Cloudflare Pages
+- Day 3-4: Configure Decap CMS, create content collections
+- Day 5-7: Build home page layout and navigation
 
-**If WordPress:**
-- Week 1-2: Hosting, install WP, theme setup
-- Week 3-4: Build pages, install plugins
-- Week 5-6: Forms, email, client systems
-- Week 7-8: Testing, optimization
-- Week 9-10: Launch
-- **Total: 10 weeks to launch**
+**Week 2-3: Core Pages**
+- Week 2: Services page, About page, Contact page
+- Week 3: FAQ page, Pricing page, Archive structure
 
-**If Custom (Next.js):**
-- Month 1: Set up repo, build components
-- Month 2: CMS integration, content import
-- Month 3: Testing, optimization
-- Month 4: Launch
-- **Total: 3-4 months to launch (or hire developer)**
+**Week 4-5: Content & Features**
+- Week 4: Import all copy from wireframes/, add forms
+- Week 5: Set up Cal.com booking, integrate Web3Forms
 
-**Recommendation:** Squarespace for fastest path to revenue.
+**Week 6-7: Polish & SEO**
+- Week 6: Add Umami analytics, optimize images
+- Week 7: SEO metadata, sitemap, robots.txt
+
+**Week 8: Launch**
+- Test all features and forms
+- Connect custom domain
+- Go live and start marketing
+
+**Total: 8 weeks to launch** (40-60 hours total work)
+
+**Detailed step-by-step guide:** See `OPEN-SOURCE-STACK.md`
 
 ### For Complete Details
 
 **Read these files:**
-- `INFRASTRUCTURE-STATUS.md` - Complete audit (this was just created)
+- `OPEN-SOURCE-STACK.md` - **START HERE** - Complete step-by-step implementation guide (600+ lines)
+- `INFRASTRUCTURE-STATUS.md` - Complete infrastructure audit with platform decision
+- `claude.md` - Platform decision rationale and architecture overview
 - `developer-guide.md` - 2,562 lines of technical guidance
 - `MASTER-IMPLEMENTATION-CHECKLIST.md` - 87-task roadmap
 - `STATUS-UPDATE.md` - What's complete vs missing
@@ -266,7 +289,7 @@ README.md
   └── Purpose: Entry point for understanding repository
 
 claude.md
-  ├── References: techguide.md, lilbits.md, user prompts
+  ├── References: techguide.md, lilbits.md, user prompts, OPEN-SOURCE-STACK.md
   ├── Purpose: Development principles and process
   └── Used by: AI assistants working on repository
 
@@ -274,6 +297,12 @@ techguide.md (THIS FILE)
   ├── References: Every file in repository
   ├── Purpose: Complete technical map and reference
   └── Used by: Developers, AI assistants, project managers
+
+OPEN-SOURCE-STACK.md (IMPLEMENTATION GUIDE)
+  ├── References: claude.md, INFRASTRUCTURE-STATUS.md, wireframes/, copy/
+  ├── Purpose: Step-by-step guide for Next.js + open-source stack implementation
+  ├── Contains: Complete architecture, setup instructions, configuration examples
+  └── Used by: Developers implementing the website (START HERE for implementation)
 
 lilbits.md
   ├── References: Scripts in /scripts directory (when they exist)
@@ -284,6 +313,11 @@ todo.md
   ├── References: All gap analysis and improvement tasks
   ├── Purpose: Track technical debt and improvements
   └── Used by: Project tracking, sprint planning
+
+INFRASTRUCTURE-STATUS.md
+  ├── References: OPEN-SOURCE-STACK.md, claude.md
+  ├── Purpose: Complete infrastructure audit and platform decision
+  └── Used by: Understanding what's implemented vs planned
 ```
 
 ### Master Planning Layer

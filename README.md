@@ -187,12 +187,14 @@ Read `claude.md` for complete principles. Summary:
 
 ### What's Missing
 
-**CRITICAL - Platform Decision:**
-- **Website platform not chosen** (Squarespace vs WordPress vs Custom)
-- No live website (just documentation)
-- No CMS configured
-- No inquiry forms
-- No domain purchased
+**PLATFORM DECISION: MADE** ✅ (2025-11-18)
+- **Platform chosen:** Next.js + Open-Source Stack
+- **CMS chosen:** Decap CMS (git-based, open-source)
+- **Hosting chosen:** Cloudflare Pages (free tier)
+- **Total cost:** $12/year (domain only)
+- No live website yet (implementation ready to begin)
+- No domain purchased yet
+- See `OPEN-SOURCE-STACK.md` for complete 600+ line implementation guide
 
 See `INFRASTRUCTURE-STATUS.md` for complete audit of what's set up vs. what's missing.
 
@@ -220,15 +222,21 @@ See `INFRASTRUCTURE-STATUS.md` for complete audit of what's set up vs. what's mi
 
 ### If You're Building the Website
 
-1. **Choose your platform:**
-   - Squarespace/Showit (easiest, $20-25/month)
-   - WordPress + Divi (flexible, $10-15/month)
-   - Custom build with Next.js (most control, see `developer-guide.md`)
+**Platform Decision Made: Next.js + Open-Source Stack** ✅
 
-2. **Follow the implementation plan:**
-   - Read `MASTER-IMPLEMENTATION-CHECKLIST.md` for 87-task roadmap
-   - Use `QUICK-START-ACTION-PLAN.md` for 8-week sprint
-   - Reference `developer-guide.md` for technical details
+1. **START HERE - Implementation Guide:**
+   - **Read `OPEN-SOURCE-STACK.md`** for complete step-by-step instructions (600+ lines)
+   - Includes: Prerequisites, setup, deployment, configuration examples
+   - Timeline: 8 weeks to launch (40-60 hours total work)
+   - Cost: $12/year (domain only)
+
+2. **Technology Stack:**
+   - Frontend: Next.js 14+ (App Router)
+   - Hosting: Cloudflare Pages (free, unlimited bandwidth)
+   - CMS: Decap CMS (git-based, open-source)
+   - Forms: Web3Forms (100% free)
+   - Booking: Cal.com (self-hosted, open-source)
+   - Analytics: Umami (self-hosted, privacy-focused)
 
 3. **Build pages using documentation:**
    - Structure: `wireframes/*.md`
@@ -241,6 +249,12 @@ See `INFRASTRUCTURE-STATUS.md` for complete audit of what's set up vs. what's mi
    - Questionnaire: `client-questionnaire-template.md`
    - Email templates: `email-templates.md`
    - Instagram: `instagram-30-day-content-calendar.md`
+
+5. **Additional references:**
+   - `MASTER-IMPLEMENTATION-CHECKLIST.md` - 87-task roadmap
+   - `QUICK-START-ACTION-PLAN.md` - 8-week sprint plan
+   - `claude.md` - Platform decision rationale
+   - `INFRASTRUCTURE-STATUS.md` - Complete infrastructure audit
 
 ### If You're Creating Content
 
@@ -319,26 +333,31 @@ See `seo-implementation-guide.md` for complete strategy.
 
 ## Next Steps
 
+**Platform Decision Made - Ready to Implement** ✅
+
 ### Immediate (This Week)
-1. Read `todo.md` for complete gap analysis
-2. Create `.gitignore` file
-3. Archive outdated logseq notes
-4. Add "Last Updated" dates to strategy docs
+1. ✅ Platform decision complete (Next.js + Open-Source Stack)
+2. **Purchase domain** (nightfoxfilms.com, $12-15/year)
+3. **Set up development environment** (Node.js 18+, npm, Git)
+4. **Read `OPEN-SOURCE-STACK.md`** for complete implementation guide
 
-### Short-term (This Month)
-5. DECISION: Choose website platform
-6. Begin website build using wireframes and copy
-7. Set up Google Analytics and Search Console
-8. Create validation scripts
+### Short-term (Weeks 1-4)
+5. Create Next.js project and deploy to Cloudflare Pages
+6. Configure Decap CMS with content collections
+7. Build home page and navigation
+8. Build service pages (Super 8, Dad Cam)
+9. Set up Web3Forms for contact
 
-### Long-term (This Quarter)
-9. Launch minimum viable website (home + 2 service pages)
-10. Implement client systems (contract, email, questionnaire)
-11. Optimize Instagram (30-day content calendar)
-12. Create 3-5 archive posts
-13. Build location landing pages
+### Medium-term (Weeks 5-8)
+10. Build remaining pages (About, FAQ, Pricing, Contact)
+11. Set up Cal.com for booking
+12. Deploy Umami analytics
+13. Add SEO metadata and sitemaps
+14. Test all features and forms
+15. **LAUNCH PUBLICLY** (connect custom domain, go live)
 
-**Full roadmap:** See `MASTER-IMPLEMENTATION-CHECKLIST.md` for 87-task breakdown.
+**Implementation Guide:** See `OPEN-SOURCE-STACK.md` for step-by-step instructions (600+ lines)
+**Full Roadmap:** See `MASTER-IMPLEMENTATION-CHECKLIST.md` for 87-task breakdown
 
 ---
 
@@ -383,37 +402,45 @@ Every task follows this 11-step process:
 
 See `todo.md` for complete list. Summary:
 
-**Critical:**
-- Create .gitignore
-- Archive logseq/pages directory
-- Create validation scripts
+**Critical (COMPLETED):** ✅
+- ✅ Create .gitignore
+- ✅ Archive logseq/pages directory
+- ✅ Create validation scripts
+- ✅ Add "Last Updated" dates
+- ✅ Create CHANGELOG.md
+- ✅ **Platform decision made (Next.js + Open-Source Stack)**
 
-**High Priority:**
-- Add "Last Updated" dates
-- Create CHANGELOG.md
-- Build validation automation
+**High Priority (NOW):**
+- Purchase domain
+- Set up Next.js development environment
+- Begin website implementation (follow OPEN-SOURCE-STACK.md)
 
 **Medium Priority:**
-- Decide on website platform
-- Build actual website
-- Set up deployment pipeline
+- Build actual website pages
+- Set up deployment pipeline (Cloudflare Pages + GitHub)
+- Configure Decap CMS
 
 ---
 
 ## Resources
 
 ### Official Documentation
-- `claude.md` - Development principles
+- `OPEN-SOURCE-STACK.md` - **START HERE** for implementation (600+ lines, step-by-step)
+- `claude.md` - Development principles and platform decision rationale
 - `techguide.md` - Complete file map (this is the master reference)
+- `INFRASTRUCTURE-STATUS.md` - Infrastructure audit and platform details
 - `todo.md` - Gap analysis and task tracking
 - `IMPLEMENTATION-SUMMARY.md` - Business strategy
 
-### External Links
-- Squarespace: https://www.squarespace.com
-- WordPress: https://wordpress.org
+### External Links (Technology Stack)
 - Next.js: https://nextjs.org
-- Vercel: https://vercel.com
-- Google Analytics: https://analytics.google.com
+- Cloudflare Pages: https://pages.cloudflare.com
+- Decap CMS: https://decapcms.org
+- Web3Forms: https://web3forms.com
+- Cal.com: https://cal.com
+- Umami Analytics: https://umami.is
+- Vercel (for Cal.com/Umami hosting): https://vercel.com
+- Google Search Console: https://search.google.com/search-console
 
 ---
 

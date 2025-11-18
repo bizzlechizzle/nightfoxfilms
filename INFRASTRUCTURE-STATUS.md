@@ -2,16 +2,22 @@
 
 **Last Updated:** 2025-11-18
 **Purpose:** Comprehensive audit of what's implemented vs what's planned vs what's missing
-**Status:** NOTHING IS IMPLEMENTED - This is a documentation-only repository
+**Status:** PLATFORM DECISION MADE - Ready to begin implementation
 
 ---
 
 ## Executive Summary
 
+**PLATFORM DECISION: Next.js + Open-Source Stack** (Decided: 2025-11-18)
+
 **Current Reality:** This repository contains ZERO technical infrastructure. No website, no CMS, no inquiry forms, no databases, no hosting, no domains configured.
 
-**What exists:** Excellent documentation planning what SHOULD be built
-**What's missing:** Everything technical - the actual implementation
+**What exists:**
+- Excellent documentation planning what SHOULD be built
+- Complete open-source technology stack selected (see OPEN-SOURCE-STACK.md)
+- Platform decision finalized - ready to implement
+
+**What's missing:** Everything technical - the actual implementation (but now unblocked)
 
 ---
 
@@ -72,10 +78,10 @@
 
 **To implement inquiry system:**
 
-1. **Choose website platform** (Decision pending)
-   - Option A: Squarespace ($23/month) - Built-in forms
-   - Option B: WordPress ($10-15/month hosting) - Contact Form 7 or WPForms
-   - Option C: Custom Next.js - Formspree, Netlify Forms, or custom API
+1. **Platform chosen: Next.js + Open-Source Stack** (DECISION MADE ✅)
+   - Forms: Web3Forms (100% free, unlimited submissions)
+   - Alternative: Cloudflare Workers (custom, free)
+   - See OPEN-SOURCE-STACK.md for complete setup guide
 
 2. **Set up Calendly** (15 minutes)
    - Create free Calendly account
@@ -105,36 +111,27 @@
 
 ## CMS (Content Management System)
 
-### What's Recommended (But Not Chosen)
+### Platform Chosen: Decap CMS (Git-Based, Open-Source)
 
-**From `developer-guide.md` (line 54):**
-- **If custom build:** Sanity.io or Contentful
-- **If WordPress:** WordPress itself is the CMS
-- **If Squarespace:** Squarespace itself is the CMS
+**DECISION MADE:** Decap CMS (formerly Netlify CMS) ✅
 
-**Sanity.io (Recommended for Custom Build):**
-- Pros: Headless CMS, great DX, free tier, flexible
-- Cons: Requires React knowledge, setup complexity
-- Cost: Free for small projects
-- Use case: If building custom Next.js site
+**Why Decap CMS:**
+- 100% open-source (MIT license, no vendor lock-in)
+- Git-based workflow (content = markdown files in repository)
+- No database required (files are the database)
+- No hosting cost (runs in browser, static admin panel)
+- Version control for all content (full git history)
+- Works offline (local development possible)
+- Aligns with "free and open source" requirement
 
-**Contentful:**
-- Pros: Enterprise-grade, good documentation
-- Cons: More expensive, overkill for small site
-- Cost: Free tier (limited), $489/month for team
-- Use case: If scaling to many sites/brands
+**Cost:** $0/month (completely free)
 
-**WordPress:**
-- Pros: Familiar, huge ecosystem, easy updates
-- Cons: Slower performance, security concerns, outdated tech
-- Cost: Free software, $10-15/month hosting
-- Use case: If want traditional CMS experience
-
-**Squarespace:**
-- Pros: All-in-one, beautiful templates, easy
-- Cons: Less flexible, locked-in ecosystem
-- Cost: $23/month (annual billing)
-- Use case: If want simplest path to launch
+**Alternatives Considered (but rejected):**
+- Sanity.io: Proprietary, vendor lock-in
+- Contentful: Expensive ($300/month), proprietary
+- Strapi: Requires database hosting, more complex
+- WordPress: Not JAMstack, requires PHP hosting
+- Squarespace: Proprietary, expensive ($23/month)
 
 ### What's Actually Set Up
 
@@ -178,38 +175,34 @@
 
 ### What Needs to Happen
 
-**To implement CMS:**
+**To implement Decap CMS:**
 
-1. **DECIDE on platform** (CRITICAL DECISION)
-   - Review `developer-guide.md` (2,562 lines of guidance)
-   - Consider: budget, technical skill, time, scalability
-   - Make choice: Squarespace OR WordPress OR Custom (Next.js + Sanity)
+1. **Platform Decision MADE** ✅
+   - Chosen: Decap CMS (git-based, open-source)
+   - Frontend: Next.js 14+ (App Router)
+   - Hosting: Cloudflare Pages (free tier)
+   - See OPEN-SOURCE-STACK.md for complete guide
 
-2. **If Squarespace:** (Easiest path)
-   - Sign up for account ($23/month)
-   - Choose template (recommend photography/portfolio template)
-   - Copy content from markdown files into Squarespace pages
-   - Configure settings, navigation, SEO
-   - **Time:** 10-20 hours
+2. **Set up Decap CMS** (20-30 minutes)
+   - Create `public/admin/config.yml` with CMS configuration
+   - Configure collections: pages, services, blog, archive
+   - Enable GitHub OAuth for authentication
+   - Access admin panel at yourdomain.com/admin
+   - Full setup instructions in OPEN-SOURCE-STACK.md
 
-3. **If WordPress:** (Middle path)
-   - Get hosting (SiteGround, Bluehost, or Cloudways)
-   - Install WordPress
-   - Choose theme (Divi, Astra, or custom)
-   - Install plugins (Contact Form 7, Yoast SEO, etc.)
-   - Copy content from markdown files
-   - **Time:** 20-40 hours
+3. **Import existing content** (2-4 hours)
+   - Convert existing markdown files to Decap format
+   - Import copy from wireframes/ directory
+   - Set up content structure matching wireframes
+   - Configure media library (Cloudinary integration)
 
-4. **If Custom (Next.js + Sanity):** (Most control)
-   - Create new code repository
-   - Set up Next.js project
-   - Configure Sanity CMS
-   - Build React components for each page
-   - Import content to Sanity
-   - Deploy to Vercel
-   - **Time:** 60-120 hours (or hire developer)
+4. **Deploy CMS admin** (5 minutes)
+   - Decap admin is static files (no server needed)
+   - Deploys automatically with Next.js site
+   - No separate hosting required
 
-**Recommendation:** Start with Squarespace for fastest launch, migrate to custom later if needed.
+**Time to implement:** 3-5 hours total
+**Monthly cost:** $0 (completely free)
 
 ---
 
@@ -259,43 +252,62 @@
 
 ## DOMAIN & HOSTING
 
-### Current Status
+### Platform Chosen: Cloudflare Pages (Free Tier)
 
 **Domain:**
 - Status: NOT PURCHASED
 - Recommendation: `nightfoxfilms.com`
-- Where to buy: Namecheap, Google Domains, or included with hosting
+- Where to buy: Namecheap or Cloudflare Registrar ($12-15/year)
 - Cost: $12-15/year
 
-**Hosting:**
-- Status: NOT CONFIGURED
-- Depends on platform choice:
-  - Squarespace: Hosting included ($23/month)
-  - WordPress: Need separate hosting ($10-15/month)
-  - Custom: Vercel (free hobby tier) or Netlify (free tier)
+**Hosting: Cloudflare Pages** ✅
+- Status: PLATFORM CHOSEN (not yet deployed)
+- Cost: $0/month (free tier)
+- Features:
+  - Unlimited bandwidth (no limits)
+  - Unlimited sites
+  - Automatic HTTPS/SSL
+  - Global CDN (300+ edge locations)
+  - Automatic deployments from GitHub
+  - Custom domains (free)
+  - Preview deployments for PRs
+- See OPEN-SOURCE-STACK.md for setup
 
 **SSL Certificate:**
-- Status: NOT SET UP
-- All platforms include free SSL (Let's Encrypt)
+- Status: NOT SET UP (but automatic with Cloudflare Pages)
+- Cloudflare provides free SSL (automatic, no configuration)
 - Enables HTTPS (required for security and SEO)
 
 **DNS Configuration:**
 - Status: NOT CONFIGURED
-- Needed for: Email (MX records), Website (A/CNAME), Verification (TXT)
+- Cloudflare Pages includes DNS management (free)
+- Needed for: Email (MX records), Website (automatic with Cloudflare), Verification (TXT)
 
 ---
 
 ## ANALYTICS & TRACKING
 
-### What's Planned
+### Platform Chosen: Umami (Self-Hosted, Open-Source)
 
-**From `MASTER-IMPLEMENTATION-CHECKLIST.md`:**
+**Analytics: Umami** ✅
+- Status: PLATFORM CHOSEN (not yet deployed)
+- Type: Self-hosted, privacy-focused analytics
+- Cost: $0/month (deploy free on Vercel)
+- License: MIT (open-source)
+- Features:
+  - GDPR compliant (no cookies, no tracking scripts)
+  - Simple, beautiful dashboard
+  - Real-time visitor tracking
+  - Page views, referrers, devices, countries
+  - Event tracking (form submissions, clicks)
+- Alternative: Plausible (similar but has paid tier)
+- See OPEN-SOURCE-STACK.md for setup
 
-1. **Google Analytics 4** - Planned
-2. **Google Search Console** - Planned
-3. **Goal tracking** - Form submissions, contact clicks
-4. **Facebook Pixel** - Optional (if running ads)
-5. **Heatmaps** - Optional (Hotjar free plan)
+**Also Setting Up:**
+1. **Google Search Console** - For SEO monitoring (free)
+2. **Google Analytics 4** - Optional backup (if client wants it)
+3. **Goal tracking** - Form submissions, contact clicks (Umami events)
+4. **Facebook Pixel** - Optional (only if running ads)
 
 ### What's Set Up
 
@@ -470,117 +482,150 @@ jobs:
 
 | Component | Documented | Implemented | Platform Chosen | Ready to Use |
 |-----------|------------|-------------|-----------------|--------------|
-| **Contact Forms** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Booking (Calendly)** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Email Templates** | ✅ Yes (10) | ❌ No | ❌ No | ❌ No |
-| **Lead Nurture** | ✅ Yes (5 emails) | ❌ No | ❌ No | ❌ No |
-| **CMS** | ✅ Options listed | ❌ No | ❌ No | ❌ No |
-| **Domain** | ✅ Recommended | ❌ No | ❌ No | ❌ No |
-| **Hosting** | ✅ Options listed | ❌ No | ❌ No | ❌ No |
-| **Email Service** | ✅ Planned | ❌ No | ❌ No | ❌ No |
-| **Analytics** | ✅ Planned | ❌ No | ❌ No | ❌ No |
-| **Client Management** | ✅ Templates exist | ❌ No | ❌ No | ❌ No |
-| **Payment Processing** | ✅ Mentioned | ❌ No | ❌ No | ❌ No |
+| **Contact Forms** | ✅ Yes | ❌ No | ✅ Web3Forms | ❌ No |
+| **Booking (Calendly)** | ✅ Yes | ❌ No | ✅ Cal.com | ❌ No |
+| **Email Templates** | ✅ Yes (10) | ❌ No | ✅ Resend | ❌ No |
+| **Lead Nurture** | ✅ Yes (5 emails) | ❌ No | ✅ Resend/Listmonk | ❌ No |
+| **CMS** | ✅ Yes | ❌ No | ✅ Decap CMS | ❌ No |
+| **Frontend** | ✅ Wireframes | ❌ No | ✅ Next.js 14 | ❌ No |
+| **Hosting** | ✅ Options listed | ❌ No | ✅ Cloudflare Pages | ❌ No |
+| **Domain** | ✅ Recommended | ❌ No | 🟡 TBD | ❌ No |
+| **Analytics** | ✅ Planned | ❌ No | ✅ Umami | ❌ No |
+| **Client Management** | ✅ Templates exist | ❌ No | 🟡 TBD | ❌ No |
+| **Payment Processing** | ✅ Mentioned | ❌ No | 🟡 TBD | ❌ No |
 | **Automation** | ✅ 1 script works | 🟡 Partial | N/A | 🟡 1 of 3 |
 
-**Overall Status:** 0% implemented, 100% documented
+**Overall Status:** 0% implemented, 100% documented, PLATFORM DECIDED (Next.js + Open-Source Stack)
 
 ---
 
 ## CRITICAL PATH TO LAUNCH
 
-**The ONE decision that unlocks everything else:**
+**DECISION MADE: Next.js + Open-Source Stack** ✅
 
-### DECISION: Choose Website Platform
+Everything is now unblocked and ready to implement.
 
-Everything else depends on this choice.
+### Chosen Platform: Next.js + Cloudflare Pages + Decap CMS
 
-**Option A: Squarespace** ($23/month)
-- ✅ Fastest path (2-3 weeks to launch)
-- ✅ All-in-one (hosting, forms, templates)
-- ✅ No coding required
-- ❌ Less flexible
-- **Best for:** Quick launch, non-technical user
+**Decision Date:** 2025-11-18
 
-**Option B: WordPress** ($10-15/month hosting)
-- ✅ Familiar, huge ecosystem
-- ✅ More control than Squarespace
-- ✅ Lots of plugins available
-- ❌ Slower, security concerns
-- **Best for:** Traditional CMS experience
+**Stack Summary:**
+- Frontend: Next.js 14+ (App Router)
+- Hosting: Cloudflare Pages (free tier)
+- CMS: Decap CMS (git-based, open-source)
+- Forms: Web3Forms (100% free)
+- Booking: Cal.com (self-hosted, open-source)
+- Analytics: Umami (self-hosted, privacy-focused)
+- Email: Resend (free tier) → Listmonk (self-hosted)
 
-**Option C: Custom (Next.js + Sanity)** ($0-10/month hosting)
-- ✅ Full control, best performance
-- ✅ Modern tech stack, great SEO
-- ✅ Future-proof, scalable
-- ❌ Requires development (60-120 hours)
-- **Best for:** If you can code or hire developer
+**Total Cost:** $12/year (domain only)
 
-**Recommendation:** Start with Squarespace for speed, migrate later if needed.
+**Why This Stack:**
+- User requirement: "Free and open source"
+- User requirement: "Breaking up with the corporate overlords"
+- Zero vendor lock-in (everything open-source)
+- Professional quality (same tools as Netflix, Uber)
+- Complete control and ownership
+
+**Full Implementation Guide:** See `OPEN-SOURCE-STACK.md` (600+ lines, step-by-step)
 
 ---
 
 ## WHAT TO DO NEXT
 
+**Platform Decision MADE - Ready to Implement**
+
+See `OPEN-SOURCE-STACK.md` for complete step-by-step implementation guide.
+
 **Immediate (This Week):**
 
-1. **Make platform decision** (Squarespace vs WordPress vs Custom)
-   - Read `developer-guide.md` (2,562 lines of guidance)
-   - Consider: budget, timeline, technical skill
-   - Make choice and stick with it
-
-2. **Purchase domain** (15 minutes, $12-15)
+1. **Purchase domain** (15 minutes, $12-15)
    - Buy `nightfoxfilms.com`
-   - Configure DNS to point to chosen platform
+   - Use Namecheap or Cloudflare Registrar
+   - Don't configure yet (will set up with Cloudflare Pages)
 
-3. **Sign up for platform** (30 minutes)
-   - Create account on chosen platform
-   - Select template/theme
-   - Configure basic settings
+2. **Set up development environment** (30 minutes)
+   - Install Node.js 18+ and npm
+   - Install Git (if not already installed)
+   - Clone this repository locally
+   - See OPEN-SOURCE-STACK.md "Prerequisites"
 
-**Short-term (This Month):**
+3. **Create Next.js project** (15 minutes)
+   - Run: `npx create-next-app@latest nightfoxfilms-site`
+   - Choose: App Router, TypeScript, Tailwind CSS
+   - Initialize git repository
+   - See OPEN-SOURCE-STACK.md "Step 1: Create Next.js Project"
 
-4. **Build initial pages** (10-30 hours depending on platform)
-   - Use wireframes from `wireframes/` directory
-   - Use copy from `copy/` directory
-   - Start with: Home, Super 8, Contact
+**Week 1: Foundation**
 
-5. **Set up inquiries** (3-4 hours)
-   - Create contact form
-   - Set up Calendly
-   - Test form submissions
+4. **Deploy to Cloudflare Pages** (15 minutes)
+   - Connect GitHub repository to Cloudflare Pages
+   - Configure build settings (Next.js preset)
+   - Get live preview URL
+   - See OPEN-SOURCE-STACK.md "Step 2: Deploy to Cloudflare Pages"
 
-6. **Configure email** (2-3 hours)
-   - Set up domain email
-   - Connect to Mailchimp/ConvertKit
-   - Import templates
+5. **Set up Decap CMS** (20-30 minutes)
+   - Create `public/admin/config.yml`
+   - Configure collections (pages, services, blog, archive)
+   - Enable GitHub OAuth authentication
+   - Access admin at yourdomain.com/admin
+   - See OPEN-SOURCE-STACK.md "Step 3: Configure Decap CMS"
 
-**Medium-term (This Quarter):**
+6. **Build home page layout** (4-6 hours)
+   - Create Next.js components for header, footer, hero
+   - Use wireframes from `wireframes/home-page-wireframe.md`
+   - Use copy from `copy/home-page-copy.md`
+   - Deploy and test
 
-7. **Complete all pages** (20-40 hours)
-   - All service pages
-   - About, FAQ, Pricing
-   - First 3 archive posts
+**Week 2-3: Core Pages**
 
-8. **Set up analytics** (2-3 hours)
-   - Google Analytics
-   - Search Console
-   - Goal tracking
+7. **Build service pages** (8-12 hours)
+   - Super 8 Service page
+   - Dad Cam Service page
+   - About page
+   - Use wireframes and copy from respective files
 
-9. **Launch publicly** (Week 8-12)
-   - Test everything
-   - Announce on social media
-   - Start SEO campaign
+8. **Build contact and pricing pages** (4-6 hours)
+   - Contact page with Web3Forms integration
+   - Pricing page with Cal.com booking embed
+   - FAQ page
+
+**Week 4-5: Features**
+
+9. **Set up all integrations** (4-6 hours)
+   - Web3Forms for contact form
+   - Cal.com for booking (deploy to Vercel/Railway)
+   - Umami analytics (deploy to Vercel)
+   - Cloudinary for images
+
+**Week 6-8: Polish and Launch**
+
+10. **SEO optimization** (3-4 hours)
+    - Add metadata to all pages
+    - Create sitemap.xml and robots.txt
+    - Set up Google Search Console
+    - Optimize images and performance
+
+11. **Final testing and launch** (2-3 hours)
+    - Test all forms and booking
+    - Test on mobile devices
+    - Connect custom domain
+    - Go live
+
+**Total Implementation Time:** 40-60 hours over 8 weeks
 
 ---
 
 ## FILES TO REFERENCE
 
-**For platform decision:**
-- `developer-guide.md` - Complete technical guidance (2,562 lines)
-- `README.md` - Platform comparison summary
+**For platform decision (DECIDED):**
+- `OPEN-SOURCE-STACK.md` - Complete implementation guide for Next.js + open-source stack (600+ lines)
+- `claude.md` - Platform decision rationale and architecture overview
+- `developer-guide.md` - General technical guidance (2,562 lines)
+- `README.md` - Updated with platform decision
 
 **For implementation:**
+- `OPEN-SOURCE-STACK.md` - STEP-BY-STEP guide (start here)
 - `MASTER-IMPLEMENTATION-CHECKLIST.md` - 87-task roadmap
 - `QUICK-START-ACTION-PLAN.md` - 8-week sprint plan
 
@@ -598,5 +643,6 @@ Everything else depends on this choice.
 ---
 
 **Last Updated:** 2025-11-18
-**Next Review:** After platform decision is made
-**Status:** Awaiting platform choice to begin implementation
+**Next Review:** After beginning implementation (Week 2-3)
+**Status:** Platform decision MADE (Next.js + Open-Source Stack) - Ready to implement
+**Implementation Guide:** See OPEN-SOURCE-STACK.md for complete step-by-step instructions

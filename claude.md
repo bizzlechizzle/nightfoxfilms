@@ -678,198 +678,224 @@ Adds test case for None input.
 
 ### Applying WWYDD to Technology Choices
 
-**Current Status:** This repository is documentation-only. No website, CMS, or infrastructure exists.
+**Current Status:** Platform decision MADE - Next.js + Open-Source Stack
 
-**Critical Decision Needed:** Choose website platform (blocks everything else)
+**Decision Date:** 2025-11-18
 
-See `INFRASTRUCTURE-STATUS.md` for complete audit.
+See `OPEN-SOURCE-STACK.md` for complete implementation guide.
 
 ### Platform Decision Framework (Following THE RULES)
 
 **KISS (Keep It Simple):**
-- Simplest that meets needs: Squarespace
-- Don't over-engineer for imaginary future scale
-- Launch fast, migrate later if needed
+- Use proven, stable frameworks (Next.js is mature)
+- Leverage platform defaults (App Router, Static Export)
+- Don't over-engineer - use static generation where possible
+- Free hosting with Cloudflare Pages (no server to manage)
 
 **FAANG PE (Enterprise Quality):**
-- Any platform can be professional-grade
-- Quality comes from execution, not technology
-- Squarespace site can be better than bad custom code
+- Next.js used by Netflix, Uber, Hulu (production-proven)
+- Git-based CMS workflow (version control everything)
+- Edge deployment for global performance
+- Professional-grade stack for zero cost
 
 **BPL (Bulletproof Long-Term):**
-- Will Squarespace exist in 5 years? Yes
-- Will Next.js? Probably (React-based, widely adopted)
-- Will WordPress? Yes (20+ years proven)
-- Minimize lock-in: own your content (markdown files)
+- Next.js backed by Vercel, massive adoption (won't disappear)
+- Open-source everything (no vendor lock-in)
+- Static exports work forever (no backend dependencies)
+- Own all content as markdown (portable anywhere)
 
 **BPA (Best Practices):**
-- Research official docs before deciding
-- Check recent comparisons (web dev evolves fast)
-- Verify current recommendations (not 2019 articles)
+- Follow Next.js official docs (App Router is current standard)
+- Use official Cloudflare Pages deployment guides
+- Implement proper SEO with metadata API
+- Follow JAMstack architecture patterns
 
 **DRETW (Don't Re-Invent The Wheel):**
-- Don't build CMS from scratch
-- Use proven platforms (millions of users)
-- Don't write custom form handlers if platform has built-in
+- Use Next.js instead of building from scratch
+- Use Decap CMS instead of custom admin panel
+- Use Web3Forms instead of custom form backend
+- Use Cal.com instead of building booking system
 
 **WWYDD (What Would You Do Differently):**
 
-**If I were launching Nightfox Films, here's what I'd recommend:**
+This platform decision prioritizes:
+1. Zero vendor lock-in (everything open-source)
+2. Minimal ongoing costs ($12/year domain only)
+3. Maximum flexibility (own the entire stack)
+4. Professional quality (same tools as major companies)
 
-### Recommendation: Start with Squarespace
+### Final Platform Decision: Next.js + Open-Source Stack
 
-**Why Squarespace first:**
-1. **Fastest to revenue** (8 weeks vs 4 months custom)
-2. **Lowest risk** (proven platform, templates work)
-3. **All-in-one** (hosting, forms, SSL, templates included)
-4. **Professional** (used by many successful businesses)
-5. **Can migrate later** (content is portable to custom)
+**PLATFORM CHOSEN: Custom Next.js with Open-Source Tools**
 
-**When to choose WordPress:**
-- If already familiar with WordPress
-- If want traditional CMS experience
-- If need specific plugins (rare for wedding videographer)
+**Reasoning:**
+- User requirement: "We want free and open source"
+- User requirement: "Breaking up with the corporate overlords"
+- User confirmation: "Custom next.js"
+- Budget-conscious approach with professional results
+- Complete control and ownership of all code and content
 
-**When to choose Custom (Next.js):**
-- If can code React OR can hire developer
-- If have 3-4 months before need revenue
-- If want absolute control and best performance
-- If plan to scale to multiple brands/sites
+### The Complete Open-Source Stack
 
-### Platform Comparison (Honest Assessment)
+See `OPEN-SOURCE-STACK.md` for detailed implementation guide.
 
-| Factor | Squarespace | WordPress | Custom (Next.js) |
-|--------|-------------|-----------|------------------|
-| **Time to launch** | 8 weeks | 10 weeks | 12-16 weeks |
-| **Technical skill** | Low | Medium | High |
-| **Monthly cost** | $23 | $10-30 | $0-10 |
-| **Upfront cost** | $0 | $0 | $0-5000 |
-| **Flexibility** | Medium | High | Highest |
-| **Performance** | Good | Medium | Excellent |
-| **SEO capability** | Good | Good | Excellent |
-| **Maintenance** | None | Medium | High |
-| **Security** | Handled | Your problem | Your problem |
-| **Learning curve** | 1 week | 2-4 weeks | 8-12 weeks |
+| Component | Tool | Cost | License |
+|-----------|------|------|---------|
+| **Frontend** | Next.js 14+ (App Router) | $0 | MIT (Open-Source) |
+| **Hosting** | Cloudflare Pages | $0 | N/A (Free Service) |
+| **CMS** | Decap CMS (git-based) | $0 | MIT (Open-Source) |
+| **Forms** | Web3Forms | $0 | Free Service |
+| **Booking** | Cal.com (self-hosted) | $0 | AGPL (Open-Source) |
+| **Analytics** | Umami (self-hosted) | $0 | MIT (Open-Source) |
+| **Email** | Resend | $0 | Free tier (100/day) |
+| **Images** | Cloudinary | $0 | Free tier (25GB) |
 
-**Verdict:** Unless you can code React or hire a developer, start with Squarespace.
+**Total monthly cost:** $0
+**Total annual cost:** $12 (domain registration only)
 
-### CMS Decision (If Custom Build)
+### Architecture Overview
 
-**If building custom Next.js site:**
+```
+Users
+  ↓
+Cloudflare Pages CDN (Global Edge Network)
+  ↓
+Next.js 14 Static Site (App Router)
+  ↓
+Content: Markdown files in Git
+  ↓
+Decap CMS Admin (/admin) → Git Repository → Auto-deploy
+```
 
-**Sanity.io** (Recommended)
-- ✅ Modern, great DX
-- ✅ Free tier sufficient
-- ✅ Content as data (portable)
-- ✅ Real-time collaboration
-- ❌ Requires React knowledge
+**Key Benefits:**
+- No server to manage (static export + edge deployment)
+- No database to maintain (content as markdown files)
+- No vendor lock-in (everything open-source)
+- Automatic deployments (git push = deploy)
+- Global CDN (fast worldwide)
+- Unlimited bandwidth (Cloudflare Pages free tier)
 
-**Contentful**
-- ✅ Enterprise-grade
-- ✅ Excellent docs
-- ❌ Expensive ($489/month team plan)
-- ❌ Overkill for single site
+### CMS Decision: Decap CMS (Git-Based)
 
-**Strapi** (Self-hosted)
-- ✅ Open source, free
-- ✅ Full control
-- ❌ Need to host database
-- ❌ More complex setup
+**Why Decap CMS:**
+- 100% open-source (MIT license, no vendor)
+- Git-based workflow (content = markdown files in repo)
+- No database required (files are the database)
+- No hosting cost (runs in browser)
+- Version control for all content (full history)
+- Works offline (local development)
 
-**Recommendation:** Sanity.io for custom builds
+**Alternatives Considered:**
+- Sanity.io: Proprietary, has free tier but vendor lock-in
+- Contentful: Expensive ($300/month), proprietary
+- Strapi: Requires database hosting, more complex
+- WordPress: Not JAMstack, requires PHP hosting
 
-### Inquiry System Recommendations
+**Decision:** Decap CMS aligns perfectly with "free and open source" requirement
 
-**Contact Forms:**
-- Squarespace: Built-in (use it)
-- WordPress: Contact Form 7 (free plugin)
-- Custom: Formspree ($0-10/month) or Netlify Forms (free)
+### Inquiry System Implementation
 
-**Booking (Calendly):**
-- Use regardless of platform (free tier is fine)
-- Embed on website
-- 15 minutes to set up
-- **Do this TODAY** (doesn't require website)
+**Contact Forms: Web3Forms**
+- 100% free (unlimited submissions)
+- No backend required (API endpoint)
+- Spam protection included
+- Email notifications
+- 5-minute setup
 
-**Email Platform:**
-- Start: Mailchimp free tier (up to 500 contacts)
-- Grow: ConvertKit ($15/month when revenue coming in)
-- Import templates from `lead-nurture-email-sequence.md`
+**Booking: Cal.com (Self-Hosted)**
+- Open-source Calendly alternative (AGPL license)
+- Deploy free on Vercel or Railway
+- Connect to Google Calendar
+- Customizable booking pages
+- No per-booking fees
+
+**Email: Resend**
+- 100 emails/day free tier
+- Modern API (better than SendGrid/Mailgun)
+- React Email templates
+- For automation, migrate to Listmonk (self-hosted, unlimited)
 
 **Client Management:**
-- Start: HoneyBook ($16/month) - all-in-one
-- Alternative: Bonsai ($16/month) - similar features
-- Import templates from `contract-template-outline.md`
+- Start: Google Workspace (email + calendar + drive)
+- Build custom portal later in Next.js (you own the code)
 
-### What Can Be Done NOW (Before Platform Decision)
+### What Can Be Done NOW (Platform Decision Made)
 
-**Take these steps while deciding:**
+**Next steps to begin implementation:**
 
 1. **Purchase domain** (15 min, $12-15)
    - Buy nightfoxfilms.com
-   - Use Namecheap or Google Domains
-   - Don't connect to anything yet
+   - Use Namecheap or Cloudflare Registrar
+   - Don't connect yet (will configure with Cloudflare Pages)
 
-2. **Create Calendly** (15 min, free)
-   - Set availability
-   - Create "Wedding Consultation" event type
-   - Get embed code ready
+2. **Set up development environment** (30 min)
+   - Install Node.js 18+ and npm
+   - Install Git (if not already)
+   - Clone this repository locally
+   - See OPEN-SOURCE-STACK.md for detailed setup
 
-3. **Sign up for Mailchimp** (30 min, free)
-   - Create account
-   - Copy email templates from repo
-   - Don't send yet (no list)
+3. **Create Next.js project** (15 min)
+   - Run: `npx create-next-app@latest nightfoxfilms-site`
+   - Choose: App Router, TypeScript, Tailwind CSS
+   - Initialize git repository
+   - See OPEN-SOURCE-STACK.md Step 1
 
-4. **Review platform** (2-4 hours)
-   - Read `developer-guide.md` (2,562 lines)
-   - Watch Squarespace demo video
-   - Try WordPress.com free trial
-   - Make decision
+4. **Deploy to Cloudflare Pages** (15 min)
+   - Connect GitHub repository
+   - Configure build settings
+   - Get live preview URL
+   - See OPEN-SOURCE-STACK.md Step 2
 
-5. **Run validation** (5 min)
-   - `./scripts/validation/validate-markdown.sh`
-   - Fix any broken links found
+5. **Set up Decap CMS** (20 min)
+   - Add config.yml for CMS admin
+   - Configure collections (pages, services, blog, archive)
+   - Enable GitHub OAuth
+   - Access admin at yourdomain.com/admin
 
-**These don't require website and save time later.**
+**Total setup time: 2 hours to live site**
 
-### Decision Timeline
+### Implementation Timeline (8-Week Launch)
 
-**Week 1:**
-- Read this section
-- Read `INFRASTRUCTURE-STATUS.md`
-- Read `developer-guide.md`
-- Make platform decision
-- Purchase domain
+**Week 1: Foundation**
+- Day 1-2: Set up Next.js project and deploy to Cloudflare Pages
+- Day 3-4: Configure Decap CMS and create content collections
+- Day 5-7: Build home page layout and navigation
 
-**Week 2:**
-- Sign up for chosen platform
-- Create first page (home)
-- Set up Calendly
-- Configure email
+**Week 2-3: Core Pages**
+- Week 2: Services page, About page, Contact page
+- Week 3: FAQ page, Pricing page, Archive structure
 
-**Week 3-8:**
-- Follow `MASTER-IMPLEMENTATION-CHECKLIST.md`
-- Build all pages
-- Set up systems
-- Launch
+**Week 4-5: Content & Features**
+- Week 4: Import all copy from wireframes/, add forms
+- Week 5: Set up Cal.com booking, integrate Web3Forms
 
-**Don't overthink platform decision. Pick one and execute.**
+**Week 6-7: Polish & SEO**
+- Week 6: Add Umami analytics, optimize images
+- Week 7: SEO metadata, sitemap, robots.txt
+
+**Week 8: Launch**
+- Test all features and forms
+- Connect custom domain
+- Go live and start marketing
+
+**Detailed implementation: See OPEN-SOURCE-STACK.md**
 
 ### Common Mistakes to Avoid
 
 **DON'T:**
-- Spend months deciding (analysis paralysis)
-- Build custom if you can't code (hire or use platform)
-- Choose based on what's "cool" vs what works
-- Ignore the 8-week Squarespace path if you need revenue soon
-- Assume custom is automatically better (it's not)
+- Skip the official Next.js tutorial (invest 2 hours to save 20)
+- Ignore TypeScript errors (fix them immediately)
+- Deploy without testing locally first
+- Hardcode content (use CMS from day one)
+- Over-complicate the design (start simple, iterate)
 
 **DO:**
-- Choose based on YOUR skills and timeline
-- Start simple, migrate later if needed
-- Focus on launching and getting customers
-- Remember: website is tool, not product (product is your films)
-- Make decision this week and move forward
+- Follow Next.js App Router patterns (official docs)
+- Use static generation for all pages (fast, free)
+- Test on mobile first (most users on phones)
+- Set up analytics from day one (Umami)
+- Version control everything (git commit often)
+- Reference OPEN-SOURCE-STACK.md for step-by-step guidance
 
 ---
 

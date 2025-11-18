@@ -51,10 +51,13 @@
 ## MEDIUM PRIORITY - Do This Month
 
 ### Website Implementation
-- [ ] DECISION: Choose website platform (Squarespace, Webflow, WordPress, or custom)
-- [ ] If custom build: Create separate code repository
-- [x] If custom build: Create deployment scripts (launch.sh, health-check.sh) - TEMPLATES CREATED
-- [ ] If custom build: Set up CI/CD pipeline (GitHub Actions)
+- [x] DECISION: Choose website platform - **COMPLETED** (Next.js + Open-Source Stack, 2025-11-18)
+- [x] Create implementation guide (OPEN-SOURCE-STACK.md) - **COMPLETED** (600+ lines, step-by-step)
+- [ ] Create separate code repository for Next.js website
+- [x] Create deployment scripts (launch.sh, health-check.sh) - TEMPLATES CREATED
+- [ ] Set up CI/CD pipeline (GitHub Actions for Cloudflare Pages)
+- [ ] Purchase domain (nightfoxfilms.com)
+- [ ] Begin Next.js implementation (follow OPEN-SOURCE-STACK.md)
 
 ### Repository Hygiene
 - [ ] Review all files - identify which can be archived
@@ -114,6 +117,13 @@
 - [x] Created CHANGELOG.md for version tracking (2025-11-18)
 - [x] Added "Last Updated" dates to all major strategy documents (2025-11-18)
 - [x] Verified cross-references between core docs (claude.md, techguide.md, lilbits.md, README.md, todo.md) (2025-11-18)
+- [x] **PLATFORM DECISION MADE: Next.js + Open-Source Stack** (2025-11-18)
+- [x] Created OPEN-SOURCE-STACK.md - Complete implementation guide (600+ lines, step-by-step) (2025-11-18)
+- [x] Updated claude.md with platform decision and architecture overview (2025-11-18)
+- [x] Updated INFRASTRUCTURE-STATUS.md with chosen stack and implementation timeline (2025-11-18)
+- [x] Updated techguide.md with platform decision and file map (2025-11-18)
+- [x] Updated README.md with Next.js stack and next steps (2025-11-18)
+- [x] Updated todo.md with platform decision completion (2025-11-18)
 
 ---
 
@@ -215,12 +225,17 @@
 ## DECISION LOG
 
 **Decisions Needed:**
-- [ ] Website platform choice (custom vs Squarespace vs WordPress)
 - [ ] Should documentation stay in root or move to docs/ directory?
 - [ ] Keep logseq folder or archive it completely?
 - [ ] Open source any of this content or keep private?
 
 **Decisions Made:**
+- [x] **Website platform: Next.js + Open-Source Stack** (2025-11-18)
+  - Frontend: Next.js 14+ (App Router)
+  - Hosting: Cloudflare Pages (free tier)
+  - CMS: Decap CMS (git-based, open-source)
+  - Total cost: $12/year (domain only)
+  - Implementation guide: OPEN-SOURCE-STACK.md
 - [x] Repository will remain documentation-focused (not code)
 - [x] Will create comprehensive technical documentation
 - [x] Will add .gitignore and basic automation
