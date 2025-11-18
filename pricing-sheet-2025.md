@@ -1,5 +1,6 @@
 # Nightfox Films Pricing Sheet 2025
-**Updated:** November 2025
+
+**Last Updated:** 2025-11-18
 **Effective:** Immediately for new bookings
 
 ---

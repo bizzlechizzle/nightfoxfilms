@@ -1,0 +1,99 @@
+# Nightfox Films - Git Ignore File
+# Last Updated: 2025-11-18
+
+# macOS Files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux Files
+*~
+.directory
+
+# Editor/IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Logseq temp files (if using Logseq)
+.logseq/
+logseq/.recycle/
+logseq/bak/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*.tmp
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (if adding scripts with secrets)
+.env
+.env.local
+.env.production
+.env.test
+
+# Node modules (if adding npm scripts)
+node_modules/
+npm-debug.log
+package-lock.json
+yarn.lock
+
+# Python (if adding Python scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+env/
+ENV/
+
+# Build directories (if building website)
+/build
+/dist
+/.next
+/out
+.vercel
+.netlify
+
+# Cache directories
+.cache/
+.parcel-cache/
+.turbo/
+
+# Testing
+/coverage
+.nyc_output
+
+# Archives and compressed files (except intentional backups)
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+# Temporary files
+/tmp
+/temp
+
+# Personal notes (if developers add local notes)
+NOTES.md
+TODO-personal.md
+scratch.md

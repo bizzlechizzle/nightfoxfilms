@@ -1,4 +1,6 @@
 # Quick-Start Action Plan: Launch Your New Nightfox Films Website
+
+**Last Updated:** 2025-11-18
 **Timeline:** 8 weeks to launch
 
 ---
