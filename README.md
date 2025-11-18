@@ -425,7 +425,8 @@ See `todo.md` for complete list. Summary:
 ## Resources
 
 ### Official Documentation
-- `OPEN-SOURCE-STACK.md` - **START HERE** for implementation (600+ lines, step-by-step)
+- `LOCAL-DEVELOPMENT.md` - **START HERE** for local development setup (prerequisites, environment, troubleshooting)
+- `OPEN-SOURCE-STACK.md` - Complete implementation guide (600+ lines, deployment steps)
 - `claude.md` - Development principles and platform decision rationale
 - `techguide.md` - Complete file map (this is the master reference)
 - `INFRASTRUCTURE-STATUS.md` - Infrastructure audit and platform details

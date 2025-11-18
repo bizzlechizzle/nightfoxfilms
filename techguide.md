@@ -299,10 +299,16 @@ techguide.md (THIS FILE)
   └── Used by: Developers, AI assistants, project managers
 
 OPEN-SOURCE-STACK.md (IMPLEMENTATION GUIDE)
-  ├── References: claude.md, INFRASTRUCTURE-STATUS.md, wireframes/, copy/
+  ├── References: claude.md, INFRASTRUCTURE-STATUS.md, LOCAL-DEVELOPMENT.md, wireframes/, copy/
   ├── Purpose: Step-by-step guide for Next.js + open-source stack implementation
   ├── Contains: Complete architecture, setup instructions, configuration examples
-  └── Used by: Developers implementing the website (START HERE for implementation)
+  └── Used by: Developers implementing the website (START HERE for deployment)
+
+LOCAL-DEVELOPMENT.md (LOCAL SETUP GUIDE)
+  ├── References: OPEN-SOURCE-STACK.md, claude.md
+  ├── Purpose: Complete guide for running Next.js locally on your machine
+  ├── Contains: Prerequisites, environment setup, local CMS workflow, troubleshooting
+  └── Used by: Developers setting up local environment (START HERE for local dev)
 
 lilbits.md
   ├── References: Scripts in /scripts directory (when they exist)

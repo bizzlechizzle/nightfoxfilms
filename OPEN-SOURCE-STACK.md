@@ -430,7 +430,40 @@ CONTENT FLOW:
 
 ---
 
+## PREREQUISITES
+
+**Before you start, you need:**
+
+1. **Node.js 18+** - JavaScript runtime
+2. **npm 9+** - Package manager (comes with Node.js)
+3. **Git** - Version control
+4. **Text editor** - VS Code recommended
+5. **GitHub account** - For code hosting and CMS OAuth
+6. **Terminal/command line** - Basic familiarity
+
+**Not sure if you have these?**
+
+See `LOCAL-DEVELOPMENT.md` for complete setup instructions including:
+- How to install Node.js, npm, and Git
+- Environment variables configuration
+- Local CMS workflow (critical for development)
+- Common errors and troubleshooting
+- VS Code setup and extensions
+
+**Quick check:**
+```bash
+node --version  # Should be v18.x.x or v20.x.x
+npm --version   # Should be 9.x.x or higher
+git --version   # Any recent version
+```
+
+If these commands work, you're ready. If not, read `LOCAL-DEVELOPMENT.md` first.
+
+---
+
 ## GETTING STARTED (Step-by-Step)
+
+**IMPORTANT:** These steps are for deployment. For local development setup, see `LOCAL-DEVELOPMENT.md`.
 
 ### Step 1: Create Next.js Project (15 minutes)
 
