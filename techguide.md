@@ -10,19 +10,20 @@
 ## TABLE OF CONTENTS
 
 1. [Repository Overview](#repository-overview)
-2. [File Structure](#file-structure)
-3. [File Map with Dependencies](#file-map-with-dependencies)
-4. [Core Documentation Files](#core-documentation-files)
-5. [Strategy Documents](#strategy-documents)
-6. [Website Content Files](#website-content-files)
-7. [Client Systems](#client-systems)
-8. [Marketing Materials](#marketing-materials)
-9. [Archive Folders](#archive-folders)
-10. [Scripts and Automation](#scripts-and-automation)
-11. [Configuration Files](#configuration-files)
-12. [Key Rules and Principles](#key-rules-and-principles)
-13. [Workflows and Processes](#workflows-and-processes)
-14. [Integration Map](#integration-map)
+2. [Infrastructure Status](#infrastructure-status)
+3. [File Structure](#file-structure)
+4. [File Map with Dependencies](#file-map-with-dependencies)
+5. [Core Documentation Files](#core-documentation-files)
+6. [Strategy Documents](#strategy-documents)
+7. [Website Content Files](#website-content-files)
+8. [Client Systems](#client-systems)
+9. [Marketing Materials](#marketing-materials)
+10. [Archive Folders](#archive-folders)
+11. [Scripts and Automation](#scripts-and-automation)
+12. [Configuration Files](#configuration-files)
+13. [Key Rules and Principles](#key-rules-and-principles)
+14. [Workflows and Processes](#workflows-and-processes)
+15. [Integration Map](#integration-map)
 
 ---
 
@@ -49,25 +50,143 @@
 
 ---
 
+## INFRASTRUCTURE STATUS
+
+### Quick Answer: What's Actually Set Up?
+
+**NOTHING IS IMPLEMENTED.**
+
+This repository is documentation-only. There is no live website, no CMS, no inquiry forms, no email automation, no domain, no hosting.
+
+**What exists:** Excellent planning documents for what SHOULD be built
+**What's missing:** All technical implementation
+
+### Detailed Infrastructure Audit
+
+See `INFRASTRUCTURE-STATUS.md` for complete breakdown of:
+
+**Inquiry Systems:**
+- Contact forms: ❌ Documented but not implemented
+- Booking system (Calendly): ❌ Planned but not set up
+- Email templates: ✅ Written (10 templates) but ❌ not connected to any platform
+- Lead nurture automation: ✅ Sequence written (5 emails) but ❌ not configured
+
+**Content Management:**
+- CMS platform: ❌ NOT CHOSEN (options: Squarespace, WordPress, Sanity/Contentful)
+- Content: ✅ All written as markdown, needs to be imported to CMS
+- Admin interface: ❌ Does not exist
+
+**Email Infrastructure:**
+- Domain email: ❌ Domain not purchased
+- Marketing email (Mailchimp/ConvertKit): ❌ Not configured
+- Transactional email: ❌ Not set up
+
+**Hosting & Domain:**
+- Domain: ❌ Not purchased (recommend: nightfoxfilms.com)
+- Hosting: ❌ Not configured
+- SSL: ❌ Not set up (included free with any platform)
+
+**Analytics:**
+- Google Analytics: ❌ Not configured
+- Search Console: ❌ Not set up
+- Goal tracking: ❌ Not implemented
+
+**Client Management:**
+- Contract platform (HoneyBook/Bonsai): ❌ Not set up
+- Payment processing: ❌ Not configured
+- Questionnaire system: ✅ Template written but ❌ not in platform
+
+**Automation:**
+- Scripts: 🟡 3 created (1 functional, 2 templates)
+- CI/CD: ❌ Not configured
+- Deployment: ❌ No website to deploy
+
+### Critical Blocker: Platform Decision
+
+**Everything is blocked by ONE decision:**
+
+Must choose website platform:
+- **Option A:** Squarespace ($23/month) - Easiest, all-in-one
+- **Option B:** WordPress ($10-15/month) - Traditional CMS
+- **Option C:** Custom Next.js + Sanity ($0-10/month) - Most control, requires coding
+
+See `INFRASTRUCTURE-STATUS.md` for detailed comparison and recommendations.
+
+### What CAN Be Done Right Now
+
+**Without a website, you can:**
+1. ✅ Run markdown validation: `./scripts/validation/validate-markdown.sh`
+2. ✅ Review all documentation (it's excellent!)
+3. ✅ Make platform decision (read `developer-guide.md`)
+4. ✅ Purchase domain name
+5. ✅ Create Calendly account (free, 15 minutes)
+6. ✅ Sign up for email platform (Mailchimp free tier)
+
+**Cannot do until website exists:**
+- Cannot receive inquiries (no forms)
+- Cannot display content (no pages)
+- Cannot process bookings (no integration)
+- Cannot track analytics (no tracking code)
+- Cannot deploy anything (nothing to deploy)
+
+### Implementation Timeline (Once Decision Made)
+
+**If Squarespace:**
+- Week 1: Sign up, choose template, add home page
+- Week 2-3: Add all service pages
+- Week 4: Set up forms, Calendly, email
+- Week 5-6: SEO optimization, testing
+- Week 7-8: Launch publicly
+- **Total: 8 weeks to launch**
+
+**If WordPress:**
+- Week 1-2: Hosting, install WP, theme setup
+- Week 3-4: Build pages, install plugins
+- Week 5-6: Forms, email, client systems
+- Week 7-8: Testing, optimization
+- Week 9-10: Launch
+- **Total: 10 weeks to launch**
+
+**If Custom (Next.js):**
+- Month 1: Set up repo, build components
+- Month 2: CMS integration, content import
+- Month 3: Testing, optimization
+- Month 4: Launch
+- **Total: 3-4 months to launch (or hire developer)**
+
+**Recommendation:** Squarespace for fastest path to revenue.
+
+### For Complete Details
+
+**Read these files:**
+- `INFRASTRUCTURE-STATUS.md` - Complete audit (this was just created)
+- `developer-guide.md` - 2,562 lines of technical guidance
+- `MASTER-IMPLEMENTATION-CHECKLIST.md` - 87-task roadmap
+- `STATUS-UPDATE.md` - What's complete vs missing
+
+---
+
 ## FILE STRUCTURE
 
 ```
 /nightfoxfilms/
 ├── .git/                                    # Git version control
-├── .DS_Store                                # macOS file (SHOULD BE GITIGNORED)
 │
-├── Core Documentation (NEW - 2025-11-18)
-│   ├── README.md                            # Project overview (UPDATED)
+├── Core Documentation (2025-11-18)
+│   ├── README.md                            # Project overview
 │   ├── claude.md                            # Development principles and process
 │   ├── techguide.md                         # This file - complete technical reference
 │   ├── lilbits.md                           # Script documentation system
-│   └── todo.md                              # Task tracking and gap analysis
+│   ├── todo.md                              # Task tracking and gap analysis
+│   ├── CHANGELOG.md                         # Version history
+│   ├── STATUS-UPDATE.md                     # CRITICAL-MISSING-PIECES audit results
+│   └── INFRASTRUCTURE-STATUS.md             # CMS, inquiry, and setup status (NEW)
 │
 ├── Master Planning Documents (ROOT LEVEL)
 │   ├── IMPLEMENTATION-SUMMARY.md            # Master implementation plan
 │   ├── MASTER-IMPLEMENTATION-CHECKLIST.md   # 87-task checklist, 8-12 week timeline
 │   ├── QUICK-START-ACTION-PLAN.md           # 8-week tactical launch plan
-│   └── CRITICAL-MISSING-PIECES.md           # Gap analysis (NEEDS UPDATE)
+│   └── CRITICAL-MISSING-PIECES.md           # Gap analysis (see STATUS-UPDATE.md for current status)
 │
 ├── Research & Strategy
 │   ├── research-guide.md                    # 1,122 lines, competitive analysis, SEO keywords

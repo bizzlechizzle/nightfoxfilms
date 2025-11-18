@@ -185,24 +185,34 @@ Read `claude.md` for complete principles. Summary:
 - Client management systems
 - SEO strategy and implementation guide
 
-### What's Missing (See todo.md)
-**Critical:**
-- .gitignore file (to exclude OS cruft)
-- Actual website code (just documentation exists)
-- Deployment automation
-- Validation scripts
+### What's Missing
 
-**High Priority:**
-- Archive outdated logseq notes
-- Add "Last Updated" dates to all docs
-- Create validation scripts
-- Update CRITICAL-MISSING-PIECES.md status
+**CRITICAL - Platform Decision:**
+- **Website platform not chosen** (Squarespace vs WordPress vs Custom)
+- No live website (just documentation)
+- No CMS configured
+- No inquiry forms
+- No domain purchased
 
-**Medium Priority:**
-- Build website using this documentation
-- Create location landing pages (Buffalo, Syracuse, etc.)
-- Set up automated lead nurture system
-- Implement analytics tracking
+See `INFRASTRUCTURE-STATUS.md` for complete audit of what's set up vs. what's missing.
+
+**Technical Infrastructure (All Missing):**
+- Contact forms and booking system
+- Email automation platform
+- Client management system
+- Analytics and tracking
+- Payment processing
+
+**Content (Some Missing):**
+- 3 additional location pages needed (Syracuse, Finger Lakes, Adirondacks)
+- Photographer partnership strategy
+- Weather contingency messaging
+- Portfolio/featured work page
+
+**See also:**
+- `todo.md` - Complete task list
+- `STATUS-UPDATE.md` - CRITICAL-MISSING-PIECES audit (43% complete)
+- `INFRASTRUCTURE-STATUS.md` - CMS, inquiry, and setup status (NEW)
 
 ---
 

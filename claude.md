@@ -674,6 +674,205 @@ Adds test case for None input.
 
 ---
 
+## INFRASTRUCTURE & PLATFORM DECISIONS
+
+### Applying WWYDD to Technology Choices
+
+**Current Status:** This repository is documentation-only. No website, CMS, or infrastructure exists.
+
+**Critical Decision Needed:** Choose website platform (blocks everything else)
+
+See `INFRASTRUCTURE-STATUS.md` for complete audit.
+
+### Platform Decision Framework (Following THE RULES)
+
+**KISS (Keep It Simple):**
+- Simplest that meets needs: Squarespace
+- Don't over-engineer for imaginary future scale
+- Launch fast, migrate later if needed
+
+**FAANG PE (Enterprise Quality):**
+- Any platform can be professional-grade
+- Quality comes from execution, not technology
+- Squarespace site can be better than bad custom code
+
+**BPL (Bulletproof Long-Term):**
+- Will Squarespace exist in 5 years? Yes
+- Will Next.js? Probably (React-based, widely adopted)
+- Will WordPress? Yes (20+ years proven)
+- Minimize lock-in: own your content (markdown files)
+
+**BPA (Best Practices):**
+- Research official docs before deciding
+- Check recent comparisons (web dev evolves fast)
+- Verify current recommendations (not 2019 articles)
+
+**DRETW (Don't Re-Invent The Wheel):**
+- Don't build CMS from scratch
+- Use proven platforms (millions of users)
+- Don't write custom form handlers if platform has built-in
+
+**WWYDD (What Would You Do Differently):**
+
+**If I were launching Nightfox Films, here's what I'd recommend:**
+
+### Recommendation: Start with Squarespace
+
+**Why Squarespace first:**
+1. **Fastest to revenue** (8 weeks vs 4 months custom)
+2. **Lowest risk** (proven platform, templates work)
+3. **All-in-one** (hosting, forms, SSL, templates included)
+4. **Professional** (used by many successful businesses)
+5. **Can migrate later** (content is portable to custom)
+
+**When to choose WordPress:**
+- If already familiar with WordPress
+- If want traditional CMS experience
+- If need specific plugins (rare for wedding videographer)
+
+**When to choose Custom (Next.js):**
+- If can code React OR can hire developer
+- If have 3-4 months before need revenue
+- If want absolute control and best performance
+- If plan to scale to multiple brands/sites
+
+### Platform Comparison (Honest Assessment)
+
+| Factor | Squarespace | WordPress | Custom (Next.js) |
+|--------|-------------|-----------|------------------|
+| **Time to launch** | 8 weeks | 10 weeks | 12-16 weeks |
+| **Technical skill** | Low | Medium | High |
+| **Monthly cost** | $23 | $10-30 | $0-10 |
+| **Upfront cost** | $0 | $0 | $0-5000 |
+| **Flexibility** | Medium | High | Highest |
+| **Performance** | Good | Medium | Excellent |
+| **SEO capability** | Good | Good | Excellent |
+| **Maintenance** | None | Medium | High |
+| **Security** | Handled | Your problem | Your problem |
+| **Learning curve** | 1 week | 2-4 weeks | 8-12 weeks |
+
+**Verdict:** Unless you can code React or hire a developer, start with Squarespace.
+
+### CMS Decision (If Custom Build)
+
+**If building custom Next.js site:**
+
+**Sanity.io** (Recommended)
+- ✅ Modern, great DX
+- ✅ Free tier sufficient
+- ✅ Content as data (portable)
+- ✅ Real-time collaboration
+- ❌ Requires React knowledge
+
+**Contentful**
+- ✅ Enterprise-grade
+- ✅ Excellent docs
+- ❌ Expensive ($489/month team plan)
+- ❌ Overkill for single site
+
+**Strapi** (Self-hosted)
+- ✅ Open source, free
+- ✅ Full control
+- ❌ Need to host database
+- ❌ More complex setup
+
+**Recommendation:** Sanity.io for custom builds
+
+### Inquiry System Recommendations
+
+**Contact Forms:**
+- Squarespace: Built-in (use it)
+- WordPress: Contact Form 7 (free plugin)
+- Custom: Formspree ($0-10/month) or Netlify Forms (free)
+
+**Booking (Calendly):**
+- Use regardless of platform (free tier is fine)
+- Embed on website
+- 15 minutes to set up
+- **Do this TODAY** (doesn't require website)
+
+**Email Platform:**
+- Start: Mailchimp free tier (up to 500 contacts)
+- Grow: ConvertKit ($15/month when revenue coming in)
+- Import templates from `lead-nurture-email-sequence.md`
+
+**Client Management:**
+- Start: HoneyBook ($16/month) - all-in-one
+- Alternative: Bonsai ($16/month) - similar features
+- Import templates from `contract-template-outline.md`
+
+### What Can Be Done NOW (Before Platform Decision)
+
+**Take these steps while deciding:**
+
+1. **Purchase domain** (15 min, $12-15)
+   - Buy nightfoxfilms.com
+   - Use Namecheap or Google Domains
+   - Don't connect to anything yet
+
+2. **Create Calendly** (15 min, free)
+   - Set availability
+   - Create "Wedding Consultation" event type
+   - Get embed code ready
+
+3. **Sign up for Mailchimp** (30 min, free)
+   - Create account
+   - Copy email templates from repo
+   - Don't send yet (no list)
+
+4. **Review platform** (2-4 hours)
+   - Read `developer-guide.md` (2,562 lines)
+   - Watch Squarespace demo video
+   - Try WordPress.com free trial
+   - Make decision
+
+5. **Run validation** (5 min)
+   - `./scripts/validation/validate-markdown.sh`
+   - Fix any broken links found
+
+**These don't require website and save time later.**
+
+### Decision Timeline
+
+**Week 1:**
+- Read this section
+- Read `INFRASTRUCTURE-STATUS.md`
+- Read `developer-guide.md`
+- Make platform decision
+- Purchase domain
+
+**Week 2:**
+- Sign up for chosen platform
+- Create first page (home)
+- Set up Calendly
+- Configure email
+
+**Week 3-8:**
+- Follow `MASTER-IMPLEMENTATION-CHECKLIST.md`
+- Build all pages
+- Set up systems
+- Launch
+
+**Don't overthink platform decision. Pick one and execute.**
+
+### Common Mistakes to Avoid
+
+**DON'T:**
+- Spend months deciding (analysis paralysis)
+- Build custom if you can't code (hire or use platform)
+- Choose based on what's "cool" vs what works
+- Ignore the 8-week Squarespace path if you need revenue soon
+- Assume custom is automatically better (it's not)
+
+**DO:**
+- Choose based on YOUR skills and timeline
+- Start simple, migrate later if needed
+- Focus on launching and getting customers
+- Remember: website is tool, not product (product is your films)
+- Make decision this week and move forward
+
+---
+
 ## SUMMARY
 
 **Every task, every time:**
