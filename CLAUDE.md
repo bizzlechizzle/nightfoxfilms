@@ -1,508 +1,930 @@
-# Nightfox Films
+# Claude Development Principles & Process
 
-Manage wedding videography workflows with camera profiles, automated imports, and social media asset generation.
+**Last Updated:** 2025-11-18
+**Purpose:** Core principles and standard operating procedures for AI-assisted development on Nightfox Films repository
 
-## Three-Doc Stack
+---
 
-This project uses three core instruction files. Read them in order before any task:
+## THE RULES
 
-| File | Purpose | Modify? |
-|------|---------|---------|
-| **CLAUDE.md** (this file) | Project rules, architecture, constraints, reference index | Never |
-| **@techguide.md** | Implementation details, build setup, environment config, deep troubleshooting | Never |
-| **@lilbits.md** | Script registry every utility script with purpose, usage, line count | Never |
+### KISS = Keep It Simple, Stupid
+- Simplest solution wins
+- Avoid over-engineering
+- One function = one purpose
+- Readable code beats clever code
+- If it takes more than 3 sentences to explain, simplify it
 
-These three files are the complete instruction set. All other docs are reference material consulted on-demand.
+**Examples:**
+- GOOD: `validate_email(email)` - Does one thing, clear purpose
+- BAD: `process_user_data_and_send_email_and_log_to_db()` - Does too much
 
-**If any of these files are missing, empty, or unreadable: STOP and report to human. Do not proceed.**
+---
 
-## Quick Context
+### FAANG PE = Facebook/Amazon/Apple/Netflix/Google-level Engineering for Small Teams
+- Enterprise-grade quality at startup scale
+- Write code like it will be maintained for 10 years
+- Document everything (future you will thank present you)
+- Use industry best practices, not hacky shortcuts
+- Scalable architecture even if you only have 10 users today
 
-- **Mission**: Streamline wedding video workflows from import through social media delivery
-- **Current**: Desktop release v0.1.0 (Electron + Svelte)
-- **Target**: Camera-aware import pipeline with smart asset generation (screenshots, clips, captions)
-- **Persona**: Wedding videographer managing footage across multiple camera sources and couples
-- **Runtime**: Node >=20, pnpm >=10, Electron 35+
+**Standards:**
+- Code reviews (even for solo projects - review your own code)
+- Automated testing (unit tests, integration tests, end-to-end)
+- Version control with meaningful commit messages
+- Error handling and logging throughout
+- Security-first mindset (never commit secrets, validate all inputs)
 
-## Boot Sequence
+---
 
-1. Read this file (CLAUDE.md) completely
-2. Read @techguide.md for implementation details
-3. Read @lilbits.md for script registry
-4. Read the task request
-5. **Then** touch code not before
+### BPL = Bulletproof Long-Term
+- Build for reliability over 3-10 years minimum
+- Assume code will outlive current tools and frameworks
+- Minimize dependencies (every dependency is a liability)
+- Design for maintainability (someone else might inherit this)
+- Backwards compatibility whenever possible
 
-## Commands
+**Checklist:**
+- Will this still work in 5 years?
+- Can someone unfamiliar with the codebase understand this?
+- Is error handling comprehensive?
+- Are breaking changes documented?
+- Is there a rollback plan?
 
-```bash
-pnpm install          # Install dependencies
-pnpm dev              # Run desktop app in dev mode
-pnpm build            # Build all packages for production
-pnpm -r test          # Run tests in all packages
-pnpm -r lint          # Lint all packages
-pnpm format           # Format code with Prettier
-pnpm --filter core build      # Build only core package
-pnpm --filter desktop rebuild # Rebuild native modules (better-sqlite3, sharp)
-pnpm reinstall        # Clean and reinstall (fixes native module issues)
+---
+
+### BPA = Best Practices Always
+- Always check official documentation (not Stack Overflow first)
+- Follow language/framework conventions (PEP 8 for Python, etc.)
+- Use latest stable versions (not bleeding edge, not ancient)
+- Stay updated on security patches
+- Reference authoritative sources
+
+**Before writing code:**
+1. Check official docs for the tool/framework/language
+2. Review recent changelog for breaking changes
+3. Search for known security vulnerabilities
+4. Verify best practices haven't changed
+
+---
+
+### NME = No Emojis Ever
+- Professional communication only
+- Clear, concise technical writing
+- No emojis in code, comments, commit messages, or documentation
+- Focus on substance over style
+- Technical accuracy beats personality
+
+**Examples:**
+- GOOD: "Fix authentication bug in user login"
+- BAD: "Fix auth bug! Login works now"
+
+---
+
+### WWYDD = What Would You Do Differently - Suggestions Encouraged
+- User is a generalist, not a specialist - expertise welcome
+- Question assumptions before implementing
+- Propose better alternatives proactively
+- Explain trade-offs of different approaches
+- Challenge the requirements if there's a better way
+
+**Process:**
+1. Understand the request
+2. Consider alternatives
+3. Propose improvements BEFORE coding
+4. Explain why your approach is better
+5. Let user decide final direction
+
+**Example Response:**
+"You asked for X, but have you considered Y? Here's why Y might be better:
+- Pros: [list benefits]
+- Cons: [list drawbacks]
+- Trade-offs: [explain]
+Do you want to proceed with X as requested, or explore Y?"
+
+---
+
+### DRETW = Don't Re-Invent The Wheel
+- Search GitHub for existing solutions first
+- Check npm/PyPI for packages that solve this
+- Look for proven open-source alternatives
+- Review Reddit/HackerNews for recommendations
+- Borrow code from quality sources (with attribution)
+
+**Process:**
+1. Define the problem clearly
+2. Search GitHub: "site:github.com [problem description]"
+3. Search package managers: npm/PyPI/etc
+4. Check awesome-lists (awesome-python, awesome-javascript, etc.)
+5. If found: evaluate quality (stars, recent commits, issues, license)
+6. If suitable: use it (give credit)
+7. If not: build it, but borrow patterns from similar projects
+
+**Evaluation Criteria for External Code:**
+- Is it actively maintained? (commits in last 6 months)
+- Does it have good documentation?
+- Is the license compatible? (MIT, Apache, BSD preferred)
+- Are there open security issues?
+- Is the code quality high? (tests, linting, CI/CD)
+
+---
+
+### LILBITS = Always Write Scripts in Little Bits
+- One script = one function
+- Modular, composable, reusable
+- Each script should do ONE thing well
+- Document every new script in lilbits.md
+- Easy to test, easy to debug, easy to replace
+
+**Structure:**
+```
+scripts/
+  validate_email.sh       # One function: validate email format
+  send_email.sh           # One function: send email via API
+  process_signup.sh       # Orchestrates: validate + send
 ```
 
-> **Note**: Verify these commands match `package.json` scripts before relying on them.
-
-## Development Rules
-
-1. **Scope Discipline** Only implement what the current request describes; no surprise features
-2. **Workflow-First** Every change must serve import, organization, or asset generation workflows
-3. **Prefer Open Source + Verify Licenses** Default to open tools, avoid cloud services, log every dependency license
-4. **Offline-First** Assume zero connectivity; add graceful fallbacks when online helpers exist
-5. **One Script = One Function** Keep each script focused, under ~300 lines, recorded in lilbits.md
-6. **No AI in Docs** Never mention Claude, ChatGPT, Codex, or similar in user-facing docs or UI
-7. **Keep It Simple** Favor obvious code, minimal abstraction, fewer files
-8. **Binary Dependencies Welcome** App size is not a concern; freely add binaries (ffmpeg, ffprobe, exiftool, blake3) when they solve problems better than pure-JS alternatives
-9. **Real-Time UI Updates** Any operation that modifies data (imports, saves, deletes) must trigger automatic UI refresh. Never require manual page refresh to see changes. Use IPC events from main process to notify renderer when data changes.
-10. **Verify Build Before Done** After any implementation work, run `pnpm build` and `pnpm dev` to confirm the app compiles and boots without errors. Monitor console output for crashes, native module failures, or import errors. A feature is not complete until the app runs.
-
-## Do Not
-
-- Invent new features, pages, or data models beyond what the task or referenced docs authorize
-- Bypass the hashing contract when importing media or linking files to couples
-- Remove or rename migration files; schema edits go through new migrations only
-- Leak or transmit local data outside the user's machine
-- Add third-party SDKs or services without logging licenses and confirming they function offline
-- Mention AI assistants in UI, user docs, exports, or metadata
-- Leave TODOs or unexplained generated code in production branches
-- **Modify or remove core instruction files** CLAUDE.md, techguide.md, and lilbits.md are protected; flag issues for human review instead of auto-fixing
-- **Assume when uncertain** If a task is ambiguous or conflicts with these rules, stop and ask
-
-## Stop and Ask When
-
-- Task requires modifying CLAUDE.md, techguide.md, or lilbits.md
-- Task conflicts with a rule in this file
-- Referenced file or path doesn't exist
-- Task scope is unclear or seems to exceed "one feature"
-- You're about to delete code without understanding why it exists
-- Schema change is needed but not explicitly authorized
-
-## Critical Gotchas
-
-| Gotcha | Details |
-|--------|---------|
-| **Preload MUST be CommonJS** | Static `.cjs` file copied via custom Vite plugin (NOT bundled). Use `require('electron')` only, never `import`. ES module syntax crashes at runtime before UI loads. See `vite.config.ts` `copyPreloadPlugin()`. |
-| **Database source of truth** | `migrations/` only. Never edit schema inline in docs or ad-hoc SQL files. |
-| **Database location** | `./data/nightfox.db` (project-relative in dev), `[userData]/nightfox.db` (production). Foreign keys always enabled via PRAGMA on connection. |
-| **Camera profile matching** | Filename patterns > Folder patterns > Metadata make/model. If no match, store `detected_make`/`detected_model` with `camera_id = NULL`. |
-| **Import spine** | Scanner finds files -> hashes every file -> metadata extraction -> camera matching -> copies into managed folder -> links via BLAKE3 primary keys |
-| **Hashing first** | BLAKE3 computed before any metadata extraction or file moves |
-| **Managed folder structure** | `[storage_path]/[year]/[date]-[couple-name]/raw/{medium}/` (ADR-001) |
-| **Ownership pledge** | All assets stay on disk. No telemetry, no cloud sync, no auto-updates. |
-| **Dual storage** | SQLite is source of truth; JSON exports per couple for portability |
-| **pnpm v10+ native modules** | Project pre-configures `onlyBuiltDependencies` for better-sqlite3, electron, sharp, esbuild, blake3. If "Ignored build scripts" warnings appear, run `pnpm reinstall`. |
-| **Native modules in Vite** | Native modules with platform-specific binaries (better-sqlite3, sharp, blake3) MUST be in `vite.config.ts` external array. Bundling them causes "Could not dynamically require" crashes at runtime. |
-| **Sidecar file handling** | .TOD/.MOI pairs, .LRF, .THM, .SRT are linked as sidecars, not standalone files |
-
-## Architecture (Quick)
-
-- **Pattern**: Clean architecture (presentation -> infrastructure -> core domain) in pnpm monorepo
-- **Layout**: `packages/core` = domain models, repository contracts; `packages/desktop` = Electron main + renderer + services
-- **IPC flow**: Renderer -> Preload bridge -> Main -> Desktop services
-- **IPC naming**: `domain:action` format (e.g., `camera:create`, `couple:import`, `file:hash`)
-- **Security**: `contextIsolation: true`, `sandbox: false` (for drag-drop), no nodeIntegration in renderer
-- **Testing priority**: Unit focus on hashing pipeline, camera pattern matching, metadata extraction
-
-## File Naming Conventions
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Svelte components | PascalCase | `CameraCard.svelte` |
-| Services/utilities | kebab-case | `hash-service.ts` |
-| Domain models | PascalCase | `Camera.ts` |
-| IPC handlers | kebab-case with domain prefix | `camera-handlers.ts` |
-| Migrations | timestamp prefix | `001_initial_schema.sql` |
-
-## Domain Model Overview
-
-### Mediums
-
-| Medium | Description | Typical Extensions |
-|--------|-------------|-------------------|
-| `dadcam` | VHS, mini-DV, digital camcorder | .tod, .moi, .mts, .m2ts, .mpg |
-| `super8` | Film scans (digitized) | .mov, .mp4 |
-| `modern` | Contemporary digital cameras | .mp4, .mov, .mxf |
-
-### Camera Profiles
-
-Camera profiles enable automatic file routing and LUT application:
-
+**NOT this:**
 ```
-Camera Profile
-├── Identity
-│   ├── name: "Canon HV20"
-│   ├── medium: dadcam | super8 | modern
-│   └── notes: "MiniDV camera, 1080i AVCHD"
-│
-├── File Matching (priority order)
-│   ├── filename_patterns: ["*.MTS", "*.M2TS"]
-│   ├── folder_patterns: ["**/AVCHD/**", "**/PRIVATE/**"]
-│   └── extension_pairs: [".mts", ".m2ts"]
-│
-├── Technical Defaults
-│   ├── lut_path: "canon_hv20_rec709.cube" | null
-│   ├── deinterlace: true | false
-│   └── audio_channels: "stereo" | "mono" | "none"
-│
-└── Quality Profile
-    ├── sharpness_baseline: 450  // Laplacian variance
-    └── transcode_preset: "prores_hq" | "h265_high"
+scripts/
+  do_everything.sh        # 500 lines, does signup, email, logging, etc.
 ```
 
-### Couples
+**Documentation Required:**
+For each script, document in lilbits.md:
+- What it does (one sentence)
+- Inputs/outputs
+- Dependencies
+- Example usage
+- Error codes
 
-Each wedding is a "couple" with associated files:
+---
 
+## CORE PROCESS
+
+Follow this process for EVERY task (fix, troubleshoot, code, brainstorm, optimize, or WWYDD):
+
+### Step 1: Read Context
+**Read in this order:**
+1. User prompt (what are they asking for?)
+2. claude.md (this file - core principles)
+3. techguide.md (what files exist, relationships, rules)
+4. lilbits.md (existing scripts and their purpose)
+
+**Questions to answer:**
+- What exactly is the user asking for?
+- Have we done something similar before?
+- What files/scripts are relevant to this task?
+- Are there existing patterns to follow?
+
+---
+
+### Step 2: Search and Read Referenced Files
+**Find relevant files:**
+- Files explicitly mentioned in user prompt
+- Files referenced in techguide.md that relate to this task
+- Related scripts/configs that might be affected
+- Dependencies that might break
+
+**Use appropriate tools:**
+- Glob for finding files by pattern
+- Grep for searching code content
+- Read for examining specific files
+- Explore agent for thorough codebase understanding
+
+---
+
+### Step 3: Make a Plan
+**Create initial plan addressing:**
+- What needs to change?
+- Which files are affected?
+- What's the simplest approach? (KISS)
+- Are there existing solutions? (DRETW)
+- What could go wrong?
+
+**Plan should include:**
+- List of files to modify/create
+- Sequence of changes
+- Testing strategy
+- Rollback plan if it fails
+
+---
+
+### Step 4: Make Core Logic Reference
+**Before writing code, outline:**
+- Key functions/components needed
+- Data flow (input → processing → output)
+- Error handling strategy
+- Edge cases to handle
+
+**Example:**
 ```
-Couple
-├── name: "Smith-Jones"
-├── wedding_date: "2024-06-15"
-├── folder_name: "2024-06-15-smith-jones"
-├── files: [imported videos]
-└── exports: [generated assets]
-```
-
-## Data Flow
-
-### Import Pipeline
-
-```
-1. Scanner Service
-   └── Recursively find video + sidecar files
-   └── Return: FileCandidate[]
-
-2. Hasher Service
-   └── BLAKE3 each file (16-char hex)
-   └── Check for duplicates (already in DB?)
-   └── Return: HashedFile[]
-
-3. Metadata Service
-   └── Run exiftool + ffprobe
-   └── Store full JSON dumps
-   └── Extract key fields (duration, resolution, codec)
-   └── Return: FileWithMetadata[]
-
-4. Camera Matcher Service
-   └── Match against camera_patterns
-   └── Link sidecars by filename (.TOD <-> .MOI)
-   └── If no match: store detected_make/detected_model
-   └── Return: MatchedFile[] with camera_id (nullable)
-
-5. File Manager Service
-   └── Copy to managed folder structure
-   └── Rename to {blake3_short}.{ext}
-   └── Return: ManagedFile[]
-
-6. Database Commit
-   └── Insert files, file_metadata, file_sidecars
-   └── Update couple file counts
-
-7. JSON Export
-   └── Write couple.json to couple folder
-   └── Self-documenting portable archive
-```
-
-### Asset Generation Pipeline
-
-```
-1. Scene Detection (PySceneDetect)
-   └── ContentDetector for cuts
-   └── AdaptiveDetector for camera movement
-   └── Return: SceneBoundary[]
-
-2. Frame Analysis
-   └── Sharpness scoring (Laplacian variance)
-   └── Face detection (OpenCV Haar cascades)
-   └── Return: ScoredFrame[]
-
-3. Screenshot Generation
-   └── Pick sharpest frame per scene
-   └── Apply LUT if camera profile specifies
-   └── Export as JPEG
-   └── Return: Screenshot[]
-
-4. Clip Generation
-   └── Smart crop for aspect ratios (face-priority)
-   └── Audio normalization (EBU R128)
-   └── LUT application
-   └── Export as H.264/H.265
-   └── Return: Clip[]
-
-5. AI Captioning (Optional)
-   └── Send frames to LiteLLM
-   └── Generate social media captions
-   └── Store with attribution
-   └── Return: Caption[]
+Function: validate_user_input(data)
+Input: dict with user data
+Logic:
+  1. Check required fields exist
+  2. Validate email format
+  3. Validate phone format (if provided)
+  4. Check for SQL injection attempts
+  5. Sanitize all inputs
+Output: dict (cleaned data) or raise ValidationError
+Errors: InvalidEmailError, MissingFieldError, SecurityError
 ```
 
-## External Tool Wrappers
+---
 
-### ffprobe
+### Step 5: Audit the Plan
+**Review plan against:**
+- Step 1 findings (does it align with existing patterns?)
+- Step 2 findings (does it integrate with existing files?)
+- THE RULES (KISS, BPL, BPA, etc.)
+- Best practices for tools/frameworks being used
 
-```typescript
-// packages/desktop/electron/services/external/ffprobe.ts
-export interface FFProbeResult {
-  format: { duration: string; size: string; bit_rate: string; };
-  streams: Array<{
-    codec_type: 'video' | 'audio';
-    codec_name: string;
-    width?: number;
-    height?: number;
-    frame_rate?: string;
-  }>;
-}
+**Questions:**
+- Is this the simplest approach? (KISS)
+- Will this work in 5 years? (BPL)
+- Are we following official docs? (BPA)
+- Should we suggest alternatives? (WWYDD)
+- Does a solution already exist? (DRETW)
+- Are we using modular scripts? (LILBITS)
 
-export async function probe(filePath: string): Promise<FFProbeResult>;
-export async function probeRaw(filePath: string): Promise<string>;
+**Update plan based on audit findings.**
+
+---
+
+### Step 6: Write Implementation Guide
+**Create guide for a new developer:**
+- Prerequisites (what must be installed/configured first)
+- Step-by-step instructions (numbered, clear, complete)
+- Expected outcome for each step
+- How to verify it worked
+- What to do if it fails
+
+**Format:**
+```
+## Implementation Guide: [Feature Name]
+
+### Prerequisites
+- Python 3.9+
+- pip packages: requests, pytest
+- API key configured in .env
+
+### Steps
+1. Create new file `scripts/feature.py`
+   Expected: File exists with basic structure
+
+2. Add function `def process_data(input_data)`
+   Expected: Function accepts dict, returns dict
+
+3. Add error handling for network failures
+   Expected: Raises custom NetworkError on timeout
+
+4. Write unit tests in `tests/test_feature.py`
+   Expected: All tests pass
+
+### Verification
+Run: `pytest tests/test_feature.py`
+Expected output: All tests passed (100% coverage)
+
+### Rollback
+If deployment fails: `git revert [commit-hash]`
 ```
 
-### exiftool
+---
 
-```typescript
-// packages/desktop/electron/services/external/exiftool.ts
-export interface ExifToolResult {
-  Make?: string;
-  Model?: string;
-  CreateDate?: string;
-  Duration?: number;
-  ImageWidth?: number;
-  ImageHeight?: number;
-  // ... full metadata
-}
+### Step 7: Audit the Implementation Guide
+**Review guide against:**
+- Step 1 context (does it fit the project?)
+- Step 2 file analysis (does it integrate correctly?)
+- Step 4 core logic (does implementation match design?)
+- Best practices for all tools used (linters, formatters, testing frameworks)
 
-export async function extract(filePath: string): Promise<string>;  // Raw JSON
-export async function extractParsed(filePath: string): Promise<ExifToolResult>;
+**Check:**
+- Are all dependencies documented?
+- Is every step clear and unambiguous?
+- Have we linked to official documentation where relevant?
+- Are error cases handled?
+- Is the rollback plan viable?
+
+**Update guide based on audit.**
+
+---
+
+### Step 8: Write Technical Guide with Examples
+**Create detailed technical documentation:**
+- Code examples for key functions
+- Logic explanations (why this approach?)
+- Architecture diagrams (if complex)
+- API documentation (inputs, outputs, errors)
+- Integration examples (how to use this with other components)
+
+**Format:**
+```
+## Technical Guide: [Feature Name]
+
+### Overview
+[What this does and why it exists]
+
+### Architecture
+[How components interact - diagram if needed]
+
+### API Reference
+#### `function_name(param1, param2)`
+- param1 (str): Description
+- param2 (int): Description
+- Returns: dict with keys {result, status, error}
+- Raises: CustomError if validation fails
+
+### Example Usage
+```python
+from scripts.feature import process_data
+
+data = {"user": "john", "email": "john@example.com"}
+result = process_data(data)
+print(result)  # Output: {"status": "success", "user_id": 123}
 ```
 
-### ffmpeg
+### Error Handling
+| Error | Cause | Solution |
+|-------|-------|----------|
+| ValidationError | Invalid input | Check input format |
+| NetworkError | API timeout | Retry with backoff |
 
-```typescript
-// packages/desktop/electron/services/external/ffmpeg.ts
-export interface TranscodeOptions {
-  input: string;
-  output: string;
-  codec?: 'h264' | 'h265' | 'prores';
-  lut?: string;
-  crop?: { x: number; y: number; width: number; height: number };
-  audio_normalize?: boolean;
-}
+### Testing
+Run tests: `pytest tests/test_feature.py -v`
+Coverage: `pytest --cov=scripts/feature`
 
-export async function transcode(options: TranscodeOptions): Promise<void>;
-export async function extractFrame(input: string, time: number, output: string): Promise<void>;
+### Integration
+This module is used by:
+- scripts/main.py (calls process_data)
+- scripts/batch_processor.py (calls in loop)
 ```
 
-### blake3
+---
 
-```typescript
-// packages/desktop/electron/services/crypto-service.ts
-export const HASH_LENGTH = 16;
+### Step 9: Write/Update/Create Code
+**Now write the actual code:**
+- Follow implementation guide from Step 6
+- Use technical design from Step 8
+- Adhere to all THE RULES
+- Keep it modular (LILBITS)
 
-export async function calculateHash(filePath: string): Promise<string>;
-export function generateId(): string;
-export function isValidHash(hash: string): boolean;
+**Code Quality Checklist:**
+- Follows language conventions (PEP 8, ESLint, etc.)
+- Has docstrings/comments explaining WHY not WHAT
+- Includes error handling
+- Has input validation
+- Logs important events
+- No hardcoded secrets or credentials
+
+---
+
+### Step 10: Audit the Code
+**Review finished code against:**
+- Step 1 original requirements
+- Step 2 file integration
+- Step 4 core logic design
+- Step 6 implementation guide
+- Step 7 best practices
+- THE RULES (all of them)
+
+**Final Checklist:**
+- Does it work? (test it)
+- Is it simple? (KISS)
+- Is it production-ready? (FAANG PE)
+- Will it last? (BPL)
+- Follows best practices? (BPA)
+- No emojis? (NME)
+- Could we have done better? (WWYDD)
+- Did we check for existing solutions? (DRETW)
+- Is it modular? (LILBITS)
+
+**If any answer is NO, update the code.**
+
+---
+
+### Step 11: Update Documentation
+**Update these files:**
+- techguide.md (add new file to map, note dependencies)
+- lilbits.md (if new script, document it fully)
+- README.md (if major feature, update overview)
+- CHANGELOG.md (note what changed and why)
+
+**Documentation must include:**
+- What changed
+- Why it changed
+- How to use the new feature
+- What files were modified
+- Any breaking changes
+- Migration guide (if needed)
+
+---
+
+## EXAMPLE WALKTHROUGH
+
+### User Request:
+"Create a script to validate email addresses in our contact form"
+
+### Step 1: Read Context
+- Read claude.md (this file) ✓
+- Read techguide.md - check if email validation exists
+- Read lilbits.md - check for similar validation scripts
+- Understanding: Need modular email validation script
+
+### Step 2: Search Files
+- Grep for existing email validation: `grep -r "validate.*email"`
+- Check if libraries are already imported: `grep -r "import re"`
+- Review techguide.md for validation standards
+- Finding: No existing email validation
+
+### Step 3: Make a Plan
+Initial plan:
+1. Create `scripts/validate_email.py`
+2. Use regex for email validation
+3. Return True/False
+4. Add to lilbits.md
+
+### Step 4: Core Logic
+```
+Function: validate_email(email)
+Input: str (email address)
+Logic:
+  1. Check if email is string
+  2. Check basic format with regex (RFC 5322)
+  3. Check for common typos (.con instead of .com)
+  4. Optionally: DNS lookup for domain
+Output: bool (True if valid)
+Errors: TypeError if not string
 ```
 
-## AI Integration
+### Step 5: Audit Plan
+- KISS: Yes, simple function
+- DRETW: Check if library exists... found `email-validator` on PyPI
+- WWYDD: Should we use library instead of regex?
+**Updated plan:** Use `email-validator` library (more reliable than regex)
 
-### LiteLLM Configuration
+### Step 6: Implementation Guide
+```
+## Implementation: Email Validation
 
-All AI calls route through LiteLLM proxy. Never hardcode providers.
+### Prerequisites
+- Python 3.9+
+- Install: `pip install email-validator`
 
-```typescript
-// packages/desktop/electron/services/ai/litellm-client.ts
-interface LiteLLMConfig {
-  baseUrl: string;      // Default: http://localhost:4000
-  modelVLM: string;     // Vision model alias (e.g., "local-vlm")
-  modelLLM: string;     // Text model alias (e.g., "local-llm")
-}
-
-interface AIResult {
-  content: string;
-  source: {
-    model: string;
-    provider: string;
-    timestamp: Date;
-    confidence?: number;
-  };
-}
+### Steps
+1. Create `scripts/validate_email.py`
+2. Import email_validator library
+3. Implement validate_email(email) function
+4. Add error handling
+5. Write tests in `tests/test_validate_email.py`
+6. Update lilbits.md with documentation
 ```
 
-### Usage Pattern
+### Step 7: Audit Implementation Guide
+- BPA: Yes, using official PyPI package
+- All steps clear and testable
+- Guide is complete
 
-```typescript
-const caption = await litellmClient.generateCaption({
-  frames: [frameBase64],
-  prompt: "Write a wedding social media caption for this scene...",
-  model: settings.litellm_model_vlm,
-});
+### Step 8: Technical Guide
+```python
+## Email Validation Module
 
-// Store with attribution
-await db.insert('ai_analysis').values({
-  file_id: fileId,
-  analysis_type: 'caption',
-  result_json: JSON.stringify(caption),
-  model_name: caption.source.model,
-  provider_name: caption.source.provider,
-  created_at: new Date().toISOString(),
-});
+### API
+validate_email(email: str) -> bool
+
+### Example
+from scripts.validate_email import validate_email
+
+result = validate_email("user@example.com")  # True
+result = validate_email("invalid.email")      # False
 ```
 
-## IPC Patterns
+### Step 9: Write Code
+```python
+# scripts/validate_email.py
+from email_validator import validate_email as validator, EmailNotValidError
 
-### Handler Registration
+def validate_email(email):
+    """
+    Validate email address format.
 
-```typescript
-// packages/desktop/electron/main/ipc-handlers/index.ts
-export function registerAllHandlers(): void {
-  registerCameraHandlers();
-  registerCoupleHandlers();
-  registerFileHandlers();
-  registerSettingsHandlers();
-  registerExportHandlers();
-}
+    Args:
+        email (str): Email address to validate
+
+    Returns:
+        bool: True if valid, False otherwise
+
+    Uses email-validator library for RFC 5322 compliance.
+    """
+    if not isinstance(email, str):
+        return False
+
+    try:
+        validator(email, check_deliverability=False)
+        return True
+    except EmailNotValidError:
+        return False
 ```
 
-### Handler Pattern
+### Step 10: Audit Code
+- KISS: Yes, simple 10-line function
+- FAANG PE: Uses industry-standard library
+- BPL: Library is well-maintained
+- BPA: Following official library docs
+- NME: No emojis ✓
+- LILBITS: One function, one purpose ✓
 
-```typescript
-// packages/desktop/electron/main/ipc-handlers/camera-handlers.ts
-import { z } from 'zod';
-import { ipcMain } from 'electron';
+### Step 11: Update Documentation
+- Add to lilbits.md
+- Add to techguide.md (dependencies section)
+- Note in todo.md as completed
 
-const CameraInputSchema = z.object({
-  name: z.string().min(1),
-  medium: z.enum(['dadcam', 'super8', 'modern']),
-  notes: z.string().optional(),
-});
+---
 
-export function registerCameraHandlers(db: Database) {
-  ipcMain.handle('camera:create', async (_event, input: unknown) => {
-    try {
-      const validated = CameraInputSchema.parse(input);
-      // ... create camera
-      return { success: true, id: newId };
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        throw new Error(`Validation: ${error.errors.map(e => e.message).join(', ')}`);
-      }
-      throw new Error(error instanceof Error ? error.message : String(error));
-    }
-  });
-}
+## SPECIAL CASES
+
+### When User Provides Incomplete Requirements
+**DO:**
+- Ask clarifying questions
+- Propose what you THINK they want
+- Explain trade-offs of different interpretations
+- Use WWYDD to suggest improvements
+
+**DON'T:**
+- Assume and build the wrong thing
+- Build the first solution that comes to mind
+- Skip the planning steps
+
+---
+
+### When Existing Code is Poor Quality
+**DO:**
+- Point out issues professionally
+- Suggest refactoring approach
+- Explain benefits of cleanup
+- Offer to fix it (with permission)
+
+**DON'T:**
+- Silently perpetuate bad patterns
+- Criticize without offering solutions
+- Refactor without asking
+
+---
+
+### When Requirements Conflict with THE RULES
+**DO:**
+- Explain the conflict
+- Propose alternative that follows rules
+- Explain why rules exist
+- Let user override if they insist (document why)
+
+**DON'T:**
+- Blindly follow bad requirements
+- Break rules without discussion
+
+---
+
+### When Stuck or Uncertain
+**DO:**
+- Admit uncertainty
+- Research official documentation
+- Propose multiple approaches
+- Ask for user input
+
+**DON'T:**
+- Guess and hope it works
+- Use outdated Stack Overflow answers
+- Skip research steps
+
+---
+
+## QUALITY GATES
+
+Before considering ANY task complete:
+
+**Code Quality:**
+- [ ] Follows language conventions
+- [ ] Has comprehensive error handling
+- [ ] Includes tests (if applicable)
+- [ ] No hardcoded secrets
+- [ ] Passes linter/formatter
+
+**Documentation:**
+- [ ] Updated techguide.md
+- [ ] Updated lilbits.md (if script)
+- [ ] Updated README.md (if major change)
+- [ ] Inline comments explain WHY
+
+**Process:**
+- [ ] Followed all 11 steps
+- [ ] Audited against THE RULES
+- [ ] Checked for existing solutions (DRETW)
+- [ ] Proposed improvements (WWYDD)
+
+**Testing:**
+- [ ] Manually tested happy path
+- [ ] Tested error cases
+- [ ] Verified integration with existing code
+- [ ] Documented test results
+
+---
+
+## COMMIT MESSAGE STANDARDS
+
+Follow conventional commits:
+
+**Format:**
+```
+type(scope): brief description
+
+Longer explanation if needed.
+
+Refs: #issue-number
 ```
 
-### Preload Bridge
+**Types:**
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation only
+- refactor: Code change that neither fixes bug nor adds feature
+- test: Adding tests
+- chore: Maintenance (dependencies, etc.)
 
-```javascript
-// packages/desktop/electron/preload/preload.cjs
-"use strict";
-const { contextBridge, ipcRenderer } = require("electron");
+**Examples:**
+```
+feat(validation): add email validation script
 
-const invoke = (channel) => (...args) => ipcRenderer.invoke(channel, ...args);
+Implements email validation using email-validator library.
+Follows LILBITS principle with single-purpose function.
 
-const api = {
-  cameras: {
-    findAll: invoke("camera:findAll"),
-    findById: invoke("camera:findById"),
-    create: invoke("camera:create"),
-    update: invoke("camera:update"),
-    delete: invoke("camera:delete"),
-  },
-  couples: {
-    findAll: invoke("couple:findAll"),
-    findById: invoke("couple:findById"),
-    create: invoke("couple:create"),
-    update: invoke("couple:update"),
-    delete: invoke("couple:delete"),
-    exportJson: invoke("couple:exportJson"),
-  },
-  files: {
-    import: invoke("file:import"),
-    findByCouple: invoke("file:findByCouple"),
-    hash: invoke("file:hash"),
-    onImportProgress: (callback) => {
-      const listener = (_event, progress) => callback(progress);
-      ipcRenderer.on("file:import:progress", listener);
-      return () => ipcRenderer.removeListener("file:import:progress", listener);
-    },
-  },
-  settings: {
-    get: invoke("settings:get"),
-    set: invoke("settings:set"),
-    getAll: invoke("settings:getAll"),
-  },
-  export: {
-    screenshot: invoke("export:screenshot"),
-    clip: invoke("export:clip"),
-    detectScenes: invoke("export:detectScenes"),
-  },
-};
+Refs: #42
 
-contextBridge.exposeInMainWorld("electronAPI", api);
+---
+
+docs(techguide): add email validation to file map
+
+Documents new validate_email.py script and its dependencies.
+
+---
+
+fix(validation): handle None input gracefully
+
+Previously crashed on None, now returns False.
+Adds test case for None input.
 ```
 
-## Change Protocols
+---
 
-| Change Type | Required Steps |
-|-------------|----------------|
-| UI copy/layout | Update `docs/ui-spec.md` + summary in `docs/decisions/` |
-| Schema change | New migration file only; never edit existing migrations |
-| New dependency | Log license in commit message; verify offline functionality |
-| Deviation from spec | Document in `docs/decisions/` with decision ID; reference in commit |
+## INFRASTRUCTURE & PLATFORM DECISIONS
 
-## Troubleshooting
+### Applying WWYDD to Technology Choices
 
-| Problem | Solution |
-|---------|----------|
-| "Ignored build scripts" warning | Run `pnpm reinstall` |
-| Preload crashes silently | Check for ES module syntax in `.cjs` file; must use `require()` |
-| Database locked errors | Ensure only one Electron instance running |
-| Native module mismatch | Run `pnpm --filter desktop rebuild` |
-| Types out of sync | Run `pnpm --filter core build` first |
-| ffprobe/exiftool not found | Check PATH or use bundled binaries |
-| Camera not matching | Check pattern priority: filename > folder > metadata |
+**Current Status:** Platform decision MADE - Next.js + Open-Source Stack
 
-## Package-Level Guides
+**Decision Date:** 2025-11-18
 
-Read these when working in specific packages:
+See `OPEN-SOURCE-STACK.md` for complete implementation guide.
 
-- @packages/core/CLAUDE.md
-- @packages/desktop/CLAUDE.md
+### Platform Decision Framework (Following THE RULES)
 
-## On-Demand References
+**KISS (Keep It Simple):**
+- Use proven, stable frameworks (Next.js is mature)
+- Leverage platform defaults (App Router, Static Export)
+- Don't over-engineer - use static generation where possible
+- Free hosting with Cloudflare Pages (no server to manage)
 
-Read these when the task touches the relevant area:
+**FAANG PE (Enterprise Quality):**
+- Next.js used by Netflix, Uber, Hulu (production-proven)
+- Git-based CMS workflow (version control everything)
+- Edge deployment for global performance
+- Professional-grade stack for zero cost
 
-**Architecture & Data:**
-- @docs/ARCHITECTURE.md
-- @docs/DATA_FLOW.md
+**BPL (Bulletproof Long-Term):**
+- Next.js backed by Vercel, massive adoption (won't disappear)
+- Open-source everything (no vendor lock-in)
+- Static exports work forever (no backend dependencies)
+- Own all content as markdown (portable anywhere)
 
-**Contracts:**
-- @docs/contracts/hashing.md
-- @docs/contracts/camera-profiles.md
-- @docs/contracts/folder-structure.md
-- @docs/contracts/dual-storage.md
+**BPA (Best Practices):**
+- Follow Next.js official docs (App Router is current standard)
+- Use official Cloudflare Pages deployment guides
+- Implement proper SEO with metadata API
+- Follow JAMstack architecture patterns
 
-**Workflows:**
-- @docs/workflows/import.md
-- @docs/workflows/export.md
-- @docs/workflows/scene-detection.md
-- @docs/workflows/ai-captioning.md
+**DRETW (Don't Re-Invent The Wheel):**
+- Use Next.js instead of building from scratch
+- Use Decap CMS instead of custom admin panel
+- Use Web3Forms instead of custom form backend
+- Use Cal.com instead of building booking system
 
-## Authoritative Sources
+**WWYDD (What Would You Do Differently):**
 
-| Source | Purpose |
-|--------|---------|
-| `migrations/` | Database schema, constraints, seed data. Single source of truth for DB structure. |
-| `docs/ui-spec.md` | Page layouts, navigation order, typography, component states |
-| `docs/schema.md` | Field descriptions, enums, JSON schema contracts |
-| `docs/decisions/*.md` | ADR-style reasoning for deviations; reference IDs in commits |
+This platform decision prioritizes:
+1. Zero vendor lock-in (everything open-source)
+2. Minimal ongoing costs ($12/year domain only)
+3. Maximum flexibility (own the entire stack)
+4. Professional quality (same tools as major companies)
 
-## Contact Surface
+### Final Platform Decision: Next.js + Open-Source Stack
 
-All prompts funnel through this CLAUDE.md. Do not copy instructions elsewhere.
+**PLATFORM CHOSEN: Custom Next.js with Open-Source Tools**
+
+**Reasoning:**
+- User requirement: "We want free and open source"
+- User requirement: "Breaking up with the corporate overlords"
+- User confirmation: "Custom next.js"
+- Budget-conscious approach with professional results
+- Complete control and ownership of all code and content
+
+### The Complete Open-Source Stack
+
+See `OPEN-SOURCE-STACK.md` for detailed implementation guide.
+
+| Component | Tool | Cost | License |
+|-----------|------|------|---------|
+| **Frontend** | Next.js 14+ (App Router) | $0 | MIT (Open-Source) |
+| **Hosting** | Cloudflare Pages | $0 | N/A (Free Service) |
+| **CMS** | Decap CMS (git-based) | $0 | MIT (Open-Source) |
+| **Forms** | Web3Forms | $0 | Free Service |
+| **Booking** | Cal.com (self-hosted) | $0 | AGPL (Open-Source) |
+| **Analytics** | Umami (self-hosted) | $0 | MIT (Open-Source) |
+| **Email** | Resend | $0 | Free tier (100/day) |
+| **Images** | Cloudinary | $0 | Free tier (25GB) |
+
+**Total monthly cost:** $0
+**Total annual cost:** $12 (domain registration only)
+
+### Architecture Overview
+
+```
+Users
+  ↓
+Cloudflare Pages CDN (Global Edge Network)
+  ↓
+Next.js 14 Static Site (App Router)
+  ↓
+Content: Markdown files in Git
+  ↓
+Decap CMS Admin (/admin) → Git Repository → Auto-deploy
+```
+
+**Key Benefits:**
+- No server to manage (static export + edge deployment)
+- No database to maintain (content as markdown files)
+- No vendor lock-in (everything open-source)
+- Automatic deployments (git push = deploy)
+- Global CDN (fast worldwide)
+- Unlimited bandwidth (Cloudflare Pages free tier)
+
+### CMS Decision: Decap CMS (Git-Based)
+
+**Why Decap CMS:**
+- 100% open-source (MIT license, no vendor)
+- Git-based workflow (content = markdown files in repo)
+- No database required (files are the database)
+- No hosting cost (runs in browser)
+- Version control for all content (full history)
+- Works offline (local development)
+
+**Alternatives Considered:**
+- Sanity.io: Proprietary, has free tier but vendor lock-in
+- Contentful: Expensive ($300/month), proprietary
+- Strapi: Requires database hosting, more complex
+- WordPress: Not JAMstack, requires PHP hosting
+
+**Decision:** Decap CMS aligns perfectly with "free and open source" requirement
+
+### Inquiry System Implementation
+
+**Contact Forms: Web3Forms**
+- 100% free (unlimited submissions)
+- No backend required (API endpoint)
+- Spam protection included
+- Email notifications
+- 5-minute setup
+
+**Booking: Cal.com (Self-Hosted)**
+- Open-source Calendly alternative (AGPL license)
+- Deploy free on Vercel or Railway
+- Connect to Google Calendar
+- Customizable booking pages
+- No per-booking fees
+
+**Email: Resend**
+- 100 emails/day free tier
+- Modern API (better than SendGrid/Mailgun)
+- React Email templates
+- For automation, migrate to Listmonk (self-hosted, unlimited)
+
+**Client Management:**
+- Start: Google Workspace (email + calendar + drive)
+- Build custom portal later in Next.js (you own the code)
+
+### What Can Be Done NOW (Platform Decision Made)
+
+**Next steps to begin implementation:**
+
+1. **Purchase domain** (15 min, $12-15)
+   - Buy nightfoxfilms.com
+   - Use Namecheap or Cloudflare Registrar
+   - Don't connect yet (will configure with Cloudflare Pages)
+
+2. **Set up development environment** (30 min)
+   - Install Node.js 18+ and npm
+   - Install Git (if not already)
+   - Clone this repository locally
+   - See OPEN-SOURCE-STACK.md for detailed setup
+
+3. **Create Next.js project** (15 min)
+   - Run: `npx create-next-app@latest nightfoxfilms-site`
+   - Choose: App Router, TypeScript, Tailwind CSS
+   - Initialize git repository
+   - See OPEN-SOURCE-STACK.md Step 1
+
+4. **Deploy to Cloudflare Pages** (15 min)
+   - Connect GitHub repository
+   - Configure build settings
+   - Get live preview URL
+   - See OPEN-SOURCE-STACK.md Step 2
+
+5. **Set up Decap CMS** (20 min)
+   - Add config.yml for CMS admin
+   - Configure collections (pages, services, blog, archive)
+   - Enable GitHub OAuth
+   - Access admin at yourdomain.com/admin
+
+**Total setup time: 2 hours to live site**
+
+### Implementation Timeline (8-Week Launch)
+
+**Week 1: Foundation**
+- Day 1-2: Set up Next.js project and deploy to Cloudflare Pages
+- Day 3-4: Configure Decap CMS and create content collections
+- Day 5-7: Build home page layout and navigation
+
+**Week 2-3: Core Pages**
+- Week 2: Services page, About page, Contact page
+- Week 3: FAQ page, Pricing page, Archive structure
+
+**Week 4-5: Content & Features**
+- Week 4: Import all copy from wireframes/, add forms
+- Week 5: Set up Cal.com booking, integrate Web3Forms
+
+**Week 6-7: Polish & SEO**
+- Week 6: Add Umami analytics, optimize images
+- Week 7: SEO metadata, sitemap, robots.txt
+
+**Week 8: Launch**
+- Test all features and forms
+- Connect custom domain
+- Go live and start marketing
+
+**Detailed implementation: See OPEN-SOURCE-STACK.md**
+
+### Common Mistakes to Avoid
+
+**DON'T:**
+- Skip the official Next.js tutorial (invest 2 hours to save 20)
+- Ignore TypeScript errors (fix them immediately)
+- Deploy without testing locally first
+- Hardcode content (use CMS from day one)
+- Over-complicate the design (start simple, iterate)
+
+**DO:**
+- Follow Next.js App Router patterns (official docs)
+- Use static generation for all pages (fast, free)
+- Test on mobile first (most users on phones)
+- Set up analytics from day one (Umami)
+- Version control everything (git commit often)
+- Reference OPEN-SOURCE-STACK.md for step-by-step guidance
+
+---
+
+## SUMMARY
+
+**Every task, every time:**
+1. Read context (claude.md, techguide.md, lilbits.md, user prompt)
+2. Search and read relevant files
+3. Make a plan
+4. Design core logic
+5. Audit the plan
+6. Write implementation guide
+7. Audit the guide
+8. Write technical documentation
+9. Write the code
+10. Audit the code
+11. Update all documentation
+
+**Every decision:**
+- KISS - Keep it simple
+- FAANG PE - Enterprise quality
+- BPL - Build for long-term
+- BPA - Follow best practices
+- NME - No emojis
+- WWYDD - Suggest improvements
+- DRETW - Use existing solutions
+- LILBITS - Modular scripts
+
+---
+
+**Last Review:** 2025-11-18
+**Next Review:** When THE RULES need updating or process improvements identified
