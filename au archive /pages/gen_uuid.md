@@ -1,0 +1,20 @@
+- Objective
+	- creates a unique uuid4 when called
+-
+- Script
+	- gen_uuid.py
+-
+- steps
+	- generate a uuid4 in python when called
+	- load database #auarchive
+	- check tables
+		- locs
+			- locid
+		- slocs
+			- subid
+		- urls
+			- urlid
+	- if the first 12 digits of the are not unique generate a new uuid4
+	- if the uuid is not unique generate a new uuid4 until this step passes
+	- id:: 691f6f4b-c904-4287-a187-4ad8d4dcd6c9
+-

@@ -1,0 +1,16 @@
+- objective
+	- creates organized folders
+-
+- load
+	- #auarchive
+		- check tables/columns
+			- #locloc
+			- #imgloc
+			- #vidloc
+			- #maploc
+			- #docloc
+		- if null create folders
+			- #json_folders
+		- verify folders
+		- record in database
+- ## 1 Linked Reference

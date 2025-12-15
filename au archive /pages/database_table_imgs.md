@@ -1,0 +1,17 @@
+- purpose:
+	- database_table_imgs.json
+-
+- rows:
+	- blank
+-
+- columns
+	- #imgsha
+	- #imgnam
+	- #imgloc
+	- #auth_imp
+	- #meta_exiftool
+	- #imgloco
+	- #imgnamo
+	- #locid
+	- #subid
+-

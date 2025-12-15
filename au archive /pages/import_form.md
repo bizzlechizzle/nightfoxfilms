@@ -1,0 +1,83 @@
+- location name - sub-location [box]
+	- location name
+		- mandatory
+		- text input
+		- autofill as you type
+		- #locnam
+	- sub-location
+		- checkbox
+- -sub-location name -  primary [box] [this shows up only if sub-location box is checked]
+	- sub-location name
+		- mandatory
+		- text input
+		- autofill as you type
+		- #subnam
+	- primary sub-location
+		- checkbox
+- short name - aka name
+	- text input
+		- short name
+		- automatically generated if not filled #slugify
+		- 12 character max
+		- #slocnam
+	- aka name
+		- also known as
+		- #akanam
+- type - sub-type
+	- text input
+	- autofill as you type
+	- type
+		- #type
+	- sub-type
+		- #stype
+- author
+	- text input
+	- autofill as you type
+	- #auth_imp
+- condition - status
+	- dropdown
+		- #condition
+		- #status
+- documentation - access
+	- dropdown
+	- Documentation
+		- Interior + Exterior
+		- Exterior Only
+		- Perimeter Only
+		- Drive-By
+		- No Visit / Keyboard Scout
+		- Drone Only
+		- #documentation
+	- Access
+		- Abandoned
+		- Vacant
+		- Active
+		- Partially Active
+		- Unknown
+		- Tresspassing
+		- #access
+- Street Address
+	- text input
+	- autofill as you type
+	- number and street
+	- #street
+- State - City - Zipcode
+	- #state
+		- mandatory
+		- 2 Digit Postal Abbreviation
+	- #city
+	- #zipcode
+- county - historical [box]
+	- #county
+		- text entry
+	- #historic
+		- checkbox
+- #gps
+	- single text box
+	- accepts all inputs
+-
+- advanced
+	- input forms not visible to user
+		- #gps_leaflet
+		- #map_verified
+-

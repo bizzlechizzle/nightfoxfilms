@@ -1,0 +1,21 @@
+- edit - update
+	- buttons
+	- top right justified
+- #heroimage
+	- image place holder use #logo
+- #locnam [header]
+- #akaname - #condition
+- #type - #stype - #status
+- #documentation - #access
+- #address - #gps
+- #note-box
+- #usernotes
+- #bookmarks
+	- list
+- #documents
+	- list
+- #images
+	- list
+- #videos
+	- list
+- #nerdstats

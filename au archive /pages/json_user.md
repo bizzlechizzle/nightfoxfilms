@@ -1,0 +1,9 @@
+- purpose: user.json
+-
+- location
+	- #folder_archive
+-
+- input
+	- #deleteonimport
+	- #loginrequired
+	-

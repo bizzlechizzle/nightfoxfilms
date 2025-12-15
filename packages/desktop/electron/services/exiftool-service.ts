@@ -1,0 +1,232 @@
+/**
+ * ExifTool Service
+ *
+ * Metadata extraction using exiftool-vendored.
+ * Handles EXIF, IPTC, XMP and video metadata.
+ */
+
+import { ExifTool, Tags } from 'exiftool-vendored';
+import type { ExifToolResult } from '@nightfox/core';
+
+// Singleton ExifTool instance
+let exiftool: ExifTool | null = null;
+
+/**
+ * Get or create ExifTool instance
+ */
+function getExifTool(): ExifTool {
+  if (!exiftool) {
+    exiftool = new ExifTool({
+      maxProcs: 4,
+      taskTimeoutMillis: 30000,
+    });
+  }
+  return exiftool;
+}
+
+/**
+ * Close ExifTool instance (call on app shutdown)
+ */
+export async function closeExifTool(): Promise<void> {
+  if (exiftool) {
+    await exiftool.end();
+    exiftool = null;
+  }
+}
+
+/**
+ * Get all metadata for a file
+ */
+export async function getMetadata(filePath: string): Promise<Tags> {
+  const et = getExifTool();
+  return et.read(filePath);
+}
+
+/**
+ * Get metadata as JSON string (for storage)
+ */
+export async function getMetadataJson(filePath: string): Promise<string> {
+  const metadata = await getMetadata(filePath);
+  return JSON.stringify(metadata);
+}
+
+/**
+ * Extract key info from ExifTool output
+ */
+export interface MediaInfo {
+  make: string | null;
+  model: string | null;
+  createDate: Date | null;
+  duration: number | null;
+  width: number | null;
+  height: number | null;
+  frameRate: number | null;
+  mimeType: string | null;
+}
+
+/**
+ * Parse metadata into simplified MediaInfo
+ */
+export function parseMediaInfo(tags: Tags): MediaInfo {
+  // Parse create date
+  let createDate: Date | null = null;
+  const dateFields = ['CreateDate', 'DateTimeOriginal', 'MediaCreateDate', 'ModifyDate'];
+  for (const field of dateFields) {
+    const value = (tags as any)[field];
+    if (value) {
+      if (value instanceof Date) {
+        createDate = value;
+      } else if (typeof value === 'string') {
+        createDate = new Date(value);
+      } else if (value.rawValue) {
+        createDate = new Date(value.rawValue);
+      }
+      if (createDate && !isNaN(createDate.getTime())) break;
+      createDate = null;
+    }
+  }
+
+  // Parse duration (can be in various formats)
+  let duration: number | null = null;
+  const durationValue = (tags as any).Duration;
+  if (durationValue) {
+    if (typeof durationValue === 'number') {
+      duration = durationValue;
+    } else if (typeof durationValue === 'string') {
+      // Parse "HH:MM:SS" or "SS.ms" format
+      if (durationValue.includes(':')) {
+        const parts = durationValue.split(':').map(Number);
+        if (parts.length === 3) {
+          duration = parts[0] * 3600 + parts[1] * 60 + parts[2];
+        } else if (parts.length === 2) {
+          duration = parts[0] * 60 + parts[1];
+        }
+      } else {
+        duration = parseFloat(durationValue);
+      }
+    }
+  }
+
+  return {
+    make: (tags as any).Make ?? null,
+    model: (tags as any).Model ?? null,
+    createDate,
+    duration,
+    width: (tags as any).ImageWidth ?? (tags as any).ExifImageWidth ?? null,
+    height: (tags as any).ImageHeight ?? (tags as any).ExifImageHeight ?? null,
+    frameRate: (tags as any).VideoFrameRate ?? null,
+    mimeType: (tags as any).MIMEType ?? null,
+  };
+}
+
+/**
+ * Get simplified media info for a file
+ */
+export async function getMediaInfo(filePath: string): Promise<MediaInfo> {
+  const tags = await getMetadata(filePath);
+  return parseMediaInfo(tags);
+}
+
+/**
+ * Get camera make and model
+ */
+export async function getCameraInfo(filePath: string): Promise<{ make: string | null; model: string | null }> {
+  const tags = await getMetadata(filePath);
+  return {
+    make: (tags as any).Make ?? null,
+    model: (tags as any).Model ?? null,
+  };
+}
+
+/**
+ * Get file creation date
+ */
+export async function getCreateDate(filePath: string): Promise<Date | null> {
+  const info = await getMediaInfo(filePath);
+  return info.createDate;
+}
+
+/**
+ * Check if file has GPS data
+ */
+export async function hasGpsData(filePath: string): Promise<boolean> {
+  const tags = await getMetadata(filePath);
+  return (tags as any).GPSLatitude !== undefined && (tags as any).GPSLongitude !== undefined;
+}
+
+/**
+ * Get GPS coordinates
+ */
+export async function getGpsCoordinates(
+  filePath: string
+): Promise<{ latitude: number; longitude: number } | null> {
+  const tags = await getMetadata(filePath);
+  const lat = (tags as any).GPSLatitude;
+  const lng = (tags as any).GPSLongitude;
+
+  if (lat === undefined || lng === undefined) {
+    return null;
+  }
+
+  return {
+    latitude: typeof lat === 'number' ? lat : parseFloat(lat),
+    longitude: typeof lng === 'number' ? lng : parseFloat(lng),
+  };
+}
+
+/**
+ * Get video-specific metadata
+ */
+export async function getVideoExifMetadata(filePath: string): Promise<{
+  duration: number | null;
+  width: number | null;
+  height: number | null;
+  frameRate: number | null;
+  codec: string | null;
+  rotation: number | null;
+}> {
+  const tags = await getMetadata(filePath);
+
+  let duration: number | null = null;
+  const durationValue = (tags as any).Duration;
+  if (typeof durationValue === 'number') {
+    duration = durationValue;
+  } else if (typeof durationValue === 'string') {
+    duration = parseFloat(durationValue);
+  }
+
+  return {
+    duration,
+    width: (tags as any).ImageWidth ?? null,
+    height: (tags as any).ImageHeight ?? null,
+    frameRate: (tags as any).VideoFrameRate ?? null,
+    codec: (tags as any).CompressorName ?? (tags as any).VideoCodec ?? null,
+    rotation: (tags as any).Rotation ?? null,
+  };
+}
+
+/**
+ * Convert ExifTool Tags to our ExifToolResult format
+ */
+export function toExifToolResult(tags: Tags, filePath: string): ExifToolResult {
+  return {
+    SourceFile: filePath,
+    FileName: (tags as any).FileName ?? '',
+    FileSize: (tags as any).FileSize ?? '',
+    FileType: (tags as any).FileType ?? '',
+    MIMEType: (tags as any).MIMEType ?? '',
+    Make: (tags as any).Make,
+    Model: (tags as any).Model,
+    CreateDate: (tags as any).CreateDate?.toString(),
+    ModifyDate: (tags as any).ModifyDate?.toString(),
+    Duration: (tags as any).Duration,
+    ImageWidth: (tags as any).ImageWidth,
+    ImageHeight: (tags as any).ImageHeight,
+    VideoFrameRate: (tags as any).VideoFrameRate,
+    AudioChannels: (tags as any).AudioChannels,
+    AudioSampleRate: (tags as any).AudioSampleRate,
+    GPSLatitude: (tags as any).GPSLatitude?.toString(),
+    GPSLongitude: (tags as any).GPSLongitude?.toString(),
+    ...tags,
+  };
+}

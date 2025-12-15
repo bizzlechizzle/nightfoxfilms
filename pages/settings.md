@@ -1,0 +1,4 @@
+- user preference file / settings in gui
+-
+- settings
+	- save location

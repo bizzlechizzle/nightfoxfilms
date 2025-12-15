@@ -1,0 +1,1 @@
+- vhs (super vhs 400TVL), mini-dv, and digital camcorder footage

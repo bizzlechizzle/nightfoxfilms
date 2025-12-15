@@ -1,0 +1,14 @@
+- screenshot tool for social media
+-
+- screenshots raw footage (applies lut if needed)
+- screenshots edited footage (no lut needed)
+-
+- resolutions needed
+	- original aspect ratio
+	- vertical
+	- square
+	- 4:3
+-
+- tools needed
+	- sharpness detection
+	- smart cropping

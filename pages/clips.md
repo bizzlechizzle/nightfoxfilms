@@ -1,0 +1,19 @@
+- clips are for social media sharing
+-
+- clips raw footage (applies lut if needed)
+	- audio normalization
+- clips edited footage (no lut needed)
+-
+- clip types
+	- single scene
+	- multi scene
+-
+- resolutions needed
+	- original aspect ratio
+	- vertical
+	- square
+	- 4:3
+-
+- tools needed
+	- scene detection
+	- smart cropping

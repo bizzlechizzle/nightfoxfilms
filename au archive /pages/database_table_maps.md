@@ -1,0 +1,23 @@
+- purpose:
+	- database_table_maps.json
+-
+- rows:
+	- blank
+-
+- columns
+	- #mapsha
+	- #mapnam
+	- #maploc
+	- #auth_imp
+	- #meta_exiftool
+	- #meta_map
+	- #maploco
+	- #mapnamo
+	- #locid
+	- #subid
+	- #reference
+	- #map_states
+	-
+-
+-
+-

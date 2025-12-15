@@ -1,0 +1,149 @@
+---
+title: Landwehr Century Farm
+seoTitle: Landwehr Century Farm Homestead | Abandoned Upstate
+pubDatetime: 2015-03-07 03:00:00-05:00
+description: Historic Stearns County farm
+seoDescription: Explore Landwehr Century Farm in Stearns County, Minnesota, a 19th-century yellow brick homestead preserved by generations of the Landwehr family.
+featured: false
+draft: false
+state: minnesota
+
+county: stearns
+city: st augusta
+region: 
+category: houses
+status: demolished
+
+built_year: 1870
+abandoned_year: 2010
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- farmhouses
+heroImage: ../assets/images/landwehr-century-farm/landwehr-century-farm-exterior-house.jpg
+heroImageAlt: "Yellow brick farmhouse at Landwehr Century Farm in St. Augusta, Minnesota"
+seoImage: ../assets/images/landwehr-century-farm/landwehr-century-farm-interior-vintage-stove.jpg
+canonicalURL: https://abandonedupstate.com/landwehr-century-farm/
+author: Jessica Olson
+galleryImages:
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-vintage-stove.jpg"
+    caption: "Vintage General Electric stove in the farmhouse kitchen"
+    seoCaption: "Vintage General Electric stove inside the abandoned Landwehr Century Farm kitchen"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-kitchen-sink.jpg"
+    caption: "Porcelain drainboard sink beneath patterned wallpaper"
+    seoCaption: "Porcelain drainboard kitchen sink with peeling wallpaper at Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-red-chair.jpg"
+    caption: "Red armchair draped with lace curtains"
+    seoCaption: "Red armchair draped in lace curtains inside Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-speas-gallon-glass-bottle.jpg"
+    caption: "Speas vinegar bottle on a dusty shelf"
+    seoCaption: "Speas gallon glass vinegar bottle left behind at Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-green-porch.jpg"
+    caption: "Green-painted enclosed porch with broken windows"
+    seoCaption: "Green enclosed porch at the abandoned Landwehr Century Farm house"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-floral-curtains.jpg"
+    caption: "Floral curtains hanging in the front room"
+    seoCaption: "Floral curtains filtering light inside Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-bathroom.jpg"
+    caption: "Freestanding medicine cabinet in the bathroom"
+    seoCaption: "Freestanding medicine cabinet inside Landwehr Century Farm bathroom"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-interior-staircase.jpg"
+    caption: "Upstairs hallway and staircase illuminated by skylight"
+    seoCaption: "Upstairs hallway staircase lit by a skylight at Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-exterior-barn.jpg"
+    caption: "Barn and silo overgrown with brush"
+    seoCaption: "Overgrown barn and silo at Landwehr Century Farm"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-exterior-sign.jpg"
+    caption: "Landwehr Century Farm sign established 1859"
+    seoCaption: "Landwehr Century Farm sign noting the homestead was established in 1859"
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-historic-1986-aieral.jpg"
+    caption: "1986 aerial photograph of Landwehr Century Farm"
+    seoCaption: "1986 aerial photograph showing the Landwehr Century Farm layout"
+    historical: true
+  - src: "@/assets/images/landwehr-century-farm/landwehr-century-farm-historic-2006-birdseye-aerial.jpg"
+    caption: "2006 bird's-eye aerial view of the farmstead"
+    seoCaption: "2006 bird's-eye aerial view of Landwehr Century Farm in St. Augusta"
+    historical: true
+---
+
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from '../assets/images/landwehr-century-farm/landwehr-century-farm-exterior-house.jpg';
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: 'Landwehr Century Farm yellow brick house',
+  seoCaption: 'Yellow brick farmhouse at Landwehr Century Farm in St. Augusta, Minnesota',
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="landwehr-century-farm"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: '#b9975c' }}>{frontmatter.description}</p>
+
+1800's Yellow Brick Farmhouse
+
+The Landwehr House is an abandoned farm in Stearns County, Minnesota. In 1859, Henry Landwehr ventured to St. Augusta township, where he acquired 160 acres and built a yellow brick farmhouse. The Landwehr legacy endured through successive generations, with Landwehr men and their families committing their lives to the farm. This longstanding tradition concluded with the passing of Roman Landwehr on June 14th, 2014.
+
+Subsequently, his wife Angie reached out to the Stearns History Museum, seeking recognition for the farm as a century farm — a title bestowed upon farm families that have maintained ownership of at least 50 acres continuously for 100 years or more.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="landwehr-century-farm"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="landwehr-century-farm"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Stearns History Museum — Century Farms Listing](https://stearnshistorymuseum.org/2020/01/20/stearns-county-century-farms-listing/)
+
+<div class="my-12"></div>

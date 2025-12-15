@@ -1,0 +1,2 @@
+- date map added to database
+- normalization #dateutil

@@ -1,0 +1,10 @@
+- slug location name
+	- max 12 characters
+- normalization
+	- unidecode
+	- titlecase
+	- slugification
+		- #slugify
+-
+-
+-

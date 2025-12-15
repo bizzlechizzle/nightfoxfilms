@@ -1,0 +1,14 @@
+- load #auarchive
+	- check tables/columns
+		- if null run #gen_uuid
+			- #locid
+			- #subid
+		- if null run #slugify
+			- #slocnam
+			- #ssubname
+		- if null run #gen_sha
+			- #imgsha
+			- #vidsha
+			- #mapsha
+			- #docsha
+-

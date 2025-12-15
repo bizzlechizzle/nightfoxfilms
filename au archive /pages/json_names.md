@@ -1,0 +1,13 @@
+- objective
+	- files naming schema
+	- named names.json
+-
+- name schema
+	- images
+		- sha256.extension
+	- videos
+		- sha256.extension
+	- documents
+		- sha256.extension
+	- maps
+		- sha256.extension

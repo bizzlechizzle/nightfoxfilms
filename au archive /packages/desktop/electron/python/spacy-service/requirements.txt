@@ -1,0 +1,17 @@
+# spaCy Extraction Service Dependencies
+#
+# Install with: pip install -r requirements.txt
+# Then download the model: python -m spacy download en_core_web_lg
+
+# Core NLP
+spacy>=3.7.0
+
+# Date parsing with pre-filtering
+dateparser>=1.2.0
+
+# FastAPI web framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+
+# Type validation
+pydantic>=2.5.0

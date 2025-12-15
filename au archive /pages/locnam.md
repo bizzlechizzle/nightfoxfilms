@@ -1,0 +1,5 @@
+- abandoned location name
+- normalization
+	- unidecode
+	- titlecase
+-

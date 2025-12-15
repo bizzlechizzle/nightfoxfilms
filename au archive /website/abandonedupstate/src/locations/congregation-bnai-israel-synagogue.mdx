@@ -1,0 +1,175 @@
+---
+title: Congregation B'Nai Israel Synagogue
+seoTitle: Congregation B'Nai Israel Synagogue | Abandoned Upstate
+pubDatetime: 2016-05-27 23:56:00+00:00
+description: The Oldest Synagogue in Rochester
+seoDescription: Discover Congregation B'Nai Israel Synagogue on Rochester's Joseph Avenue—the city's oldest surviving synagogue captured in haunting detail.
+featured: false
+state: new york
+
+county: monroe
+city: rochester
+region: 
+category: faith
+status: abandoned
+
+built_year: 1924
+abandoned_year: 2008
+lastmod: 2025-10-06T09:00:00-05:00
+draft: false
+tags:
+- synagogues
+heroImage: ../assets/images/congregation-bnai-israel/congregation-bnai-israel-exterior-synagogue.jpg
+heroImageAlt: "Front elevation of Congregation B'Nai Israel Synagogue on Joseph Avenue in Rochester, New York"
+seoImage: ../assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-sanctuary.jpg
+canonicalURL: https://abandonedupstate.com/congregation-bnai-israel-synagogue/
+author: Bryant Neal
+galleryImages:
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-exterior-2017-snow.jpg"
+    caption: "Snow-dusted facade on Joseph Avenue"
+    seoCaption: "2017 winter view of the Congregation B'Nai Israel exterior on Joseph Avenue"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-sanctuary.jpg"
+    caption: "Sanctuary facing the bimah"
+    seoCaption: "Sanctuary of Congregation B'Nai Israel with pews facing the bimah"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-prayer-hall-pews.jpg"
+    caption: "Prayer hall with flanking columns"
+    seoCaption: "Prayer hall of Congregation B'Nai Israel with wooden pews and flanking columns"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-pews.jpg"
+    caption: "Main floor pews in disrepair"
+    seoCaption: "Main floor pews inside Congregation B'Nai Israel showing years of neglect"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-stained-glass-windows-pews.jpg"
+    caption: "Stained glass over the north aisle"
+    seoCaption: "Stained glass windows filtering light over the north aisle pews"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-stained-glass.jpg"
+    caption: "Star of David stained glass detail"
+    seoCaption: "Close view of Star of David stained glass window at Congregation B'Nai Israel"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-pew-131.jpg"
+    caption: "Numbered pew 131"
+    seoCaption: "Numbered pew 131 along the sanctuary aisle"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-pew-47.jpg"
+    caption: "Numbered pew 47"
+    seoCaption: "Numbered pew 47 with peeling paint inside the sanctuary"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-pillar.jpg"
+    caption: "Decorated support column"
+    seoCaption: "Decorative column supporting the women's balcony inside the synagogue"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-chandelier.jpg"
+    caption: "Chandelier beneath a cracked ceiling"
+    seoCaption: "Chandelier hanging beneath a cracked plaster ceiling at Congregation B'Nai Israel"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-balcony.jpg"
+    caption: "Women's balcony overlooking the nave"
+    seoCaption: "Women's balcony overlooking the main nave of Congregation B'Nai Israel"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-stair-chandelier.jpg"
+    caption: "Staircase lit by a chandelier"
+    seoCaption: "Staircase lit by a chandelier inside Congregation B'Nai Israel Synagogue"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-basement.jpg"
+    caption: "Basement corridor with exposed piping"
+    seoCaption: "Basement corridor with exposed piping inside the synagogue"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-basement-stairs.jpg"
+    caption: "Basement stairwell with flaking paint"
+    seoCaption: "Basement stairwell with flaking paint inside Congregation B'Nai Israel"
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-interior-historic-1995-tax-photo.jpg"
+    caption: "1995 tax photograph of the sanctuary"
+    seoCaption: "1995 Monroe County tax photograph documenting the sanctuary"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-historic-1928-newspaper.jpg"
+    caption: "1928 Democrat & Chronicle clipping"
+    seoCaption: "May 1928 Democrat and Chronicle article announcing the synagogue dedication"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-historic-1928-synogoue.jpg"
+    caption: "1928 portrait of the congregation"
+    seoCaption: "1928 portrait of Congregation Ahavas Achim Anshi Austria on Joseph Avenue"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/congregation-bnai-israel/congregation-bnai-israel-historic-render-arts-center.jpg"
+    caption: "Future Joseph Avenue Arts Center rendering"
+    seoCaption: "Rendering of the Joseph Avenue Arts and Culture Alliance plan for the former synagogue"
+    historical: true
+    sourceURL: n/a
+---
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from "../assets/images/congregation-bnai-israel/congregation-bnai-israel-exterior-synagogue.jpg";
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "Congregation B'Nai Israel exterior on Joseph Avenue",
+  seoCaption: "Facade of Congregation B'Nai Israel Synagogue on Joseph Avenue in Rochester, New York",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || "";
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="congregation-bnai-israel-synagogue"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: "block", margin: "2rem 0" }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: "100%", borderRadius: "inherit" }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: "#b9975c" }}>{frontmatter.description}</p>
+
+Built in 1928 for Congregation Ahavas Achim Anshi Austria, the brick synagogue at 692 Joseph Avenue quickly became known as Congregation B'Nai Israel. It rose alongside thriving kosher markets and delis that once lined the corridor, and its twin entrance towers, stained glass, and meticulously numbered pews reflected the optimism of Rochester's north-side Jewish community.
+
+For decades the sanctuary hosted religious services, fundraisers, and neighborhood meetings, even as families gradually relocated to the suburbs following World War II. By the late twentieth century the congregation had merged elsewhere, yet locals continued to refer to the Joseph Avenue landmark as Temple B'Nai Israel—a name that still appears in community directories and on neighborhood tours. Subsequent church congregations kept the lights on for a time before deferred maintenance took its toll on the plaster, flooring, and balcony railings captured in these photographs.
+
+Today a coalition led by the Joseph Avenue Arts and Culture Alliance is working to stabilize the structure and reimagine it as a performing arts center and heritage hub. The effort has already earned recognition through a William G. Pomeroy Foundation historic marker and documentation on regional heritage registers, ensuring the story of Rochester's oldest surviving purpose-built synagogue remains in public view while plans for revival move forward.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="congregation-bnai-israel-synagogue"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="congregation-bnai-israel-synagogue"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Temple B'Nai Israel - Yelp](https://www.yelp.com/biz/temple-bnai-israel-rochester)
+- [Democrat and Chronicle — Joseph Avenue synagogue's arts center future](https://www.democratandchronicle.com/picture-gallery/news/2022/03/15/joseph-ave-1928-synagogue-future-home-arts-center/1367073002/)
+- [William G. Pomeroy Foundation — Congregation B'Nai Israel](https://www.wgpfoundation.org/historic-markers/congregation-bnai-israel/)
+- [Historical Marker Database — Congregation B'Nai Israel](https://www.hmdb.org/m.asp?m=166821)
+
+<div class="my-12"></div>

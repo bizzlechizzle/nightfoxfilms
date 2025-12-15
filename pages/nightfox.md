@@ -1,0 +1,21 @@
+- mac desktop app for managing nightfox films clients, files, etc
+-
+- Nightfox Films is a specialized wedding company that films modern weddings on vintage and modern mediums with above average quality
+-
+- built in stages
+-
+- #couples
+- #import
+- #settings
+-
+- mediums
+	- #dadcam
+	- #super8
+	- #modern
+-
+- #folder
+-
+- #tools
+	- #screenshot
+	- #clips
+	-

@@ -1,0 +1,12 @@
+- purpose:
+	- database_table_slocs.json
+-
+- rows
+	- blank
+-
+- columns
+	- #subnam
+	- #ssubname
+	- #subid
+	- #sub12
+	- #locid

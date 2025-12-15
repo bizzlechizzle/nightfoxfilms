@@ -1,0 +1,9 @@
+# Python virtual environment
+venv/
+
+# Model weights (download separately - too large for git)
+*.pth
+
+# Python cache
+__pycache__/
+*.pyc

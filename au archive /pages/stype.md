@@ -1,0 +1,2 @@
+- sub-location type
+- normalization: unidecode, titlecase

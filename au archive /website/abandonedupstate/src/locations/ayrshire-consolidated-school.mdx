@@ -1,0 +1,164 @@
+---
+title: Ayrshire Consolidated School
+seoTitle: Abandoned Ayrshire Consolidated School - Ayrshire, IA
+pubDatetime: 2018-04-07 03:00:00
+description: Home of the Ayrshire Beavers
+seoDescription: Ayrshire Consolidated School is located in Palo Alto County, Iowa. The school was built around 1920 and officially closed its doors in 1982.
+featured: false
+draft: false
+
+state: iowa
+county: palo alto
+city: ayrshire
+region:
+
+category: schools
+status: abandoned
+
+built_year: 1920
+abandoned_year: 1982
+lastmod: 2025-10-06T09:00:00-05:00
+
+tags:
+- gymnasiums
+
+heroImage: ../assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-exterior-iowa.jpg
+heroImageAlt: "Abandoned Ayrshire Consolidated School - Ayrshire, IA"
+seoImage: ../assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-exterior-iowa.jpg
+canonicalURL: https://abandonedupstate.com/ayrshire-consolidated-school/
+author: Jessica Olson
+galleryImages:
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-blue-classroom.jpg"
+    caption: "Blue classroom lined with wooden desks"
+    seoCaption: "Blue classroom with wooden desks inside the abandoned Ayrshire school"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-blue-bathroom.jpg"
+    caption: "Blue tiled bathroom with broken stalls"
+    seoCaption: "Blue tiled bathroom stalls inside Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-science-lab.jpg"
+    caption: "Science lab with built-in counters"
+    seoCaption: "Science lab counters inside Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-practice-book.jpg"
+    caption: "Handwriting practice book left on a desk"
+    seoCaption: "Handwriting practice book left behind inside Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-classroom-curtains-chair.jpg"
+    caption: "Curtained classroom with a single chair"
+    seoCaption: "Curtained classroom corner with a lone chair inside Ayrshire school"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-blue-bathroom-vertical.jpg"
+    caption: "Utility sink at the end of the blue bathroom"
+    seoCaption: "Utility sink at the end of the blue tiled bathroom in Ayrshire school"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-teal-classroom.jpg"
+    caption: "Teal classroom with chalkboard maps"
+    seoCaption: "Teal-painted classroom with chalkboard maps in Ayrshire school"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-stairway.jpg"
+    caption: "Central stairwell with peeling paint"
+    seoCaption: "Peeling paint along the central stairwell inside Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-coral-chalkboard.jpg"
+    caption: "Coral chalkboard covered in lessons"
+    seoCaption: "Coral-colored classroom chalkboard still covered in lessons"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-hallway-winter.jpg"
+    caption: "Snow-dusted hallway on the main level"
+    seoCaption: "Snow dusting the hallway of the abandoned Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-interior-gymnasium.jpg"
+    caption: "Gymnasium with faded green walls"
+    seoCaption: "Faded green walls and basketball hoops inside Ayrshire school gymnasium"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-exterior-metal-slides.jpg"
+    caption: "Rusting playground slides behind the school"
+    seoCaption: "Rusting metal playground slides behind Ayrshire Consolidated School"
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-historical-class-of-1927.jpg"
+    caption: "Class of 1927 portrait"
+    seoCaption: "Historic portrait of the Ayrshire Consolidated School Class of 1927"
+    historical: true
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-historical-class-of-1956.jpg"
+    caption: "Class of 1956 portrait"
+    seoCaption: "Historic portrait of the Ayrshire Consolidated School Class of 1956"
+    historical: true
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-historical-ayrshire-beavers-tshirt.jpg"
+    caption: "Ayrshire Beavers gym shirt"
+    seoCaption: "Vintage Ayrshire Beavers physical education T-shirt"
+    historical: true
+  - src: "@/assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-historical-exterior-date-unknown.jpg"
+    caption: "Historic exterior view of the school"
+    seoCaption: "Historic exterior photograph of Ayrshire Consolidated School"
+    historical: true
+
+---
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from '../assets/images/ayrshire-consolidated-school/ayrshire-consolidated-school-exterior-iowa.jpg';
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "Ayrshire Consolidated School exterior",
+  seoCaption: "Abandoned Ayrshire Consolidated School exterior in Iowa",
+};
+
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="ayrshire-consolidated-school"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: '#b9975c' }}>{frontmatter.description}</p>
+
+Ayrshire Consolidated School, situated in Palo Alto County, Iowa, has remained abandoned for over four decades. Erected around 1920, the school flourished as one of two educational institutions in Ayrshire, undergoing expansion with a substantial gym addition in 1968. Corresponding with the abandonment of the Chicago and North Western Railways lines, the school officially closed its doors in 1982.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="ayrshire-consolidated-school"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="ayrshire-consolidated-school"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Iowa Schools - Ayrshire Consolidated School](http://www.iowaschools.com/school.cfm?SchoolID=709)
+- [Fillmore County Journal - One Moment Please: When a School Dies](https://fillmorecountyjournal.com/one-moment-please-when-a-school-dies/)
+
+<div class="my-12"></div>

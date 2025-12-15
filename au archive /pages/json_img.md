@@ -1,0 +1,2 @@
+- list of supported images
+	- if exiftool supports it, we import it

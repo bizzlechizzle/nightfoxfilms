@@ -1,0 +1,157 @@
+---
+title: The Dog House (Barndominium)
+seoTitle: The Dog House (Abandoned Barndominium) - Owego, NY
+pubDatetime: 2021-09-27 08:18:00-04:00
+description: Cornell Grad’s Abandoned Dog House
+seoDescription: The Dog House is an abandoned half-residence and half-barn located within a barn near in Owego, New York. The property's history traces back to 1870, with the barn itself constructed in 1948. 
+featured: false
+draft: false
+state: new york
+
+county: tioga
+city: owego
+region: 
+category: houses
+status: abandoned
+
+built_year: 1950
+abandoned_year: 2015
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- motorcycles
+heroImage: ../assets/images/the-dog-house-barndominium/dog-barndominium-exterior-abandoned-barndominium.jpg
+heroImageAlt: "Abandoned Dog House barndominium near Owego in Tioga County, New York"
+seoImage: ../assets/images/the-dog-house-barndominium/dog-barndominium-interior-living-room.jpg
+canonicalURL: https://abandonedupstate.com/the-dog-house-barndominium/
+author: Bryant Neal
+galleryImages:
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-exterior-overgrown-house.jpg"
+    caption: "Overgrown Barndominium (House)"
+    seoCaption: "The Dog House exterior nearly hidden beneath a weeping willow and dense overgrowth"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-exterior-red-honda-cx-500.jpg"
+    caption: "Entry Door/Honda CX500 Custom"
+    seoCaption: "Entry door and Honda CX500 Custom inside the collapsed lean-to at the abandoned Dog House barndominium in Tioga County NY"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-exterior-yamaha-enduro-175-blue.jpg"
+    caption: "Yamaha Enduro 175"
+    seoCaption: "Abandoned Yamaha Enduro 175 motorcycle parked beside the Dog House barndominium in Owego NY"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-collaped-kitchen.jpg"
+    caption: "Open Floor Plan Kitchen"
+    seoCaption: "Kitchen with collapsed walls and vines creeping over vintage appliances"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-living-room.jpg"
+    caption: "Disorganized Living Room"
+    seoCaption: "Disorganized retro living room inside the Dog House barndominium in Upstate New York"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-cornell-grad.jpg"
+    caption: "Cornell Graduate and her dog."
+    seoCaption: "Wallet photograph of a Cornell graduate and her dog found inside the abandoned home in Tioga County NY"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-white-smith-ski-goggels.jpg"
+    caption: "Smith Snow Boarding Goggles"
+    seoCaption: "1980s Smith snowboarding goggles on a bookshelf inside the abandoned barndominium"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-1980s-cornell-folder.jpg"
+    caption: "Big Red Paper Company Folder"
+    seoCaption: "Green Cornell folder covered in dust inside the barndominium"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-bedroom.jpg"
+    caption: "Bedroom with Blouses and Purses"
+    seoCaption: "Blue bedroom with pink blouse and leather purse inside the Dog House barndominium, Southern Tier NY"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-metal-roller-skate-box.jpg"
+    caption: "Metal Roller Skates Box"
+    seoCaption: "Vintage red-white-and-blue metal roller-skate box found inside the Dog House barndominium"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-cornell-university-notebook.jpg"
+    caption: "Cornell University Notebook"
+    seoCaption: "Yellow Cornell University notebook recovered from inside the Dog House barndominium"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-interior-wheel-horse-tractor.jpg"
+    caption: "Wheel Horse Tractor"
+    seoCaption: "Wheel Horse tractor stored inside the barn section of the Dog House property"
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-historic-2021-google-maps.jpg"
+    caption: "2021 Satellite Image - Image courtesy of Google Maps"
+    seoCaption: "2021 satellite Image - image courtesy of Google Maps"
+    historical: true
+    sourceURL: https://vintageaerial.com/photos/search?q=owego+ny&ref=home-search
+  - src: "@/assets/images/the-dog-house-barndominium/dog-barndominium-historic-1989-aerial.jpg"
+    caption: "1989 Aerial Photograph - Image courtesy of Vintage Aerial"
+    seoCaption: "1989 aerial photograph showing the Dog House barndominium and surrounding farmland - Image courtesy of Vintage Aerial"
+    historical: true
+    sourceURL: https://vintageaerial.com/photos/search?q=owego+ny&ref=home-search
+---
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from '../assets/images/the-dog-house-barndominium/dog-barndominium-exterior-abandoned-barndominium.jpg';
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "The Dog House - An Abandoned Barndominium of a Cornell Grad",
+  seoCaption: "Abandoned Dog House barndominium exterior near Owego, New York",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="the-dog-house-barndominium"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: '#b9975c' }}>{frontmatter.description}</p>
+
+The Dog House is an abandoned residence nestled within a barn near the Pennsylvania border in Tioga County, New York. The property's history traces back to 1870, with the barn itself constructed in 1948, likely replacing the original structure. The conversion into a makeshift half-residence and half-barn likely occurred in the early 1970s.
+
+The circumstances surrounding how a Cornell graduate came to reside in this unconventional dwelling remain shrouded in mystery. Remarkably, she remains active on social media and has garnered recognition as a judge in various dog competitions. The Cornell graduate vacated the premises in 1990, only a handful months after the included aerial photograph was taken, leaving no doubt that she was living here, if not indoors in the historic photo.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="the-dog-house-barndominium"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="the-dog-house-barndominium"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Vintage Aerial - Tioga County, NY](https://vintageaerial.com/photos/new-york/tioga)
+- [Real Property & Assessment Roll - Tioga County, NY](https://tiogacountyny.com/departments/real-property-assessment-rolls/)
+- [Satellite View - Google Maps](https://www.google.com/maps/place/Tioga+County,+NY/@42.2043274,-76.3221276)
+
+
+<div class="my-12"></div>

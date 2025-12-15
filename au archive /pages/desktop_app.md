@@ -1,0 +1,32 @@
+- version 0.1.0
+	- first build, from scratch
+-
+- electron
+-
+- platform
+	- linux
+	- mac-os
+	- windows (future)
+-
+- database
+	- #auarchive
+		- SQLite
+-
+- multiple local users - logs who researched what and stuff
+-
+- left menu
+	- #page_dashboard
+	- #page_locations
+	- #page_web-browser
+	- #page_imports
+	- #page_search
+	- #page_settings
+	- #page_atlas
+-
+- pages
+	- #page_location
+	- #page_sublocation
+	- #page_hostlocation
+-
+- startup
+	- #health_check

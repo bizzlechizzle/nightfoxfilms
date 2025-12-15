@@ -1,0 +1,87 @@
+- Objective
+	- Searchable database of US locations and regions for autofill, normalization, and mapping.
+- Script
+	- addresslookup.py
+- Database
+	- address_lookup_us.db
+- Tables
+	- countries
+		- Rows:
+			- US
+		- Optional: GPS boundary via boundaries table
+	- states
+		- All 50 states (+ DC if you want)
+		- Optional: GPS boundaries via boundaries table
+	- regions
+		- Holds ALL region types:
+			- Census divisions (9)
+			- Directional regions (14)
+				- Cardinals
+					- North
+					- South
+					- East
+					- West
+				- Intercardinals
+					- Northeast
+					- Northwest
+					- Southeast
+					- Southwest
+				- Pure Central
+					- Central
+				- Cardinal + Central
+					- North Central
+					- South Central
+					- East Central
+					- West Central
+				- (Note: don’t list Central twice)
+			- Cultural regions
+				- Custom per-state regions (e.g. Finger Lakes, Southern Tier)
+				- States may be N/A
+				- GPS boundaries (can be guesstimated)
+			- User regions
+				- User-defined regions
+				- GPS boundaries
+		- Columns (conceptual):
+			- id
+			- name
+			- slug
+			- level    ( 'census_div', 'directional', 'cultural', 'user' )
+			- state_id (nullable; used for cultural/user regions)
+			- description
+	- region_members
+		- Connects regions to actual geography:
+			- region_id
+			- state_id (nullable)
+			- county_id (nullable)
+			- city_id (nullable)
+		- Examples:
+			- “Finger Lakes” = these counties
+			- “North” = these counties or states
+			- “User Region A” = these cities
+	- counties
+		- All counties
+		- state_id
+		- Optional: GPS boundaries via boundaries table
+	- cities
+		- City/place names, tied to state and (optionally) county
+	- zips
+		- ZIP codes mapped to state / city / county
+	- boundaries
+		- Unified GPS boundaries / polygons for:
+			- countries  (ref_type='country')
+			- states     (ref_type='state')
+			- counties   (ref_type='county')
+			- regions    (ref_type='region')
+		- Columns (conceptual):
+			- id
+			- ref_type  ('country' | 'state' | 'county' | 'region')
+			- ref_id
+			- geom      (GeoJSON or WKB polygon)
+	- fts_search
+		- FTS table indexing:
+			- states
+			- counties
+			- cities
+			- zips
+			- regions (including user regions)
+		- For fast autocomplete across everything.

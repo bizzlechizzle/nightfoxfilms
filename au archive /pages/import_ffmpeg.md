@@ -1,0 +1,5 @@
+- import_ffmpeg.py
+-
+- #auarchive
+	- check #meta_ffmpeg in all columns, if null run #ffmpeg / ffprobe dump
+	- record all data in json1 format

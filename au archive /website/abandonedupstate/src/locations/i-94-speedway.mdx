@@ -1,0 +1,165 @@
+---
+title: I-94 Speedway
+seoTitle: I-94 Speedway Abandoned Racetrack | Abandoned Upstate
+pubDatetime: 2015-04-29 03:00:00-05:00
+description: Minnesota's First Asphalt Speedway
+seoDescription: Relive Minnesota's first asphalt racetrack at the abandoned I-94 Speedway near Sauk Centre, with weathered grandstands and fading sponsor walls.
+featured: false
+draft: false
+state: minnesota
+
+county: stearns
+city: sauk centre
+region: 
+category: businesses
+status: demolished
+
+built_year: 1967
+abandoned_year: 2011
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- automobiles
+heroImage: ../assets/images/i-94-speedway/i-94-speedway-exterior-track-grandstands.jpg
+heroImageAlt: "Weathered grandstands beside the I-94 Speedway oval"
+seoImage: ../assets/images/i-94-speedway/i-94-speedway-exterior-race-track.jpg
+canonicalURL: https://abandonedupstate.com/i-94-speedway/
+author: Jessica Olson
+galleryImages:
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-asphalt-track.jpg"
+    caption: "Cracked asphalt curving through the infield"
+    seoCaption: "Cracked asphalt racing surface at the abandoned I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-red-grandstand.jpg"
+    caption: "Weathered red grandstand seating"
+    seoCaption: "Weathered red-painted grandstand seating at the abandoned I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-blue-grandstand.jpg"
+    caption: "Blue grandstand overlooking turn four"
+    seoCaption: "Blue spectator grandstand overlooking turn four at I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-consession-stand.jpg"
+    caption: "Concession stand with shuttered windows"
+    seoCaption: "Closed concession stand with shuttered windows at I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-catch-fence.jpg"
+    caption: "Catch fence guarding the front stretch"
+    seoCaption: "Catch fence guarding the abandoned I-94 Speedway front stretch"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-racing-scoreboard.jpg"
+    caption: "Rusting Miller Lite scoreboard"
+    seoCaption: "Rusting Miller Lite branded scoreboard at the abandoned I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-peeling-speedway-sign.jpg"
+    caption: "Peeling Speedway lettering on the wall"
+    seoCaption: "Peeling I-94 Speedway lettering on the retaining wall"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-advertising-wall.jpg"
+    caption: "Sponsor wall fading in the sun"
+    seoCaption: "Sun-faded sponsor advertising wall at I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-wall-logo.jpg"
+    caption: "Concrete wall painted with the track logo"
+    seoCaption: "Concrete track wall painted with the I-94 Speedway logo"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-exterior-overgrown-grandstands.jpg"
+    caption: "Grass overtaking the backstretch bleachers"
+    seoCaption: "Overgrown grass surrounding the backstretch bleachers at I-94 Speedway"
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-2006-race-day.jpg"
+    caption: "Packed grandstands on a 2006 race night"
+    seoCaption: "Fans filling the I-94 Speedway grandstands on a July 2006 race night"
+    historical: true
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-stock-car-race.jpg"
+    caption: "Stock cars battling on the front stretch"
+    seoCaption: "Stock cars battling for position on the I-94 Speedway front stretch"
+    historical: true
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-stock-cars-racing.jpg"
+    caption: "Late models lined up along pit road"
+    seoCaption: "Late model stock cars lined up along pit road at I-94 Speedway"
+    historical: true
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-newspaper-article.jpg"
+    caption: '"Wave of the Future" newspaper clipping'
+    seoCaption: '"Wave of the Future" newspaper clipping announcing the new Speedway'
+    historical: true
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-signed-flyer.jpg"
+    caption: "Autographed I-94 Speedway promotional flyer"
+    seoCaption: "Autographed I-94 Speedway promotional flyer"
+    historical: true
+  - src: "@/assets/images/i-94-speedway/i-94-speedway-historic-speedway-wall-logo.jpg"
+    caption: "Historic wall logo in brighter colors"
+    seoCaption: "Historic photo of the I-94 Speedway wall logo in its prime"
+    historical: true
+---
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from '../assets/images/i-94-speedway/i-94-speedway-exterior-track-grandstands.jpg';
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "I-94 Speedway grandstands and front stretch",
+  seoCaption: "Weathered grandstands overlooking the abandoned I-94 Speedway oval",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="i-94-speedway"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: '#b9975c' }}>{frontmatter.description}</p>
+
+The I-94 Speedway, also known as the I-94 Raceway, sat along Interstate 94 just west of Sauk Centre, Minnesota. Amphitheater-style bleachers wrapped the 3/8-mile oval when it opened in 1991, and the new surface quickly drew comparisons to national short tracks. Within a year the promoters converted the clay into asphalt, making I-94 Minnesota's first paved speedway and a regional destination for touring series.
+
+Throughout the 1990s and early 2000s the oval hosted NASCAR Midwest Series dates, ASA Midwest Tour stops, ARTGO late models, and hometown divisions. Ownership changes in 2009 brought another dramatic shift: the track reclaimed the Speedway name, tore out the asphalt, and went back to a clay surface. The gambit never regained its former crowds; by the end of that same season the lights went dark for good and the facility slipped into disrepair.
+
+Today the painted walls, sponsor boards, and Miller Lite scoreboard fade in the prairie sun, while grass pushes through the fractured turns and aluminum planks. Shuttered concession stands, empty flag and scoring towers, and wind-worn grandstands now overlook a silent oval that once echoed each Saturday night.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="i-94-speedway"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="i-94-speedway"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Race Fans Radio - I-94 Speedway Obit](https://racefansradio.blogspot.com/2010/10/i-94-speedway-obit.html)
+- [Ghosts of Minnesota - I-94 Speedway](https://www.facebook.com/GhostsOfMinnesota/posts/the-former-i94-speedway-is-today-only-a-memory-im-glad-i-took-the-opportunity-to/1833672436685551/)
+
+<div class="my-12"></div>

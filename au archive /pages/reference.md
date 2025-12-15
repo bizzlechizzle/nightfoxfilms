@@ -1,0 +1,2 @@
+- true/false
+- auto add to database or use as a reference file

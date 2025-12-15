@@ -1,0 +1,2 @@
+- true/false
+- checked by #rsync

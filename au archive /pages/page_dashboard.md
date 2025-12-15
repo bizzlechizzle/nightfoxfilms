@@ -1,0 +1,23 @@
+- projects - recents
+	- projects
+		- show top 5 [column]
+		- show all
+	- imports
+		- show top 5 recent imports[column]
+		- show all
+- recents
+	- show top 5 recently interacted with[rows]
+	- show all
+- states - types
+	- states
+		- show top 5 states by locations [column]
+		- show all
+	- types
+		- show top 5 types [column]
+		- show all
+- recents
+	- rows, buttons
+		- favorites
+		- random
+		- un-documented
+		- historical

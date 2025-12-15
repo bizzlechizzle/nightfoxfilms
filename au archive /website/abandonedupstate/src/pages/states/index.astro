@@ -1,0 +1,28 @@
+---
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Main from "@/layouts/Main.astro";
+import Tag from "@/components/Tag.astro";
+import getUniqueStates from "@/utils/getUniqueStates";
+import { SITE } from "@/config";
+
+const posts = await getCollection("blog");
+const states = getUniqueStates(posts);
+---
+
+<Layout title={`States | ${SITE.title}`}>
+  <Header />
+  <Main
+    pageTitle="States"
+    pageDesc="Browse locations grouped by state."
+  >
+    <ul class="flex flex-wrap items-center gap-2">
+      {states.map(({ label, slug }) => (
+        <Tag tag={slug} tagName={label} size="lg" href={`/states/${slug}/`} />
+      ))}
+    </ul>
+  </Main>
+  <Footer />
+</Layout>

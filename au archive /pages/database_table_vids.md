@@ -1,0 +1,17 @@
+- purpose:
+	- database_table_vids.json
+-
+- rows:
+	- blank
+-
+- columns
+	- #vidsha
+	- #vidnam
+	- #vidloc
+	- #auth_imp
+	- #meta_ffmpeg
+	- #meta_exiftool
+	- #vidloco
+	- #vidnamo
+	- #locid
+	- #subid

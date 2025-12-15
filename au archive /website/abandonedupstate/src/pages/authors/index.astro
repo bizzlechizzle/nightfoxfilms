@@ -1,0 +1,29 @@
+---
+import { getCollection } from "astro:content";
+import Main from "@/layouts/Main.astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import getUniqueAuthors from "@/utils/getUniqueAuthors";
+import { SITE } from "@/config";
+
+const posts = await getCollection("blog");
+const authors = getUniqueAuthors(posts);
+---
+
+<Layout title={`Authors | ${SITE.title}`}>
+  <Header />
+  <Main pageTitle="Authors" pageDesc="Browse every story by contributor.">
+    <ul class="grid gap-3 sm:grid-cols-2">
+      {authors.map(({ author, authorName, count }) => (
+        <li class="flex items-center justify-between rounded border border-border px-4 py-3 text-sm uppercase tracking-[0.12em]">
+          <a href={`/authors/${author}/`} class="hover:text-accent">
+            {authorName}
+          </a>
+          <sup class="text-xs opacity-70">{count}</sup>
+        </li>
+      ))}
+    </ul>
+  </Main>
+  <Footer />
+</Layout>

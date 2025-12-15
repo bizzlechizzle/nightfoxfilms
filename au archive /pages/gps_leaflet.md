@@ -1,0 +1,3 @@
+- json1 format
+- #gps_leaflet map data dump
+- if data exists from #gps_leaflet then mark verified

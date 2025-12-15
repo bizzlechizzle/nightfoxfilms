@@ -1,0 +1,16 @@
+- #deleteonimport
+	- on/off
+- #loginrequired
+	- on/off
+- #importmap
+	- button
+	- select map location
+- #mapimport
+	- on/off
+- #backupdatabase
+	- button
+	- select save location
+-
+-
+- record settings
+	- #json_user

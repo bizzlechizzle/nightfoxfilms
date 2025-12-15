@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>AU Archive</h1>
+
+    <div id="status" class="status"></div>
+
+    <div id="form">
+      <div class="field">
+        <label>URL</label>
+        <div id="url" class="url-display"></div>
+      </div>
+
+      <div class="field">
+        <label for="title">Title</label>
+        <input type="text" id="title" placeholder="Page title">
+      </div>
+
+      <div class="field">
+        <label for="location-search">Link to Location</label>
+        <input type="text" id="location-search" placeholder="Search locations...">
+        <div id="location-results" class="results"></div>
+        <input type="hidden" id="locid">
+      </div>
+
+      <button id="save-btn" class="primary">Save Bookmark</button>
+    </div>
+
+    <div id="recent" class="recent">
+      <h3>Quick Save To:</h3>
+      <div id="recent-locations"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

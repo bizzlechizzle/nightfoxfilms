@@ -1,0 +1,2 @@
+- add map points to database
+- add map only to database [reference]

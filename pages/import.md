@@ -1,0 +1,30 @@
+- import video files and there side car files
+-
+- Steps
+	- Step 1
+		- scans give file/folder/subfolders for video and sidecar files
+		- log files found into #database
+		- link video and sidecard in database with matching names
+	- Step 2
+		- call #gen_blake3 for each file found
+		- log blake3 into #database
+	- Step 3
+		- copy files onto system #settings
+		- rename files atomically (blake3 16 hex.ext)
+		- log file location into #database
+-
+-
+- #gen_name
+	- rename files on import atomically
+-
+- determine type based on metadata and file types
+-
+- #dadcam
+	- .tod & .moi
+	- .mts
+-
+- #super8
+	- (not outlined yet)
+-
+- #modern
+	- (not outlined yet)

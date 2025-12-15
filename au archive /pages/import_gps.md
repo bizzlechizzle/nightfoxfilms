@@ -1,0 +1,14 @@
+- #auarchive
+	- #gps and #gps_status is null go to step 1a
+	- #gps and #gps_status is true/false go to step 1b
+	-
+	- steps
+		- step 1a
+			- check #meta_exiftool in #database_table_imgs and #database_table_vids for gps data
+			- if found enter lattitude and longititue into #gps
+			- record in database
+				- if no data found record #gps_status as false
+				- if data found record #gps_status as true
+		- step 1b
+			- run #geopy.point and normalize entry
+				- record #gps_status as verified

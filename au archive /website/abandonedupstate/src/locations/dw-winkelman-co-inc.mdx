@@ -1,0 +1,154 @@
+---
+title: D.W. Winkelman Co. Inc.
+seoTitle: D.W. Winkelman Co. Warehouse | Abandoned Upstate
+pubDatetime: 2019-04-13 20:30:00+00:00
+description: Syracuse's Most Tax-Delinquent Property
+seoDescription: Survey the D.W. Winkelman Co. complex on Syracuse's east side, once packed with heavy trucks and now collapsing under decades of tax delinquency.
+featured: false
+draft: false
+state: new york
+
+county: onondaga
+city: syracuse
+region: 
+category: factories
+status: abandoned
+
+built_year: 1950
+abandoned_year: 2010
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- warehouses
+- automobiles
+heroImage: ../assets/images/dw-winkelman/dw-winkelman-exterior-dw-winkelman-logo.jpg
+heroImageAlt: "Exterior of the abandoned D.W. Winkelman Co. warehouse with painted logo in Syracuse, New York"
+seoImage: ../assets/images/dw-winkelman/dw-winkelman-interior-stripped-chevy-c60.jpg
+canonicalURL: https://abandonedupstate.com/dw-winkelman-co-inc/
+author: Bryant Neal
+galleryImages:
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-south-entrance.jpg"
+    caption: "Sawtooth roof lighting the work bays"
+    seoCaption: "Sawtooth clerestory windows lighting the work bays inside the abandoned D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-collapsing-office.jpg"
+    caption: "Collapsed interior office structure"
+    seoCaption: "Collapsed interior office structure inside the abandoned D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-crumbling-walls.jpg"
+    caption: "Crumbling masonry walls"
+    seoCaption: "Crumbling masonry walls and exposed framing inside the D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-crushed-blue-sedan.jpg"
+    caption: "Crushed blue sedan among debris"
+    seoCaption: "Crushed blue sedan surrounded by debris inside the D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-heavy-trucks.jpg"
+    caption: "Heavy trucks left behind"
+    seoCaption: "Heavy trucks left behind inside the abandoned D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-stripped-chevy-c60.jpg"
+    caption: "Stripped Chevrolet C60 dump truck"
+    seoCaption: "Stripped Chevrolet C60 dump truck parked inside the former D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-interior-empty-warehouse.jpg"
+    caption: "Wide interior view of the warehouse"
+    seoCaption: "Wide interior view of the D.W. Winkelman Co. warehouse with open bays and debris"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-exterior-collapsing-garages.jpg"
+    caption: "Collapsing south-side garage doors"
+    seoCaption: "Collapsing south-side garage doors of the D.W. Winkelman Co. warehouse"
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-historical-1938-aerial.jpg"
+    caption: "1938 aerial showing early development"
+    seoCaption: "1938 aerial photograph showing early development of the D.W. Winkelman Co. site"
+    historical: true
+    sourceURL: https://digital.library.cornell.edu/catalog/ss:203513
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-historical-newspaper-1945.jpg"
+    caption: "1945 state bid newspaper article"
+    seoCaption: "1945 newspaper article announcing a New York State bid involving D.W. Winkelman Co."
+    historical: true
+    sourceURL: https://www.newspapers.com/image/56384738
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-historical-2014-oblique-aerial.jpg"
+    caption: "2014 oblique aerial of the complex"
+    seoCaption: "2014 oblique aerial photograph of the D.W. Winkelman Co. complex"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/dw-winkelman/dw-winkelman-historical-2014-dw-winkelman-logo.jpg"
+    caption: "2014 newspaper clipping about tax delinquency"
+    seoCaption: "2014 newspaper clipping about the tax-delinquent D.W. Winkelman Co. property"
+    historical: true
+    sourceURL: https://www.syracuse.com/news/2014/04/a_tour_of_the_top_10_tax-delinquent_properties_in_syracuse.html
+---
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+import heroImage from "../assets/images/dw-winkelman/dw-winkelman-exterior-dw-winkelman-logo.jpg";
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "D.W. Winkelman Co. warehouse exterior",
+  seoCaption: "Exterior of the abandoned D.W. Winkelman Co. warehouse with painted logo in Syracuse, New York",
+};
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="dw-winkelman"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: '#b9975c' }}>{frontmatter.description}</p>
+
+D.W. Winkelman Co. Inc. is an abandoned warehouse complex on the east side of Syracuse, New York. Owned and operated by Dwight W. Winkelman, the company originated in Chicago in 1924 before relocating to New York in 1930 for Adirondack construction projects. Winkelman established the Syracuse office in 1937 to oversee heavy civil work across the region.
+
+Specializing in large-scale infrastructure, the company built airports, highways, military bases, and industrial facilities. By 1988 the site was listed as an inactive hazardous waste area after vandals ruptured transformers and released PCB-laden oil onto the property—an event that marked the start of decades-long abandonment and tax delinquency for the parcel.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="dw-winkelman"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="dw-winkelman"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Syracuse.com - A tour of the top 10 tax-delinquent properties in Syracuse](https://www.syracuse.com/news/2014/04/a_tour_of_the_top_10_tax-delinquent_properties_in_syracuse.html)
+- [VHB Spatial - Onondaga County GIS](https://spatial.vhb.com/onondaga/)
+- [Cornell University Digital Library - Historical Aerial Photography](https://digital.library.cornell.edu/catalog/ss:203513)
+- [Newspapers.com - Dunkirk Evening Observer Archives](https://www.newspapers.com/image/56384738)
+
+<div class="my-12"></div>

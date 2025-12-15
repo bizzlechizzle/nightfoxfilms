@@ -1,0 +1,157 @@
+---
+title: Moland Creamery
+seoTitle: Moland Creamery Historic Ruin | Abandoned Upstate
+pubDatetime: 2015-04-03 03:00:00-05:00
+description: Historic Minnesota creamery landmark
+seoDescription: Explore Moland Creamery in Rice County, Minnesota, a historic cooperative creamery with living quarters, vintage Frigidaires, and community hall relics.
+featured: false
+draft: false
+
+state: minnesota
+county: rice
+city: moland
+region:
+
+category: businesses
+status: abandoned
+
+built_year: 1920
+abandoned_year: 1967
+lastmod: 2025-10-06T09:00:00-05:00
+
+tags: []
+heroImage: ../assets/images/moland-creamery/moland-creamery-exterior-crumbling-brick-building.jpg
+heroImageAlt: "Crumbling brick exterior of Moland Creamery in Moland, Minnesota"
+seoImage: ../assets/images/moland-creamery/moland-creamery-interior-moland-hall.jpg
+canonicalURL: https://abandonedupstate.com/moland-creamery/
+author: Jessica Olson
+galleryImages:
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-moland-hall.jpg"
+    caption: "Moland Hall spanning the second floor"
+    seoCaption: "Second-floor Moland Hall inside the historic Moland Creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-make-room.jpg"
+    caption: "The make room with galvanized vats"
+    seoCaption: "Moland Creamery make room featuring galvanized processing vats"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-work-bench.jpg"
+    caption: "Creamery workbench lined with tools"
+    seoCaption: "Workbench inside Moland Creamery with tools and supplies left behind"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-theatre-chairs.jpg"
+    caption: "Cast-iron theater chairs along the balcony"
+    seoCaption: "Cast-iron theater chairs lining the balcony inside Moland Creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-living-quarters.jpg"
+    caption: "Living quarters above the creamery"
+    seoCaption: "Living quarters above Moland Creamery used by the butter maker"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-kitchen-cabinets.jpg"
+    caption: "Butter maker's kitchen cabinets"
+    seoCaption: "Butter maker's kitchen cabinets inside Moland Creamery living quarters"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-frigidaire-refrigerator.jpg"
+    caption: "Vintage Frigidaire refrigerator"
+    seoCaption: "Vintage Frigidaire refrigerator left inside Moland Creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-frigidaire-thrifty-thirty-stove.jpg"
+    caption: "1954 Frigidaire Thrifty-30 stove"
+    seoCaption: "1954 Frigidaire Thrifty-30 stove preserved inside Moland Creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-interior-staircase.jpg"
+    caption: "Staircase leading to Moland Hall"
+    seoCaption: "Interior staircase leading up to Moland Hall inside the creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-exterior-creamery-building.jpg"
+    caption: "Staircase leading to Moland Hall"
+    seoCaption: "Interior staircase leading up to Moland Hall inside the creamery"
+  - src: "@/assets/images/moland-creamery/moland-creamery-historic-ernest-burow-unloading-milk.jpg"
+    caption: "1967 aerial view of Moland Creamery"
+    seoCaption: "1967 aerial photograph depicting Moland Creamery and surrounding property"
+    historical: true
+  - src: "@/assets/images/moland-creamery/moland-creamery-historic-1967-aerial.jpg"
+    caption: "1967 aerial view of Moland Creamery"
+    seoCaption: "1967 aerial photograph depicting Moland Creamery and surrounding property"
+    historical: true
+  - src: "@/assets/images/moland-creamery/moland-creamery-historic-butter-box.jpg"
+    caption: "Moland Creamery butter box"
+    seoCaption: "Moland Creamery cardboard butter box from the cooperative's retail products"
+    historical: true
+  - src: "@/assets/images/moland-creamery/moland-creamery-historic-original-moland-creamery-1900.jpg"
+    caption: "Original Moland Creamery circa 1900"
+    seoCaption: "Circa 1900 photograph of the original Moland Creamery"
+    historical: true
+---
+
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from "../assets/images/moland-creamery/moland-creamery-exterior-crumbling-brick-building.jpg";
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "Moland Creamery exterior of crumbling brick",
+  seoCaption: "Crumbling brick exterior of Moland Creamery in Moland, Minnesota",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || "";
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="moland-creamery"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: "block", margin: "2rem 0" }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: "100%", borderRadius: "inherit" }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: "#b9975c" }}>{frontmatter.description}</p>
+
+Moland Creamery, situated on the Rice-Steele County border in Central Minnesota, was established in 1896. Renowned for its award-winning butter, the cooperative regularly collected ribbons at county fairs and the Minnesota State Fair. After serving the community for two decades, a fire razed the building on July 7, 1920.
+
+Remarkably, the creamery was rebuilt in fewer than 90 days. The new structure boasted an upstairs auditorium that hosted local elections and community events, plus on-site accommodations for the butter makers. It continued to anchor the area until operations ceased in 1967.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="moland-creamery"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="moland-creamery"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Michael Linnihan Photography — Moland Creamery](https://www.flickr.com/photos/michaellinnihanphotography/15118195322)
+- [Brandywine Books — Moland, MN](https://brandywinebooks.net/?tag=moland-mn)
+
+<div class="my-12"></div>

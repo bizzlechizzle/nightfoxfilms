@@ -1,0 +1,17 @@
+- tools needed to make this an advanced app
+- we use external tools/depencies whenever possible
+-
+- #screenshot
+	- makes screenshots for social media posts from videos
+-
+- #clips
+	- makes screenshots for social media posts from videos
+-
+- #machinelearning
+	- builds a database of camera models
+	- builds a profile of exact cameras
+		- bug fixes
+		- luts
+		- quality profiles etc
+	- tests different transcodes on origial files for optimal conversion
+	-

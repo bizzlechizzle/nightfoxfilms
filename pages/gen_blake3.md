@@ -1,0 +1,3 @@
+- blake3 hash
+- 16 hex charachters
+-

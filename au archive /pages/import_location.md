@@ -1,0 +1,7 @@
+- steps
+	- record #import_form data into #auarchive
+		-
+	- if trigged by #drag_drop
+		- calls #import_type
+			- record all data #auarchive
+	- verify data

@@ -1,0 +1,131 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Socials from "@/components/Socials.astro";
+import LinkButton from "@/components/LinkButton.astro";
+import Card from "@/components/Card.astro";
+import Hr from "@/components/Hr.astro";
+import getSortedPosts from "@/utils/getSortedPosts";
+import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
+import { SITE } from "@/config";
+import { SOCIALS } from "@/constants";
+import stardustModern from "@/assets/images/nevele-grand/stardust-room-nevele-grand.jpg";
+import stardustHistoric from "@/assets/images/nevele-grand/stardust-room-nevele-grand-historic.jpg";
+
+const posts = await getCollection("blog");
+
+const sortedPosts = getSortedPosts(posts);
+const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
+const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+---
+
+<Layout>
+  <Header />
+  <main id="main-content" data-layout="index">
+    <section id="hero" class="pt-8 pb-6">
+      <figure class="my-6">
+        <div class="group relative overflow-hidden rounded-lg border border-border">
+          <div class="relative transition-transform duration-500 ease-in-out group-hover:scale-[1.01]">
+            <Image
+              src={stardustModern}
+              alt="The Stardust Room inside the Nevele Grand Hotel"
+              class="h-full w-full object-cover transition-opacity duration-500 ease-in-out group-hover:opacity-0"
+              widths={[400, 640, 960, 1280]}
+              sizes="(max-width: 640px) 100vw, 75vw"
+              quality={85}
+              loading="eager"
+            />
+          </div>
+          <div class="pointer-events-none absolute inset-0">
+            <Image
+              src={stardustHistoric}
+              alt="Historic postcard view of the Stardust Room at the Nevele Grand Hotel"
+              class="h-full w-full object-cover opacity-0 transition-opacity duration-500 ease-in-out group-hover:opacity-100"
+              widths={[400, 640, 960, 1280]}
+              sizes="(max-width: 640px) 100vw, 75vw"
+              quality={85}
+              loading="lazy"
+              aria-hidden="true"
+            />
+          </div>
+        </div>
+
+        <figcaption class="mt-2 text-center text-sm uppercase tracking-[0.12em] text-foreground/80 sm:text-base">
+          The Stardust Room - Nevele Grand Hotel
+        </figcaption>
+      </figure>
+
+      {
+        // only display if at least one social link is enabled
+        SOCIALS.length > 0 && (
+          <div class="mt-12 flex flex-col sm:flex-row sm:items-center">
+            <div class="me-2 mb-1 whitespace-nowrap sm:mb-0">Social Links:</div>
+            <Socials align="start" />
+          </div>
+        )
+      }
+    </section>
+
+    <Hr />
+
+    {
+      featuredPosts.length > 0 && (
+        <>
+          <section id="featured" class="pt-12 pb-6">
+            <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
+            <ul class="space-y-8">
+              {featuredPosts.map(data => (
+                <Card
+                  variant="h3"
+                  {...{
+                    ...data,
+                    data: {
+                      ...data.data,
+                      description: data.data.featuredCaption ?? data.data.description,
+                    },
+                  }}
+                />
+              ))}
+            </ul>
+          </section>
+          {recentPosts.length > 0 && <Hr />}
+        </>
+      )
+    }
+
+    {
+      recentPosts.length > 0 && (
+        <section id="recent-posts" class="pt-12 pb-6">
+          <h2 class="text-2xl font-semibold tracking-wide">Recent Locations</h2>
+          <ul class="space-y-8">
+            {recentPosts.map(
+              (data, index) =>
+                index < SITE.postPerIndex && <Card variant="h3" {...data} />
+            )}
+          </ul>
+        </section>
+      )
+    }
+
+    <div class="my-8 text-center">
+      <LinkButton href="/posts/">
+        All Locations
+        <IconArrowRight class="inline-block rtl:-rotate-180" />
+      </LinkButton>
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script>
+  document.addEventListener("astro:page-load", () => {
+    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
+      ?.dataset?.layout;
+    if (indexLayout) {
+      sessionStorage.setItem("backUrl", "/");
+    }
+  });
+</script>

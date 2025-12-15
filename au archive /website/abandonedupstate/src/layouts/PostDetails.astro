@@ -1,0 +1,594 @@
+---
+import { render, type CollectionEntry } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import Tag from "@/components/Tag.astro";
+import Datetime from "@/components/Datetime.astro";
+import EditPost from "@/components/EditPost.astro";
+import ShareLinks from "@/components/ShareLinks.astro";
+import BackButton from "@/components/BackButton.astro";
+import BackToTopButton from "@/components/BackToTopButton.astro";
+import { getPath } from "@/utils/getPath";
+import { slugifyStr } from "@/utils/slugify";
+import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
+import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
+import { SITE } from "@/config";
+
+export interface Props {
+  post: CollectionEntry<"blog">;
+  posts: CollectionEntry<"blog">[];
+}
+
+const { post, posts } = Astro.props;
+
+const {
+  title,
+  seoTitle,
+  author,
+  description,
+  seoDescription,
+  heroImage: initHeroImage,
+  seoImage: initSeoImage,
+  ogImage: legacyOgImage,
+  canonicalURL,
+  pubDatetime,
+  modDatetime,
+  timezone,
+  tags,
+  hideEditPost,
+  displayTitleInLayout,
+} = post.data;
+
+const rawState = typeof (post.data as Record<string, unknown>).state === "string"
+  ? ((post.data as Record<string, unknown>).state as string)
+  : undefined;
+const rawCategory = (() => {
+  const dataRecord = post.data as Record<string, unknown>;
+  const categoryValue = dataRecord.category ?? dataRecord.catagory;
+  return typeof categoryValue === "string" ? categoryValue : undefined;
+})();
+
+type TaxonomyItem = {
+  label: string;
+  slug: string;
+  href: string;
+};
+
+const taxonomyItems: TaxonomyItem[] = [];
+const taxonomySeen = new Set<string>();
+
+const pushTaxonomyItem = (
+  label: string | undefined,
+  hrefFactory: (clean: string, slug: string) => string
+) => {
+  const clean = typeof label === "string" ? label.trim() : "";
+  if (!clean) return;
+  const normalized = clean.toLowerCase();
+  if (taxonomySeen.has(normalized)) return;
+  taxonomySeen.add(normalized);
+  const slug = slugifyStr(clean);
+  taxonomyItems.push({ label: clean, slug, href: hrefFactory(clean, slug) });
+};
+
+const pushMultiple = (
+  source: string | string[] | undefined,
+  hrefFactory: (clean: string, slug: string) => string
+) => {
+  if (Array.isArray(source)) {
+    source.forEach(value => pushMultiple(value, hrefFactory));
+    return;
+  }
+
+  if (typeof source === "string") {
+    source
+      .split(",")
+      .map(part => part.trim())
+      .filter(Boolean)
+      .forEach(part => pushTaxonomyItem(part, hrefFactory));
+  }
+};
+
+pushMultiple(rawState, (_, slug) => `/states/${slug}/`);
+pushMultiple(rawCategory, (_, slug) => `/categories/${slug}/`);
+
+if (Array.isArray(tags)) {
+  pushMultiple(tags, (_, slug) => `/tags/${slug}/`);
+}
+
+const showLayoutTitle = displayTitleInLayout !== false;
+
+const { Content } = await render(post);
+
+const resolveImageUrl = (image?: { src?: string } | string) => {
+  if (typeof image === "string") return image;
+  if (image?.src) return image.src;
+  return undefined;
+};
+
+const heroImageUrl = resolveImageUrl(initHeroImage ?? legacyOgImage);
+
+let ogImageUrl =
+  resolveImageUrl(initSeoImage ?? legacyOgImage) ?? heroImageUrl;
+
+// Use dynamic OG image if enabled and we still do not have an explicit image
+if (!ogImageUrl && SITE.dynamicOgImage) {
+  ogImageUrl = `${getPath(post.id, post.filePath)}/index.png`;
+}
+
+const ogImage = ogImageUrl
+  ? new URL(ogImageUrl, Astro.url.origin).href
+  : undefined;
+
+const canonicalUrl =
+  canonicalURL ??
+  new URL(getPath(post.id, post.filePath), SITE.website).href;
+
+const layoutProps = {
+  title: seoTitle ?? `${title} | ${SITE.title}`,
+  author,
+  description: seoDescription ?? description,
+  pubDatetime,
+  modDatetime,
+  canonicalURL: canonicalUrl,
+  ogImage,
+  scrollSmooth: true,
+  schemaHeadline: title,
+};
+
+/* ========== Prev/Next Locations ========== */
+
+const allPosts = posts.map(({ data: { title }, id, filePath }) => ({
+  id,
+  title,
+  filePath,
+}));
+
+const currentPostIndex = allPosts.findIndex(a => a.id === post.id);
+
+const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
+const nextPost =
+  currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
+---
+
+<Layout {...layoutProps}>
+  <Header />
+  <BackButton />
+  <main
+    id="main-content"
+    class:list={[
+      "mx-auto w-full max-w-app px-4 pb-12",
+      { "mt-8": !SITE.showBackButton },
+    ]}
+    data-pagefind-body
+    data-post-slug={post.id}
+  >
+    {showLayoutTitle && (
+      <div class="post-header space-y-4">
+        <h1
+          transition:name={slugifyStr(title)}
+          class="inline-block text-2xl font-bold text-foreground sm:text-3xl"
+        >
+          {title}
+        </h1>
+        <div class="flex items-center gap-2">
+          <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" />
+          <span
+            aria-hidden="true"
+            class:list={[
+              "max-sm:hidden",
+              { hidden: !SITE.editPost.enabled || hideEditPost },
+            ]}>|</span
+          >
+          <EditPost {hideEditPost} {post} class="max-sm:hidden" />
+        </div>
+      </div>
+    )}
+    <article
+      id="article"
+      class="app-prose mx-auto mt-8 max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
+    >
+      <Content pubDatetime={pubDatetime} modDatetime={modDatetime} timezone={timezone} hideEditPost={hideEditPost} />
+    </article>
+
+    <hr class="my-8 border-dashed border-accent" />
+
+    <EditPost class="sm:hidden" {hideEditPost} {post} />
+
+    <div class="mt-4 mb-8 flex flex-col gap-3 sm:my-8 sm:flex-row sm:items-center sm:justify-between">
+      <ul class="flex flex-wrap items-center gap-2">
+        {taxonomyItems.map(item => (
+          <Tag tag={item.slug} tagName={item.label} href={item.href} />
+        ))}
+      </ul>
+      <a
+        class="text-xs uppercase tracking-[0.2em] text-accent underline-offset-4 hover:underline sm:text-sm"
+        href={`/authors/${slugifyStr(author)}/`}
+      >
+        {author}
+      </a>
+    </div>
+
+    <BackToTopButton />
+
+    <ShareLinks />
+
+    <hr class="my-6 border-dashed border-accent" />
+
+    <!-- Previous/Next Location Buttons -->
+    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      {
+        prevPost && (
+          <a
+            href={getPath(prevPost.id, prevPost.filePath)}
+            class="flex w-full gap-1 hover:opacity-75"
+          >
+            <IconChevronLeft class="inline-block flex-none rtl:rotate-180" />
+            <div>
+              <span>Previous Location</span>
+              <div class="text-sm text-accent">{prevPost.title}</div>
+            </div>
+          </a>
+        )
+      }
+      {
+        nextPost && (
+          <a
+            href={getPath(nextPost.id, nextPost.filePath)}
+            class="flex w-full justify-end gap-1 text-end hover:opacity-75 sm:col-start-2"
+          >
+            <div>
+              <span>Next Location</span>
+              <div class="text-sm text-accent">{nextPost.title}</div>
+            </div>
+            <IconChevronRight class="inline-block flex-none rtl:rotate-180" />
+          </a>
+        )
+      }
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<script is:inline data-astro-rerun>
+  /** Create a progress indicator
+   *  at the top */
+  function createProgressBar() {
+    // Create the main container div
+    const progressContainer = document.createElement("div");
+    progressContainer.className =
+      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
+
+    // Create the progress bar div
+    const progressBar = document.createElement("div");
+    progressBar.className = "progress-bar h-1 w-0 bg-accent";
+    progressBar.id = "myBar";
+
+    // Append the progress bar to the progress container
+    progressContainer.appendChild(progressBar);
+
+    // Append the progress container to the document body or any other desired parent element
+    document.body.appendChild(progressContainer);
+  }
+  createProgressBar();
+
+  /** Update the progress bar
+   *  when user scrolls */
+  function updateScrollProgress() {
+    document.addEventListener("scroll", () => {
+      const winScroll =
+        document.body.scrollTop || document.documentElement.scrollTop;
+      const height =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      if (document) {
+        const myBar = document.getElementById("myBar");
+        if (myBar) {
+          myBar.style.width = scrolled + "%";
+        }
+      }
+    });
+  }
+  updateScrollProgress();
+
+  /** Attaches links to headings in the document,
+   *  allowing sharing of sections easily */
+  function addHeadingLinks() {
+    const postSlug =
+      document.body?.dataset?.postSlug ??
+      document.querySelector('[data-post-slug]')?.dataset?.postSlug;
+    const disableAnchorsFor = new Set([
+      'cadis-baptist-church',
+      'the-ransom-house',
+    ]);
+    if (postSlug && disableAnchorsFor.has(postSlug)) {
+      return;
+    }
+    const headings = Array.from(
+      document.querySelectorAll("h2, h3, h4, h5, h6")
+    ).filter(heading => heading.dataset.noAnchor !== 'true');
+    for (const heading of headings) {
+      heading.classList.add("group");
+      const link = document.createElement("a");
+      link.className =
+        "heading-link ms-2 no-underline opacity-75 md:opacity-0 md:group-hover:opacity-100 md:focus:opacity-100";
+      link.href = "#" + heading.id;
+
+      const span = document.createElement("span");
+      span.ariaHidden = "true";
+      span.innerText = "#";
+      link.appendChild(span);
+      heading.appendChild(link);
+    }
+  }
+  addHeadingLinks();
+
+  /** Attaches copy buttons to code blocks in the document,
+   * allowing users to copy code easily. */
+  function attachCopyButtons() {
+    const copyButtonLabel = "Copy";
+    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+
+    for (const codeBlock of codeBlocks) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+
+      // Check if --file-name-offset custom property exists
+      const computedStyle = getComputedStyle(codeBlock);
+      const hasFileNameOffset =
+        computedStyle.getPropertyValue("--file-name-offset").trim() !== "";
+
+      // Determine the top positioning class
+      const topClass = hasFileNameOffset
+        ? "top-(--file-name-offset)"
+        : "-top-3";
+
+      const copyButton = document.createElement("button");
+      copyButton.className = `copy-code absolute end-3 ${topClass} rounded bg-muted border border-muted px-2 py-1 text-xs leading-4 text-foreground font-medium`;
+      copyButton.innerHTML = copyButtonLabel;
+      codeBlock.setAttribute("tabindex", "0");
+      codeBlock.appendChild(copyButton);
+
+      // wrap codebock with relative parent element
+      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      wrapper.appendChild(codeBlock);
+
+      copyButton.addEventListener("click", async () => {
+        await copyCode(codeBlock, copyButton);
+      });
+    }
+
+    async function copyCode(block, button) {
+      const code = block.querySelector("code");
+      const text = code?.innerText;
+
+      await navigator.clipboard.writeText(text ?? "");
+
+      // visual feedback that task is completed
+      button.innerText = "Copied";
+
+      setTimeout(() => {
+        button.innerText = copyButtonLabel;
+      }, 700);
+    }
+  }
+  attachCopyButtons();
+
+  /* Go to page start after page swap */
+  document.addEventListener("astro:after-swap", () =>
+    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
+  );
+</script>
+
+<style is:global>
+/* Gallery layout */
+
+.gallery-item {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+  transition: box-shadow 0.3s ease;
+  --gallery-aspect-width: 16;
+  --gallery-aspect-height: 9;
+  aspect-ratio: var(--gallery-aspect-width) / var(--gallery-aspect-height);
+  line-height: 0;
+}
+
+.gallery-item > picture,
+.gallery-item > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.gallery-item > picture {
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.gallery-image {
+  width: 100%;
+  height: 100% !important;
+  object-fit: cover;
+  border-radius: inherit;
+  border: none;
+  display: block;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.gallery-item:hover {
+  box-shadow: 0 16px 32px rgba(17, 24, 39, 0.16);
+}
+
+.gallery-item:hover .gallery-image {
+  transform: scale(1.02);
+  filter: saturate(1.02);
+}
+
+@media (max-width: 768px) {
+  .gallery {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Right-click protection */
+.gallery-image, .glightbox img {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+}
+</style>
+
+<script is:inline>
+// Enhanced right-click protection
+(function() {
+  function disableRightClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  
+  function disableDrag(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  
+  function disableSelect(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+  
+  function disableKeyShortcuts(e) {
+    // F12, Ctrl+Shift+I, Ctrl+U, Ctrl+S
+    if (e.keyCode === 123 || 
+        (e.ctrlKey && e.shiftKey && e.keyCode === 73) || 
+        (e.ctrlKey && e.keyCode === 85) ||
+        (e.ctrlKey && e.keyCode === 83)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+  }
+  
+  // Apply protection when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    applyProtection();
+  });
+  
+  // Apply protection after a delay to catch dynamically loaded content
+  setTimeout(applyProtection, 1000);
+  
+  // Monitor for GLightbox modal opening and apply protection
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1 && (node.classList?.contains('glightbox-container') || node.querySelector?.('.glightbox-container'))) {
+            setTimeout(applyGLightboxProtection, 100);
+          }
+        });
+      }
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  
+  function applyProtection() {
+    const images = document.querySelectorAll('.gallery-image, .glightbox img, img[src*="dw-winkelman"]');
+    
+    images.forEach(img => {
+      img.addEventListener('contextmenu', disableRightClick, true);
+      img.addEventListener('dragstart', disableDrag, true);
+      img.addEventListener('selectstart', disableSelect, true);
+      img.addEventListener('mousedown', function(e) {
+        if (e.button === 2) { // right click
+          disableRightClick(e);
+        }
+      }, true);
+      
+      // Additional CSS protection
+      img.style.userSelect = 'none';
+      img.style.webkitUserSelect = 'none';
+      img.style.mozUserSelect = 'none';
+      img.style.msUserSelect = 'none';
+      img.style.webkitUserDrag = 'none';
+      img.style.webkitTouchCallout = 'none';
+    });
+    
+    // Also protect the gallery containers
+    const galleryItems = document.querySelectorAll('.gallery-item, .glightbox');
+    galleryItems.forEach(item => {
+      item.addEventListener('contextmenu', disableRightClick, true);
+    });
+  }
+  
+  function applyGLightboxProtection() {
+    // Protect GLightbox modal images and containers
+    const glightboxElements = document.querySelectorAll(
+      '.glightbox-container img, .gslide img, .gslide-image img, ' +
+      '.glightbox-container, .gslide, .gslide-image, .gslide-media, ' +
+      '.ginner-container, .gslide-description'
+    );
+    
+    glightboxElements.forEach(element => {
+      element.addEventListener('contextmenu', disableRightClick, true);
+      element.addEventListener('dragstart', disableDrag, true);
+      element.addEventListener('selectstart', disableSelect, true);
+      element.addEventListener('mousedown', function(e) {
+        if (e.button === 2) {
+          disableRightClick(e);
+        }
+      }, true);
+      
+      // Additional CSS protection for GLightbox
+      if (element.tagName === 'IMG') {
+        element.style.userSelect = 'none';
+        element.style.webkitUserSelect = 'none';
+        element.style.mozUserSelect = 'none';
+        element.style.msUserSelect = 'none';
+        element.style.webkitUserDrag = 'none';
+        element.style.webkitTouchCallout = 'none';
+      }
+    });
+    
+    // Protect the entire GLightbox overlay
+    const overlay = document.querySelector('.glightbox-container');
+    if (overlay) {
+      overlay.addEventListener('contextmenu', disableRightClick, true);
+    }
+  }
+  
+  // Global keyboard protection
+  document.addEventListener('keydown', disableKeyShortcuts, true);
+  
+  // Disable print screen
+  document.addEventListener('keyup', function(e) {
+    if (e.keyCode === 44) {
+      e.preventDefault();
+      return false;
+    }
+  }, true);
+})();
+</script>

@@ -1,0 +1,16 @@
+- purpose:
+	- database_table_docs.json
+-
+- rows:
+	- blank
+-
+- columns
+	- #docsha
+	- #docnam
+	- #docloc
+	- #auth_imp
+	- #meta_exiftool
+	- #docloco
+	- #docnamo
+	- #locid
+	- #subid

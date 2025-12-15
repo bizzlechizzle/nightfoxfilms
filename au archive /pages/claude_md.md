@@ -1,0 +1,41 @@
+- project
+	- AU Archive Desktop App
+		- v 0.1.0
+-
+- objective:
+	- all-in-one tool manages abandoned locations - it organizes, imports, and catalogs abandoned locations.
+-
+- future objective:
+	- anyone can turn into a historian on any abandoned location they find, while keeping every abandoned location organized, with the option to make full research, wikipedia, or blog style posts detailing abandoned locations histories. It downloads images, videos, documents from the web.
+-
+- Golden Rule 
+   
+  LIL BITS - One Script = One Function less than 300 lines of code - break scripts up if needed
+-
+- Rules [in no specific order]
+	- KISS = Keep It Simple, Stupid
+	- FAANG PE = Facebook/Amazon/Apple/Netflix/Google-level engineering but for a small team/personal addition
+	- BPL = Bulletproof Long-Term (reliable for 3–10+ years for non api components)
+	- BPA = Best Practices Always (assume we check up-to-date docs for all tools, frameworks, CLIs, and Python standards)
+	- NME = No Emojis Ever
+	- WWYDD = Consider What You Would Do Differently - User is a master of none - Suggestions Encouraged (DO STEP EARLY)
+	- DRETW = Don’t Re-Invent The Wheel - Check Github - Known Scripts - Reddit - Does this script already exist, can we use it? Something Close? Let’s take a look at the code and borrow what we need if applicable. - Normalization functions are common scripts
+	- LILBITS - ALWAYS WRITE SCRIPTS IN LIL BITS - One Script = One Function less than 300 lines of code - break scripts up if needed - document each new script in lilbits.md [GOLDEN RULE AKA KISS SCRIPTS]
+	- PRISONMIKE - Dont mention claude - claud code, etc in the docs - be shy
+	- WLO - We love open source!
+	- URBFH - Understand Roadmap But Focus Here
+	- DAFIDFAF - Dont add feautres i didnt fucking ask for [unless needed/required/etc]
+-
+- core process
+	- 1. read user prompt, read claude.md, techguide.md, lilbits.md
+	- 2. search for and read any referenced files/folders/etc or related files outlined in techguide.md
+	- 3. make a plan [to fix, trouble shoot, code, brainstorm, optimize, audit, or WWYDD based on user prompt]
+	- 4. audit the plan based on steps 1,2 - update plan
+	- 5. write implementation guide for inexperienced developer
+	- 6. write/update/create code/plan/etc based on implementation guide
+	- 7. update techguide.md, lilbits.md with a lot of what changed and why
+-
+- techguide.md
+	- technical guide behind app
+- lilbits.md
+	- technical guide behind each script

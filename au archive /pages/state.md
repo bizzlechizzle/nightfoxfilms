@@ -1,0 +1,3 @@
+- json_state
+- USPS Two-Letter State Code
+- normalization: #libpostal

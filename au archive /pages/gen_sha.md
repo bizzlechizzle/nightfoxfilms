@@ -1,0 +1,21 @@
+- Objective
+	- generates sha256 hash when called
+	- does a check if file already exists in database
+-
+- Script
+	- gen_sha.py
+-
+- steps
+	- creates a sha256 hash on file when called
+	- load database #auarchive
+	- check tables/columns/rows
+		- imgs
+			- #imgsha
+		- vids
+			- #vidsha
+		- docs
+			- #docsha
+	- each sha256 must be unique
+	-
+-
+-

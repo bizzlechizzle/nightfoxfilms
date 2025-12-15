@@ -1,0 +1,51 @@
+id,name,category,description,latitude,longitude,num_vertices
+1,Maritime New England,Northeast,Coastal Maine and New Hampshire,44.9575,-69.0763,40
+2,Woodland New England,Northeast,Vermont; interior New Hampshire; western Massachusetts; Connecticut interior,43.1929,-71.6405,42
+3,Upstate NY,Northeast,Northern and western New York State,42.9814,-75.1860,43
+4,NYC Metro,Northeast,New York City; Long Island; northern New Jersey; southwestern Connecticut,40.8974,-73.0615,39
+5,Mid-Atlantic,Northeast,Eastern Pennsylvania; Delaware; Maryland; DC suburbs,39.9095,-76.1714,42
+6,Northern Appalachia,Northeast,Western Pennsylvania; West Virginia; eastern Ohio,40.2730,-79.5730,37
+7,Northern Tidewaters,Northeast,Virginia coast; Chesapeake Bay; Eastern Shore of Maryland,37.6750,-76.3594,32
+8,Upper Midwest,Midwest,Minnesota; eastern North and South Dakota,46.4975,-93.5600,40
+9,Lower Midwest,Midwest,Iowa; Missouri; eastern Kansas and Nebraska,40.6638,-93.3957,47
+10,Great Lakes,Midwest,Michigan; northern Indiana; northern Ohio,43.7829,-85.0268,41
+11,Ohio River Valley,Midwest,Southern Ohio; Indiana; Kentucky,38.5023,-84.0372,43
+12,Northwoods,Midwest,Northern Wisconsin; Upper Peninsula of Michigan; northern Minnesota,46.3794,-87.8529,34
+13,Chicagoland,Midwest,Chicago metropolitan area,41.9000,-87.5818,22
+14,Southern Tidewaters,The South,North Carolina; South Carolina; and Georgia coasts,33.9512,-78.0791,43
+15,Piedmont,The South,Piedmont region of NC; SC; and Georgia,34.6079,-79.9658,38
+16,Southern Appalachia,The South,Appalachian mountain region - eastern TN; western NC; eastern KY; SW Virginia,36.8610,-82.4415,41
+17,Midsouth,The South,Middle Tennessee; northern Alabama,35.5100,-86.5933,30
+18,The Ozarks,The South,Southern Missouri; northern Arkansas; eastern Oklahoma,36.9556,-92.6111,27
+19,Deep South,The South,Central Alabama; Mississippi; Georgia,32.9925,-86.4900,40
+20,Gulf Coast,The South,Florida panhandle; Alabama and Mississippi coasts,30.6333,-86.2641,39
+21,Central Florida,The South,Central Florida peninsula,28.5742,-81.5032,31
+22,Acadiana-Cajun,The South,Southern Louisiana; Cajun country,30.4794,-91.5118,34
+23,Texas Heartland,The South,Central and East Texas,30.9410,-95.9692,39
+24,Lower Rio Grande,The South,South Texas; Rio Grande Valley,26.8719,-97.7094,32
+25,South Florida,Caribbean U.S.,South Florida; Miami metropolitan area,25.8966,-81.1483,29
+26,Puerto Rico,Caribbean U.S.,Commonwealth of Puerto Rico,18.2977,-66.5477,22
+27,US Virgin Islands,Caribbean U.S.,US Virgin Islands - St. Thomas; St. John; St. Croix,18.3687,-64.9250,15
+28,Northern Great Plains,Frontier,Eastern Montana; North Dakota; northern South Dakota,46.6417,-100.2139,36
+29,Black Hills,Frontier,Black Hills region of South Dakota and northeastern Wyoming,44.0304,-103.4435,23
+30,Lower Great Plains,Frontier,Kansas; Nebraska; Oklahoma panhandle,39.7468,-98.8809,47
+31,Columbia Plateau,Frontier,Eastern Washington; eastern Oregon; Idaho panhandle,46.3516,-117.5355,31
+32,Northern Rockies,Frontier,Western Montana; northern Idaho; Wyoming,46.3915,-109.5170,47
+33,Front Range,Frontier,Colorado Front Range; Denver metropolitan area,39.0629,-104.6114,35
+34,Great Basin,Frontier,Nevada; western Utah,38.7235,-115.5059,34
+35,Navajo Nation,Frontier,Four Corners region; Navajo and Hopi lands,36.1000,-110.0400,20
+36,Mormon Corridor,Frontier,Utah; parts of Idaho; northern Arizona,39.1341,-112.2488,41
+37,Classic Southwest,Frontier,Arizona; New Mexico,34.3474,-111.3053,38
+38,Mezquital,Frontier,West Texas; southern New Mexico; Trans-Pecos region,34.2636,-103.5515,33
+39,Cascadia,Pacific,Western Washington; western Oregon; Pacific Northwest coast,46.7556,-122.3639,36
+40,Jefferson,Pacific,Southern Oregon; far northern California,42.3886,-122.5200,35
+41,North Coast,Pacific,Northern California coast - Mendocino; Humboldt,39.3381,-123.3476,21
+42,Central Valley,Pacific,California Central Valley - Sacramento to Bakersfield,37.5780,-120.5951,41
+43,Sierra Nevadas,Pacific,Sierra Nevada mountain range,37.8889,-118.7750,36
+44,SF Bay Area,Pacific,San Francisco Bay Area metropolitan region,37.6500,-122.0864,22
+45,Central Coast,Pacific,California Central Coast - Monterey to Santa Barbara,35.6000,-120.7400,25
+46,SoCal,Pacific,Southern California - Los Angeles; San Diego regions,33.9541,-117.0459,37
+47,Hawaii,Alaska & Pacific Islands,Hawaiian Islands,19.5636,-155.2182,43
+48,Alaskan First Nation,Alaska & Pacific Islands,Interior Alaska; native lands,65.9909,-152.4659,44
+49,Alaskan Maritime,Alaska & Pacific Islands,Coastal Alaska; Aleutian Islands,57.0571,-158.1143,48
+50,American Oceania,Alaska & Pacific Islands,Northern Mariana Islands; Guam; and American Samoa,13.4500,144.7750,33

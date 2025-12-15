@@ -1,0 +1,12 @@
+- objective
+	- simple start up healthcheck
+-
+- steps
+	- load database #auarchive
+		- if database does not exist run
+			- #create_database
+	- load #json_user
+	- if user.json does not exist, continue
+		- if user.json does exist script is complete
+	- create #json_user
+-

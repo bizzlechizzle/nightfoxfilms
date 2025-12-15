@@ -1,0 +1,1 @@
+- image file name and extension

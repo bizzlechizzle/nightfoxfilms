@@ -1,0 +1,35 @@
+- purpose:
+	- database_table_locations.json
+-
+- rows
+	- blank
+	-
+- columns
+	- #locnam
+	- #slocnam
+	- #akanam
+	- #type
+	- #stype
+	- #locid
+	- #loc12
+	- #sublocs
+	- #sub12
+	- #locloc
+	- #locadd
+	- #locup
+	- #auth_imp
+	- #address
+	- #regions
+	- #state
+	- #condition
+	- #status
+	- #documentation
+	- #access
+	- #historic
+	- #gps
+	- #gps_status
+	- #gps_leaflet
+	- #
+	-
+	-
+	-

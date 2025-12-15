@@ -1,0 +1,6 @@
+- objective
+	- check for #auarchive
+		- if no archive run #create_database
+	- check for #json_user
+		- if no user settings run #create_user
+		- run #first_run in desktop gui for inital setup

@@ -1,0 +1,145 @@
+---
+title: Wiscoy School (District 9)
+seoTitle: Wiscoy School District 9 Ruins | Abandoned Upstate
+pubDatetime: 2020-04-29 20:30:00+00:00
+description: Hoarded 1800s Schoolhouse
+seoDescription: Tour the hoarded 1800s Wiscoy School District 9 in Allegany County, New York, a one-room schoolhouse packed with decades of rural history.
+featured: false
+draft: false
+state: new york
+
+county: allegany
+city: wiscoy
+region: 
+category: schools
+status: abandoned
+
+built_year: 1880
+abandoned_year: 1940
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- schoolhouses
+- hoarded
+heroImage: ../assets/images/wiscoy-school/wiscoy-school-exterior-2023-summer.jpg
+heroImageAlt: "Overgrown exterior of Wiscoy School District 9 during summer 2023"
+seoImage: ../assets/images/wiscoy-school/wiscoy-school-interior-main-classroom.jpg
+canonicalURL: https://abandonedupstate.com/wiscoy-school-district-9/
+author: Bryant Neal
+galleryImages:
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-interior-main-classroom.jpg"
+    caption: "Hoarded main classroom with separate entrances"
+    seoCaption: "Main classroom of the 1880 Wiscoy School cluttered with stored materials and separate entrances"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-interior-side-entrance.jpg"
+    caption: "Side entrance stacked with machinery"
+    seoCaption: "Side entrance of Wiscoy School packed with a vintage bandsaw and small engine"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-interior-small-classroom.jpg"
+    caption: "Small classroom filled with storage boxes"
+    seoCaption: "Small classroom at Wiscoy School filled with boxes and stored items"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-interior-classroom-divider.jpg"
+    caption: "Wooden divider between classrooms"
+    seoCaption: "Wooden divider separating the two rooms of the Wiscoy two-room schoolhouse"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-exterior-side-spring-2020.jpg"
+    caption: "South exterior wall in spring light"
+    seoCaption: "South exterior wall of the abandoned Wiscoy Schoolhouse in Allegany County, New York"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-exterior-2023-summer.jpg"
+    caption: "Overgrown exterior in summer 2023"
+    seoCaption: "Overgrown exterior of the Wiscoy two-room schoolhouse during summer 2023"
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-historic-2006-winter-jim-gelser.jpg"
+    caption: "Winter 2006 photograph by Jim Gelser"
+    seoCaption: "Wiscoy Schoolhouse in winter 2006 photographed by Jim Gelser"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-historic-2009-tax-image.jpg"
+    caption: "August 2009 Allegany County tax image"
+    seoCaption: "Allegany County tax record photograph of Wiscoy School from August 2009"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-historic-2015-tax-image.jpg"
+    caption: "July 2015 Allegany County tax image"
+    seoCaption: "Allegany County tax record photograph of Wiscoy School from July 2015"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/wiscoy-school/wiscoy-school-historic-2022-tax-image.jpg"
+    caption: "June 2022 Allegany County tax image"
+    seoCaption: "Allegany County tax record photograph of Wiscoy School from June 2022"
+    historical: true
+    sourceURL: n/a
+---
+
+
+import { Image } from "astro:assets";
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+
+import heroImage from "../assets/images/wiscoy-school/wiscoy-school-exterior-2023-summer.jpg";
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "Wiscoy School exterior in summer 2023",
+  seoCaption: "Overgrown exterior of Wiscoy School District 9 during summer 2023",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || "";
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="wiscoy-school"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: "block", margin: "2rem 0" }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: "100%", borderRadius: "inherit" }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+<div class="my-4"></div>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: "#b9975c" }}>{frontmatter.description}</p>
+
+The Wiscoy School, also known as District #9, is a two room schoolhouse in Wiscoy, Caneadea, Allegany County, New York, built in 1880. It was last sold for $1,400 in 2020. Former student Gary Nevinger recalls his time there, and there's a shared desire among residents to restore it and transform it into a museum, but it currently serves as storage and is deteriorating.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="wiscoy-school"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="wiscoy-school"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [Allegany County Historical Society — Hume Schools: Wiscoy School](https://www.alleganyhistory.org/places/schools/f-j238/town-of-hume/1726-wiscoy-school-district-9)
+- [Allegany County Tax Records — Wiscoy School](https://www.alleganyco.gov/departments/real-property/)

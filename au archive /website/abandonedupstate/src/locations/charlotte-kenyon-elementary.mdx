@@ -1,0 +1,161 @@
+---
+title: Charlotte Kenyon Elementary
+seoTitle: Charlotte Kenyon Elementary Ruins | Abandoned Upstate
+pubDatetime: 2015-11-09 03:00:00-05:00
+description: Riverside Central School in Waiting
+seoDescription: Tour the abandoned Charlotte Kenyon Elementary School in Chenango Forks, New York, with its silent auditorium, stacked desks, and riverside classrooms awaiting redevelopment.
+featured: false
+draft: false
+state: new york
+
+county: broome
+city: chenango forks
+region: 
+category: schools
+status: abandoned
+
+built_year: 1952
+abandoned_year: 2011
+lastmod: 2025-10-06T09:00:00-05:00
+tags:
+- auditoriums
+- gymnasiums
+heroImage: ../assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-exterior-school.jpg
+heroImageAlt: "Brick facade of the abandoned Charlotte Kenyon Elementary School"
+seoImage: ../assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-auditorium-stage.jpg
+canonicalURL: https://abandonedupstate.com/charlotte-kenyon-elementary/
+author: Bryant Neal
+galleryImages:
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-exterior-main-entrance.jpg"
+    caption: "Main entrance doors along Main Street"
+    seoCaption: "Main entrance of the abandoned Charlotte Kenyon Elementary School in Chenango Forks"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-auditorium-stage.jpg"
+    caption: "Auditorium stage under the original proscenium"
+    seoCaption: "Abandoned auditorium stage inside Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-cafeteria-mural.jpg"
+    caption: "Cafeteria mural recalling canal days"
+    seoCaption: "Hand-painted cafeteria mural inside Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-basement-chair.jpg"
+    caption: "Basement classroom with a lone chair"
+    seoCaption: "Basement classroom with a lone chair inside Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-boys-bathroom.jpg"
+    caption: "Sunlit boys' lavatory"
+    seoCaption: "Sunlit boys' lavatory inside the abandoned Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-stairwell.jpg"
+    caption: "Stairwell with peeling yellow paint"
+    seoCaption: "Peeling yellow paint along a stairwell inside Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-yellow-classroom.jpg"
+    caption: "Upper-level classroom lined with desks"
+    seoCaption: "Upper-level classroom lined with desks inside Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-art-room-sink.jpg"
+    caption: "Art room sinks and paint-stained counters"
+    seoCaption: "Art room sinks and paint-stained counters at Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-chair-art.jpg"
+    caption: "Art classroom cluttered with stacked chairs"
+    seoCaption: "Stacks of chairs and supplies in the art classroom at Charlotte Kenyon Elementary"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-interior-hallway.jpg"
+    caption: "First-floor hallway with lockers and light"
+    seoCaption: "Sunlit first-floor hallway inside the abandoned Charlotte Kenyon Elementary School"
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-historic-exterior-1950s.jpg"
+    caption: "Charlotte Kenyon Elementary in the 1950s"
+    seoCaption: "1950s exterior photograph of Charlotte Kenyon Elementary School"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-historic-aeiral.jpg"
+    caption: "Aerial view of the Chenango Forks campus"
+    seoCaption: "Historic aerial photograph of Charlotte Kenyon Elementary and the surrounding neighborhood"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-historic-charlotte-kenyon-teacher.jpg"
+    caption: "Charlotte Kenyon with her students"
+    seoCaption: "Historic portrait of Charlotte Kenyon surrounded by Chenango Forks students"
+    historical: true
+    sourceURL: n/a
+  - src: "@/assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-historic-newspaper-clipping.jpg"
+    caption: "Newspaper clipping announcing the school"
+    seoCaption: "Historic newspaper clipping discussing Charlotte Kenyon Elementary School"
+    historical: true
+    sourceURL: n/a
+---
+
+import GalleryLightbox from "@/components/GalleryLightbox.astro";
+import { Image } from "astro:assets";
+
+import heroImage from '../assets/images/charlotte-kenyon-elementary/charlotte-kenyon-elementary-exterior-school.jpg';
+
+export const heroGalleryImage = {
+  src: heroImage,
+  caption: "Charlotte Kenyon Elementary facing Main Street",
+  seoCaption: "Brick facade of the abandoned Charlotte Kenyon Elementary School in Chenango Forks, New York",
+};
+
+export const heroLightboxCaption = heroGalleryImage.caption || frontmatter.heroImageCaption || '';
+export const heroLightboxSeoCaption =
+  heroGalleryImage.seoCaption || frontmatter.heroImageAlt || frontmatter.title;
+
+<a
+  href={heroGalleryImage.src.src}
+  class="glightbox gallery-item"
+  data-gallery="charlotte-kenyon-elementary"
+  data-caption={heroLightboxCaption || undefined}
+  data-seo-caption={heroLightboxSeoCaption}
+  style={{ display: 'block', margin: '2rem 0' }}
+>
+  <Image
+    src={heroGalleryImage.src}
+    alt={heroLightboxSeoCaption}
+    style={{ width: '100%', borderRadius: 'inherit' }}
+    quality={85}
+    loading="eager"
+    fetchpriority="high"
+  />
+</a>
+
+# {frontmatter.title}
+<p className="post-tagline" style={{ color: "#b9975c" }}>{frontmatter.description}</p>
+
+Charlotte Kenyon Elementary opened in 1929 as Chenango Forks Central School, a riverside campus built to consolidate classrooms across the valley. The district renamed the building in 1978 to honor Charlotte Kenyon, a beloved teacher and principal who guided Forks students for more than four decades, keeping music, art, and community events rooted in the brick halls along Main Street.
+
+When the elementary grades shifted to a new facility in 2002, the landmark beside the Chenango River fell quiet. Explorers still find the auditorium stage dressed for assemblies, cafeteria murals celebrating the region's canal and rail heritage, and stacks of chairs left in basement classrooms - scenes documented by urban explorers in the mid-2010s.
+
+Redevelopment plans have surfaced repeatedly, from community center concepts to a 2022 proposal for workforce housing, yet water intrusion, asbestos abatement, and financing hurdles continue to stall construction. Until a viable reuse secures funding, Charlotte Kenyon Elementary remains a time capsule for the village and alumni advocating for its revival.
+
+<div class="my-10"></div>
+
+{(() => {
+  const galleryImages = Array.isArray(frontmatter.galleryImages)
+    ? frontmatter.galleryImages
+    : [];
+  const primaryImages = galleryImages.filter(image => !image?.historical);
+  const historicalImages = galleryImages.filter(image => image?.historical);
+
+  return (
+    <>
+      {primaryImages.length > 0 && (
+        <GalleryLightbox
+          galleryId="charlotte-kenyon-elementary"
+          images={primaryImages}
+        />
+      )}
+
+      {historicalImages.length > 0 && (
+        <section className="historical-gallery">
+          <p className="historical-gallery__label">Historical images</p>
+          <GalleryLightbox
+            galleryId="charlotte-kenyon-elementary"
+            images={historicalImages}
+            class="gallery gallery--two historical-gallery__grid"
+          />
+        </section>
+      )}
+    </>
+  );
+})()}
+
+## Sources
+
+- [WBNG - You Ask, We Answer: What are the latest plans for the old Charlotte Kenyon Elementary School?](https://www.wbng.com/2022/06/02/you-ask-we-answer-what-are-latest-plans-old-charlotte-kenyon-elementary-school/)
+- [Traversing Travy - Exploring Charlotte Kenyon Elementary School](https://traversingtravy.com/2015/09/17/exploring-charlotte-kenyon-elementary-school/)
+- [Press & Sun-Bulletin - Charlotte L. Kenyon Elementary School](https://www.pressconnects.com/story/news/connections/history/2014/09/03/chenenago-forks-school/15042181/)
+
+<div class="my-12"></div>

@@ -1,0 +1,9 @@
+- folder layout
+-
+- folder user gave
+	- wedding year
+		- (date)-(couple name)
+			- raw footage
+				- #dadcam
+				- #super8
+				- #modern

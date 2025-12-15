@@ -1,0 +1,19 @@
+- embedded browser
+- right side toolbar
+	- save bookmark
+		- search
+			- search bar
+			- autofill based on database
+		- recents
+			- list top 5
+		- projects
+			- list top 5
+		- uploads
+			- list top 5
+		- save - add new
+			- buttons
+	- bookmark browser
+		- state
+			- type
+				- location
+	-

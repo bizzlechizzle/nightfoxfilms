@@ -1,0 +1,8 @@
+- locked
+- open
+- vandalized
+- unknown
+- fire damaged
+- popular site
+- time capsule
+- abandoned

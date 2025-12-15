@@ -1,0 +1,8 @@
+- select location - select folder/files- add location
+	- select location - text box with autofill from database
+	- select folder/files - button
+	- add location - button
+- drag and drop area
+-
+- input form
+	- #import_form

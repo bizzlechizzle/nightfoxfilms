@@ -1,0 +1,26 @@
+- atomic import and rename
+-
+- #auarchive
+	- read columns - if null continue
+		- #locadd
+		- #imgadd
+		- #vidadd
+		- #docadd
+		- #mapadd
+	- copy/hardlink and name files
+		- hardlink (preffered) or copy files
+			- #rsync
+			- #json_names
+		- new file location
+			- #imgloc
+			- #vidloc
+			- #docloc
+			- #maploc
+	- call #gen_sha if duplicate found then copy was complete
+		- delete original files if #deleteonimport is true
+	- record add date to respective column
+		- #locadd
+		- #imgadd
+		- #vidadd
+		- #docadd
+		- #mapadd

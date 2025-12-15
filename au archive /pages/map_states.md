@@ -1,0 +1,2 @@
+- json1 format
+- list of states that have pins on map

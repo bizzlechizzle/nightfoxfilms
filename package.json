@@ -1,0 +1,42 @@
+{
+  "name": "nightfox",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Wedding videography workflow management",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bizzlechizzle/nightfox.git"
+  },
+  "author": "Nightfox Films",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "better-sqlite3",
+      "esbuild",
+      "sharp",
+      "7zip-bin",
+      "@electron/rebuild",
+      "blake3",
+      "bufferutil",
+      "utf-8-validate"
+    ]
+  },
+  "scripts": {
+    "postinstall": "pnpm --filter @nightfox/core build",
+    "dev": "pnpm --filter @nightfox/desktop dev",
+    "build": "pnpm --filter @nightfox/core build && pnpm --filter @nightfox/desktop build",
+    "build:core": "pnpm --filter @nightfox/core build",
+    "build:desktop": "pnpm --filter @nightfox/desktop build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "prettier --write \"**/*.{ts,tsx,svelte,json,md}\"",
+    "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist packages/*/dist-electron",
+    "reinstall": "pnpm clean && pnpm install",
+    "deps": "bash scripts/check-deps.sh"
+  }
+}

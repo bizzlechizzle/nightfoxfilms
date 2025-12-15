@@ -1,0 +1,44 @@
+- objective
+	- folder naming and layout schema
+	- called folder.json
+-
+- folder organization
+	- #folder_archive
+		- locations
+			- #folder_state_type
+				- #folder_locs
+					- #folder_imgs_import
+					- #folder_vids_import
+					- #folder_docs_import
+		- documents
+			- maps
+				- #folder_maps_user
+				- #folder_maps_archive
+-
+- folder names
+	- #folder_state_type
+		- "#state"-"#type"
+	- #folder_locs
+		- "#slocnam"-"#loc12"
+	- #folder_imgs_import
+		- org-img-"#loc12"
+	- #folder_vids_import
+		- org-vid-"#loc12"
+	- #folder_docs_import
+		- org_doc_"#loc12"
+	- #folder_maps_user
+		- user maps
+	- #folder_maps_archive
+		- archive maps
+-
+- sub-location variants
+	- #folder_imgs_simport
+		- org-img-"#loc12"-"#sub12"
+	- #folder_vids_simport
+		- org-vid-"#loc12"-"#sub12"
+	- #folder_docs_simport
+		- org_doc_"#loc12"-"#sub12"
+	- #folder_docs_simport
+		- org_doc_"#loc12"-"#sub12"
+-
+-

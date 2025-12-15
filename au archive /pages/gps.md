@@ -1,0 +1,6 @@
+- latitude and longitude
+- normalize #geopy.point
+-
+- trust scale
+	- 1. #import_form
+	- 2. #import_gps
