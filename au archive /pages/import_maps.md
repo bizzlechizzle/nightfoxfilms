@@ -1,4 +1,0 @@
-- #auarchive
-	- check #meta_map if null continue
-	- dump map data into #meta_map in blob format
--

@@ -1,2 +1,0 @@
-- image location on disk
-	- absolute path

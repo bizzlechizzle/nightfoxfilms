@@ -1,1 +1,0 @@
-- first 12 characters of uuid4 for sub-location

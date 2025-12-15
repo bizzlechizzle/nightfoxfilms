@@ -1,2 +1,0 @@
-- date document  added to database
-- normalization #dateutil

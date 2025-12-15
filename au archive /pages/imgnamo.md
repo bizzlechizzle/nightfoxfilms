@@ -1,1 +1,0 @@
-- original image file name and extension

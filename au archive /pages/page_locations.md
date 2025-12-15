@@ -1,7 +1,0 @@
-- states - types
-	- states
-		- top 5 states [columns by location volume]
-		- show all
-	- types
-		- top 5 [columns by type volume]
-		- show all

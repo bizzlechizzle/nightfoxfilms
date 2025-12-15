@@ -1,8 +1,0 @@
-- json1 entry
-- full street address
-- normalization #libpostal
-- #street
-- #state
-- #city
-- #zipcode
-- #county

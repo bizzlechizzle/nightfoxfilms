@@ -1,2 +1,0 @@
-- date video added to database
-- normalization #dateutil

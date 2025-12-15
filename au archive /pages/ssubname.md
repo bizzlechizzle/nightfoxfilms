@@ -1,7 +1,0 @@
-- slug sub-location name
-	- max 12 characters
-- normalization
-	- unidecode
-	- titlecase
-	- automatic slugification
-		- #slugify

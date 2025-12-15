@@ -1,2 +1,0 @@
-- list of supported video types
-	- if ffmpeg supports it, we import it

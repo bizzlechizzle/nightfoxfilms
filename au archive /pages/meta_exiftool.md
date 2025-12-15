@@ -1,2 +1,0 @@
-- #exiftool metadata dump
-- json1 format

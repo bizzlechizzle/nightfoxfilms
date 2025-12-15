@@ -1,3 +1,0 @@
-- #desktop_app
-- #brand_guide
-- #claude_md

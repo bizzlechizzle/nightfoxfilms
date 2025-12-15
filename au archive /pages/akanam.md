@@ -1,3 +1,0 @@
-- also known as name
-- json1 entry incase of multiple entries
-- normalization: unidecode, titlecase

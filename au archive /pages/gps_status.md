@@ -1,2 +1,0 @@
-- true/false/null/normalized/verified
-- starts as null

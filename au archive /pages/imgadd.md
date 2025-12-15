@@ -1,2 +1,0 @@
-- date image added to database
-- normalization #dateutil

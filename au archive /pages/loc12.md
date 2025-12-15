@@ -1,1 +1,0 @@
-- first 12 digits of locations uuid

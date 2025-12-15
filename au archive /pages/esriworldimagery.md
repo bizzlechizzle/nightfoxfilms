@@ -1,1 +1,0 @@
-- Esri World Imagery

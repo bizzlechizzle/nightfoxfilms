@@ -1,7 +1,0 @@
-- #ffmpeg
-- #slugify
-- #exiftool
-- #libpostal
-- #dateutil
-- #rsync
-- #geopy.point

@@ -1,5 +1,0 @@
-- abandoned
-- demolished
-- renovated
-- future classic
-- unknown

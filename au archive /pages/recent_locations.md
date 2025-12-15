@@ -1,1 +1,0 @@
-- recently interacted with abandoned locations

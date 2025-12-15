@@ -1,2 +1,0 @@
-- video location on disk
-	- absolute path

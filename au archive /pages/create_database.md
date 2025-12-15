@@ -1,9 +1,0 @@
-- objective
-	- create #auarchive
-		- #database_table_locs
-		- #database_table_slocs
-		- #database_table_imgs
-		- #database_table_vids
-		- #database_table_urls
-		- #database_table_docs
--

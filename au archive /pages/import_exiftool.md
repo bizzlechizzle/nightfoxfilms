@@ -1,5 +1,0 @@
-- import_exiftool.py
--
-- #auarchive
-	- check #meta_exiftool in all columns, if null run #exiftool
-	- record all data in json1 format

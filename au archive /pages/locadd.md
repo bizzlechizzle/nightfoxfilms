@@ -1,2 +1,0 @@
-- date new abandoned location added to database
-- normalization #dateutil
