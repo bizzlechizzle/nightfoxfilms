@@ -515,6 +515,78 @@ function runMigrations(database: SqliteDatabase): void {
         ALTER TABLE scenes ADD COLUMN wedding_moment TEXT;
       `,
     },
+    // Migration 6: Add wedding photography CMS tables
+    {
+      id: 6,
+      name: 'add_wedding_cms_tables',
+      sql: `
+        -- Wedding Photography Tracking Table
+        CREATE TABLE IF NOT EXISTS weddings (
+            id TEXT PRIMARY KEY NOT NULL,
+            partner_a_name TEXT NOT NULL,
+            partner_b_name TEXT NOT NULL,
+            display_name TEXT NOT NULL,
+            email TEXT,
+            phone TEXT,
+            wedding_date TEXT NOT NULL,
+            venue_name TEXT,
+            venue_city TEXT,
+            venue_state TEXT,
+            status TEXT DEFAULT 'imported' CHECK (status IN ('imported', 'culling', 'editing', 'delivered', 'archived')),
+            date_imported TEXT DEFAULT CURRENT_TIMESTAMP,
+            date_culling_started TEXT,
+            date_editing_started TEXT,
+            date_delivered TEXT,
+            date_archived TEXT,
+            total_images INTEGER DEFAULT 0,
+            culled_images INTEGER DEFAULT 0,
+            edited_images INTEGER DEFAULT 0,
+            delivered_images INTEGER DEFAULT 0,
+            source_path TEXT,
+            working_path TEXT,
+            delivery_path TEXT,
+            package_name TEXT,
+            contracted_images INTEGER,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_weddings_status ON weddings(status);
+        CREATE INDEX IF NOT EXISTS idx_weddings_date ON weddings(wedding_date);
+        CREATE INDEX IF NOT EXISTS idx_weddings_display_name ON weddings(display_name);
+
+        -- Wedding Status History Table
+        CREATE TABLE IF NOT EXISTS wedding_status_history (
+            id TEXT PRIMARY KEY NOT NULL,
+            wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+            from_status TEXT,
+            to_status TEXT NOT NULL,
+            changed_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_wedding_status_history_wedding ON wedding_status_history(wedding_id);
+
+        -- Wedding Tags Table
+        CREATE TABLE IF NOT EXISTS wedding_tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            wedding_id TEXT NOT NULL REFERENCES weddings(id) ON DELETE CASCADE,
+            tag TEXT NOT NULL,
+            UNIQUE(wedding_id, tag)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_wedding_tags_wedding ON wedding_tags(wedding_id);
+        CREATE INDEX IF NOT EXISTS idx_wedding_tags_tag ON wedding_tags(tag);
+
+        -- Trigger to update weddings.updated_at
+        CREATE TRIGGER IF NOT EXISTS tr_weddings_update_timestamp
+        AFTER UPDATE ON weddings
+        BEGIN
+            UPDATE weddings SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
   ];
 
   // Apply pending migrations

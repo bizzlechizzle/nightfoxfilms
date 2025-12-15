@@ -6,16 +6,52 @@
   import Cameras from './pages/Cameras.svelte';
   import Settings from './pages/Settings.svelte';
 
-  type Page = 'dashboard' | 'couples' | 'import' | 'cameras' | 'settings';
-  let currentPage = $state<Page>('dashboard');
+  // Wedding CMS Pages
+  import WeddingsDashboard from './pages/WeddingsDashboard.svelte';
+  import WeddingsList from './pages/WeddingsList.svelte';
+  import WeddingDetail from './pages/WeddingDetail.svelte';
+  import WeddingsCalendar from './pages/WeddingsCalendar.svelte';
+  import WeddingsStats from './pages/WeddingsStats.svelte';
 
-  const pages: { id: Page; label: string }[] = [
+  type Page = 'dashboard' | 'couples' | 'import' | 'cameras' | 'settings' |
+              'weddings-dashboard' | 'weddings-list' | 'wedding-detail' | 'weddings-calendar' | 'weddings-stats';
+
+  let currentPage = $state<Page>('weddings-dashboard');
+  let selectedWeddingId = $state<string | null>(null);
+
+  // Navigation sections
+  const videoPages: { id: Page; label: string }[] = [
     { id: 'dashboard', label: 'Dashboard' },
     { id: 'couples', label: 'Couples' },
     { id: 'import', label: 'Import' },
     { id: 'cameras', label: 'Cameras' },
+  ];
+
+  const photoPages: { id: Page; label: string }[] = [
+    { id: 'weddings-dashboard', label: 'Dashboard' },
+    { id: 'weddings-list', label: 'Weddings' },
+    { id: 'weddings-calendar', label: 'Calendar' },
+    { id: 'weddings-stats', label: 'Stats' },
+  ];
+
+  const utilityPages: { id: Page; label: string }[] = [
     { id: 'settings', label: 'Settings' },
   ];
+
+  function handleWeddingNavigate(page: string, weddingId?: string) {
+    if (page === 'wedding-detail' && weddingId) {
+      selectedWeddingId = weddingId;
+      currentPage = 'wedding-detail';
+    } else if (page === 'weddings-list') {
+      currentPage = 'weddings-list';
+      selectedWeddingId = null;
+    }
+  }
+
+  function handleBackFromDetail() {
+    currentPage = 'weddings-list';
+    selectedWeddingId = null;
+  }
 </script>
 
 <div class="app-container">
@@ -26,19 +62,58 @@
       <span class="tagline">Films</span>
     </div>
 
-    <ul class="nav-links">
-      {#each pages as page}
-        <li>
-          <button
-            class="nav-link"
-            class:active={currentPage === page.id}
-            onclick={() => currentPage = page.id}
-          >
-            {page.label}
-          </button>
-        </li>
-      {/each}
-    </ul>
+    <!-- Photography Section -->
+    <div class="nav-section">
+      <span class="nav-section__label">Photography</span>
+      <ul class="nav-links">
+        {#each photoPages as page}
+          <li>
+            <button
+              class="nav-link"
+              class:active={currentPage === page.id}
+              onclick={() => { currentPage = page.id; selectedWeddingId = null; }}
+            >
+              {page.label}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    </div>
+
+    <!-- Videography Section -->
+    <div class="nav-section">
+      <span class="nav-section__label">Videography</span>
+      <ul class="nav-links">
+        {#each videoPages as page}
+          <li>
+            <button
+              class="nav-link"
+              class:active={currentPage === page.id}
+              onclick={() => currentPage = page.id}
+            >
+              {page.label}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    </div>
+
+    <!-- Utility Section -->
+    <div class="nav-section nav-section--bottom">
+      <ul class="nav-links">
+        {#each utilityPages as page}
+          <li>
+            <button
+              class="nav-link"
+              class:active={currentPage === page.id}
+              onclick={() => currentPage = page.id}
+            >
+              {page.label}
+            </button>
+          </li>
+        {/each}
+      </ul>
+    </div>
   </nav>
 
   <!-- Main Content Area -->
@@ -53,6 +128,16 @@
       <Cameras />
     {:else if currentPage === 'settings'}
       <Settings />
+    {:else if currentPage === 'weddings-dashboard'}
+      <WeddingsDashboard onnavigate={handleWeddingNavigate} />
+    {:else if currentPage === 'weddings-list'}
+      <WeddingsList onnavigate={handleWeddingNavigate} />
+    {:else if currentPage === 'wedding-detail' && selectedWeddingId}
+      <WeddingDetail weddingId={selectedWeddingId} onback={handleBackFromDetail} />
+    {:else if currentPage === 'weddings-calendar'}
+      <WeddingsCalendar onnavigate={handleWeddingNavigate} />
+    {:else if currentPage === 'weddings-stats'}
+      <WeddingsStats />
     {/if}
   </main>
 </div>
@@ -74,8 +159,30 @@
   }
 
   .logo {
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
     padding: 0 0.5rem;
+  }
+
+  .nav-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .nav-section--bottom {
+    margin-top: auto;
+    margin-bottom: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .nav-section__label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    padding: 0 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .logo h1 {

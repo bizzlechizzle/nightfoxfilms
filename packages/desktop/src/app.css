@@ -206,3 +206,336 @@
 .animate-pulse-dot {
   animation: pulse-dot 1.5s ease-in-out infinite;
 }
+
+/* =============================================================================
+   WEDDING CMS - Status Colors (Braun/Ulm muted palette)
+   ============================================================================= */
+
+@layer base {
+  :root {
+    /* Wedding workflow status colors */
+    --status-imported: #8A8A86;
+    --status-culling: #C9A227;
+    --status-editing: #5A7A94;
+    --status-delivered: #4A8C5E;
+    --status-archived: #5C5C58;
+
+    /* Status backgrounds (10% opacity) */
+    --status-imported-bg: rgba(138, 138, 134, 0.1);
+    --status-culling-bg: rgba(201, 162, 39, 0.1);
+    --status-editing-bg: rgba(90, 122, 148, 0.1);
+    --status-delivered-bg: rgba(74, 140, 94, 0.1);
+    --status-archived-bg: rgba(92, 92, 88, 0.1);
+  }
+}
+
+@layer components {
+  /* Status badge component */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: 2px;
+  }
+
+  .status-badge--imported {
+    background-color: var(--status-imported-bg);
+    color: var(--status-imported);
+  }
+
+  .status-badge--culling {
+    background-color: var(--status-culling-bg);
+    color: var(--status-culling);
+  }
+
+  .status-badge--editing {
+    background-color: var(--status-editing-bg);
+    color: var(--status-editing);
+  }
+
+  .status-badge--delivered {
+    background-color: var(--status-delivered-bg);
+    color: var(--status-delivered);
+  }
+
+  .status-badge--archived {
+    background-color: var(--status-archived-bg);
+    color: var(--status-archived);
+  }
+
+  /* Progress bar component */
+  .progress-bar {
+    height: 4px;
+    background-color: var(--color-border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-bar__fill {
+    height: 100%;
+    background-color: var(--color-text);
+    transition: width 0.3s ease;
+  }
+
+  .progress-bar--delivered .progress-bar__fill {
+    background-color: var(--status-delivered);
+  }
+
+  /* Wedding card component */
+  .wedding-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 1rem;
+    transition: border-color 0.15s;
+  }
+
+  .wedding-card:hover {
+    border-color: var(--color-text-muted);
+  }
+
+  .wedding-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .wedding-card__title {
+    font-size: var(--step-1);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .wedding-card__date {
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
+  }
+
+  .wedding-card__meta {
+    display: flex;
+    gap: 1rem;
+    font-size: var(--step--1);
+    color: var(--color-text-secondary);
+  }
+
+  /* Filter tabs */
+  .filter-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-tab {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--color-text-muted);
+    background: none;
+    border: none;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+    transition: color 0.15s, background-color 0.15s;
+  }
+
+  .filter-tab:hover {
+    color: var(--color-text-secondary);
+    background-color: var(--color-bg-alt);
+  }
+
+  .filter-tab--active {
+    color: var(--color-text);
+    background-color: var(--color-bg-alt);
+  }
+
+  .filter-tab__count {
+    margin-left: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 10px;
+    font-weight: 600;
+    background-color: var(--color-border);
+    border-radius: 10px;
+  }
+
+  .filter-tab--active .filter-tab__count {
+    background-color: var(--color-text);
+    color: var(--color-surface);
+  }
+
+  /* Stat card */
+  .stat-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 1.25rem;
+  }
+
+  .stat-card__label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-card__value {
+    font-size: var(--step-3);
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1;
+  }
+
+  .stat-card__subtext {
+    font-size: var(--step--1);
+    color: var(--color-text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  /* Calendar grid */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background-color: var(--color-border);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .calendar-day {
+    background-color: var(--color-surface);
+    min-height: 100px;
+    padding: 0.5rem;
+  }
+
+  .calendar-day--header {
+    min-height: auto;
+    padding: 0.5rem;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-muted);
+    text-align: center;
+    background-color: var(--color-bg-alt);
+  }
+
+  .calendar-day--other-month {
+    background-color: var(--color-bg-alt);
+    color: var(--color-text-disabled);
+  }
+
+  .calendar-day__number {
+    font-size: var(--step--1);
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .calendar-day--today .calendar-day__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background-color: var(--color-text);
+    color: var(--color-surface);
+    border-radius: 50%;
+  }
+
+  .calendar-wedding {
+    font-size: 10px;
+    padding: 0.125rem 0.25rem;
+    margin-top: 0.125rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal {
+    background-color: var(--color-surface);
+    border-radius: 8px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal__header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .modal__title {
+    font-size: var(--step-2);
+    font-weight: 500;
+    margin: 0;
+  }
+
+  .modal__body {
+    padding: 1.5rem;
+  }
+
+  .modal__footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  /* Form group */
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+
+  .form-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--color-text-muted);
+  }
+
+  .empty-state__title {
+    font-size: var(--step-1);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--color-text-secondary);
+  }
+
+  .empty-state__text {
+    font-size: var(--step-0);
+    margin-bottom: 1.5rem;
+  }
+}

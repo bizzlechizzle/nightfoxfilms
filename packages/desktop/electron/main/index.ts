@@ -19,6 +19,11 @@ import {
   filesRepository,
   scenesRepository,
   jobsRepository,
+  weddingsRepository,
+  type CreateWeddingInput,
+  type UpdateWeddingInput,
+  type WeddingFilters,
+  type WeddingStatus,
 } from '../repositories';
 import { CameraInputSchema, CameraPatternInputSchema, CoupleInputSchema } from '@nightfox/core';
 import {
@@ -777,6 +782,108 @@ ipcMain.handle('jobs:status', async () => {
 
 ipcMain.handle('jobs:cancel', async (_, jobId: number) => {
   return jobsRepository.cancel(jobId);
+});
+
+// =============================================================================
+// IPC HANDLERS - Weddings (Photography CMS)
+// =============================================================================
+
+ipcMain.handle('weddings:create', async (_, input: CreateWeddingInput) => {
+  return weddingsRepository.create(input);
+});
+
+ipcMain.handle('weddings:findById', async (_, id: string) => {
+  return weddingsRepository.findById(id);
+});
+
+ipcMain.handle('weddings:findAll', async (_, filters?: WeddingFilters) => {
+  return weddingsRepository.findAll(filters);
+});
+
+ipcMain.handle('weddings:update', async (_, id: string, input: UpdateWeddingInput) => {
+  return weddingsRepository.update(id, input);
+});
+
+ipcMain.handle('weddings:updateStatus', async (_, id: string, status: WeddingStatus, notes?: string) => {
+  return weddingsRepository.updateStatus(id, status, notes);
+});
+
+ipcMain.handle('weddings:delete', async (_, id: string) => {
+  return weddingsRepository.delete(id);
+});
+
+ipcMain.handle('weddings:getHistory', async (_, id: string) => {
+  return weddingsRepository.getStatusHistory(id);
+});
+
+ipcMain.handle('weddings:getDashboardStats', async () => {
+  return weddingsRepository.getDashboardStats();
+});
+
+ipcMain.handle('weddings:getMonthlyStats', async (_, year: number, month: number) => {
+  return weddingsRepository.getMonthlyStats(year, month);
+});
+
+ipcMain.handle('weddings:getYearlyStats', async (_, year: number) => {
+  return weddingsRepository.getYearlyStats(year);
+});
+
+ipcMain.handle('weddings:getForMonth', async (_, year: number, month: number) => {
+  return weddingsRepository.getWeddingsForMonth(year, month);
+});
+
+ipcMain.handle('weddings:selectFolder', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openDirectory'],
+  });
+
+  if (result.canceled || !result.filePaths[0]) {
+    return null;
+  }
+
+  const folderPath = result.filePaths[0];
+
+  // Count images in folder
+  const imageExtensions = ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.cr2', '.nef', '.arw', '.raw', '.dng'];
+  let imageCount = 0;
+
+  try {
+    const entries = fs.readdirSync(folderPath, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isFile()) {
+        const ext = path.extname(entry.name).toLowerCase();
+        if (imageExtensions.includes(ext)) {
+          imageCount++;
+        }
+      }
+    }
+  } catch {
+    // Ignore errors reading directory
+  }
+
+  // Try to parse metadata from folder name
+  // Common formats: "2024-06-15 Smith & Jones", "Smith Jones Wedding", etc.
+  const folderName = path.basename(folderPath);
+  const parsedMeta: { partnerAName?: string; partnerBName?: string; weddingDate?: string } = {};
+
+  // Try to extract date
+  const dateMatch = folderName.match(/(\d{4}-\d{2}-\d{2})|(\d{2}-\d{2}-\d{4})/);
+  if (dateMatch) {
+    parsedMeta.weddingDate = dateMatch[1] || dateMatch[2];
+  }
+
+  // Try to extract names from "Name & Name" pattern
+  const nameMatch = folderName.match(/([A-Z][a-z]+)\s*[&+]\s*([A-Z][a-z]+)/);
+  if (nameMatch) {
+    parsedMeta.partnerAName = nameMatch[1];
+    parsedMeta.partnerBName = nameMatch[2];
+  }
+
+  return {
+    path: folderPath,
+    imageCount,
+    parsedMeta: Object.keys(parsedMeta).length > 0 ? parsedMeta : undefined,
+  };
 });
 
 // =============================================================================

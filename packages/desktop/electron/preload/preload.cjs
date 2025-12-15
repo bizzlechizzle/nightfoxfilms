@@ -204,6 +204,22 @@ const api = {
     },
   },
 
+  // Weddings (Photography CMS)
+  weddings: {
+    create: (input) => invoke("weddings:create")(input),
+    findById: (id) => invoke("weddings:findById")(id),
+    findAll: (filters) => invoke("weddings:findAll")(filters),
+    update: (id, input) => invoke("weddings:update")(id, input),
+    updateStatus: (id, status, notes) => invoke("weddings:updateStatus")(id, status, notes),
+    delete: (id) => invoke("weddings:delete")(id),
+    getHistory: (id) => invoke("weddings:getHistory")(id),
+    getDashboardStats: () => invoke("weddings:getDashboardStats")(),
+    getMonthlyStats: (year, month) => invoke("weddings:getMonthlyStats")(year, month),
+    getYearlyStats: (year) => invoke("weddings:getYearlyStats")(year),
+    getForMonth: (year, month) => invoke("weddings:getForMonth")(year, month),
+    selectFolder: () => invoke("weddings:selectFolder")(),
+  },
+
   // Shell operations
   shell: {
     openExternal: (url) => invoke("shell:openExternal")(url),
