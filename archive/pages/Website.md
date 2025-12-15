@@ -1,0 +1,8 @@
+- nightfoxfilms.com
+-
+- #[[Home Page]]
+- #SEO
+-
+- KISS - I hate how much information can be on others websites
+-
+- DO A FULL DEEP DIVE ASS CHEWING REVIEW OF CURRENT SITE JUST TO GET OUT VOICE AND STUFF

@@ -1,0 +1,11 @@
+- Simple Color Palette
+	- Background [fffbf7]
+	- Foreground [454545]
+	- Accent [b9975c]
+-
+- Logo [same - maybe clean/up]
+	- Floral Background
+	- VHS Tape
+-
+- Voice
+	- Keep Same Wholesome Voice
