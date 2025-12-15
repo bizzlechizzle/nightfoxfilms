@@ -54,3 +54,6 @@ venv/
 # Temporary
 tmp/
 temp/
+
+# Local reference (not part of project)
+au archive /
