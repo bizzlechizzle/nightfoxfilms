@@ -93,9 +93,9 @@
 
     try {
       if (droppedFiles.length > 0) {
-        await api.import.files(droppedFiles, selectedCoupleId);
+        await api.import.files(droppedFiles, { coupleId: selectedCoupleId });
       } else if (scanResult) {
-        await api.import.files(scanResult.files, selectedCoupleId);
+        await api.import.files(scanResult.files, { coupleId: selectedCoupleId });
       }
     } catch (error) {
       console.error('Import failed:', error);

@@ -25,6 +25,26 @@ export type {
   ImportProgress,
   ImportBatchResult,
   ImportResult,
+  // Equipment & inventory types
+  Equipment,
+  EquipmentInput,
+  EquipmentType,
+  EquipmentStatus,
+  FilmStock,
+  FilmStockInput,
+  StockType,
+  FilmFormat,
+  ProcessingLab,
+  ProcessingLabInput,
+  // Camera loan types
+  CameraLoan,
+  CameraLoanInput,
+  LoanStatus,
+  LoanEventType,
+  ConditionRating,
+  // Film usage types
+  FilmUsage,
+  FilmUsageInput,
 } from '@nightfox/core';
 
 /**

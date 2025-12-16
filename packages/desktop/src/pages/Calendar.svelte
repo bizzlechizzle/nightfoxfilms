@@ -23,7 +23,6 @@
 
   const statusColors: Record<CoupleStatus, string> = {
     booked: 'var(--color-status-info)',
-    ingested: 'var(--color-status-warning)',
     editing: 'var(--color-status-warning)',
     delivered: 'var(--color-status-success)',
     archived: 'var(--color-text-muted)',

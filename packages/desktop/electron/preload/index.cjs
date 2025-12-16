@@ -158,8 +158,8 @@ const api = {
 
   // Import
   import: {
-    files: (filePaths, coupleId) => invokeLong("import:files")(filePaths, coupleId),
-    directory: (dirPath, coupleId) => invokeLong("import:directory")(dirPath, coupleId),
+    files: (filePaths, options) => invokeLong("import:files")(filePaths, options),
+    directory: (dirPath, options) => invokeLong("import:directory")(dirPath, options),
     scan: (dirPath) => invoke("import:scan")(dirPath),
     cancel: () => invoke("import:cancel")(),
     status: () => invoke("import:status")(),
@@ -273,6 +273,99 @@ const api = {
     openExternal: (url) => invoke("shell:openExternal")(url),
     openPath: (path) => invoke("shell:openPath")(path),
     showItemInFolder: (path) => invoke("shell:showItemInFolder")(path),
+  },
+
+  // Equipment inventory
+  equipment: {
+    findAll: () => invoke("equipment:findAll")(),
+    findById: (id) => invoke("equipment:findById")(id),
+    findByType: (type) => invoke("equipment:findByType")(type),
+    findByMedium: (medium) => invoke("equipment:findByMedium")(medium),
+    findByStatus: (status) => invoke("equipment:findByStatus")(status),
+    findAvailable: () => invoke("equipment:findAvailable")(),
+    findLoanerEligible: () => invoke("equipment:findLoanerEligible")(),
+    findAvailableForLoan: (startDate, endDate, excludeLoanId) => invoke("equipment:findAvailableForLoan")(startDate, endDate, excludeLoanId),
+    search: (query) => invoke("equipment:search")(query),
+    create: (input) => invoke("equipment:create")(input),
+    update: (id, input) => invoke("equipment:update")(id, input),
+    updateStatus: (id, status) => invoke("equipment:updateStatus")(id, status),
+    linkToCameraProfile: (id, cameraId) => invoke("equipment:linkToCameraProfile")(id, cameraId),
+    delete: (id) => invoke("equipment:delete")(id),
+    getCountsByType: () => invoke("equipment:getCountsByType")(),
+    getCountsByStatus: () => invoke("equipment:getCountsByStatus")(),
+  },
+
+  // Film stock inventory
+  filmStock: {
+    findAll: () => invoke("filmStock:findAll")(),
+    findById: (id) => invoke("filmStock:findById")(id),
+    findByType: (type) => invoke("filmStock:findByType")(type),
+    findByFormat: (format) => invoke("filmStock:findByFormat")(format),
+    findInStock: () => invoke("filmStock:findInStock")(),
+    findLowStock: (threshold) => invoke("filmStock:findLowStock")(threshold),
+    findOutOfStock: () => invoke("filmStock:findOutOfStock")(),
+    search: (query) => invoke("filmStock:search")(query),
+    create: (input) => invoke("filmStock:create")(input),
+    update: (id, input) => invoke("filmStock:update")(id, input),
+    adjustQuantity: (id, delta) => invoke("filmStock:adjustQuantity")(id, delta),
+    delete: (id) => invoke("filmStock:delete")(id),
+    getTotalValue: () => invoke("filmStock:getTotalValue")(),
+    getUsageStats: () => invoke("filmStock:getUsageStats")(),
+  },
+
+  // Processing labs
+  processingLabs: {
+    findAll: () => invoke("processingLabs:findAll")(),
+    findById: (id) => invoke("processingLabs:findById")(id),
+    findByMinRating: (rating) => invoke("processingLabs:findByMinRating")(rating),
+    findByService: (service) => invoke("processingLabs:findByService")(service),
+    search: (query) => invoke("processingLabs:search")(query),
+    create: (input) => invoke("processingLabs:create")(input),
+    update: (id, input) => invoke("processingLabs:update")(id, input),
+    delete: (id) => invoke("processingLabs:delete")(id),
+  },
+
+  // Camera loans
+  loans: {
+    findAll: () => invoke("loans:findAll")(),
+    findAllWithDetails: () => invoke("loans:findAllWithDetails")(),
+    findById: (id) => invoke("loans:findById")(id),
+    findByIdWithDetails: (id) => invoke("loans:findByIdWithDetails")(id),
+    findByCouple: (coupleId) => invoke("loans:findByCouple")(coupleId),
+    findByEquipment: (equipmentId) => invoke("loans:findByEquipment")(equipmentId),
+    findByStatus: (status) => invoke("loans:findByStatus")(status),
+    findActive: () => invoke("loans:findActive")(),
+    findNeedingAttention: () => invoke("loans:findNeedingAttention")(),
+    findOverdue: () => invoke("loans:findOverdue")(),
+    checkAvailability: (equipmentId, startDate, endDate, excludeLoanId) => invoke("loans:checkAvailability")(equipmentId, startDate, endDate, excludeLoanId),
+    create: (input) => invoke("loans:create")(input),
+    update: (id, input) => invoke("loans:update")(id, input),
+    transitionStatus: (id, newStatus, additionalData) => invoke("loans:transitionStatus")(id, newStatus, additionalData),
+    delete: (id) => invoke("loans:delete")(id),
+    getCountsByStatus: () => invoke("loans:getCountsByStatus")(),
+    getCountsByEventType: () => invoke("loans:getCountsByEventType")(),
+  },
+
+  // Film usage tracking
+  filmUsage: {
+    findAll: () => invoke("filmUsage:findAll")(),
+    findAllWithDetails: () => invoke("filmUsage:findAllWithDetails")(),
+    findById: (id) => invoke("filmUsage:findById")(id),
+    findByIdWithDetails: (id) => invoke("filmUsage:findByIdWithDetails")(id),
+    findByCouple: (coupleId) => invoke("filmUsage:findByCouple")(coupleId),
+    findByLoan: (loanId) => invoke("filmUsage:findByLoan")(loanId),
+    findByLab: (labId) => invoke("filmUsage:findByLab")(labId),
+    findPendingAtLab: () => invoke("filmUsage:findPendingAtLab")(),
+    findAwaitingPhysicalReturn: () => invoke("filmUsage:findAwaitingPhysicalReturn")(),
+    create: (input) => invoke("filmUsage:create")(input),
+    update: (id, input) => invoke("filmUsage:update")(id, input),
+    markSentToLab: (id, labId, trackingNumber) => invoke("filmUsage:markSentToLab")(id, labId, trackingNumber),
+    markScansReceived: (id, downloadUrl, resolution, format) => invoke("filmUsage:markScansReceived")(id, downloadUrl, resolution, format),
+    markPhysicalReceived: (id, trackingNumber) => invoke("filmUsage:markPhysicalReceived")(id, trackingNumber),
+    delete: (id) => invoke("filmUsage:delete")(id),
+    getTotalCartridgesByCouple: (coupleId) => invoke("filmUsage:getTotalCartridgesByCouple")(coupleId),
+    getTotalCostByCouple: (coupleId) => invoke("filmUsage:getTotalCostByCouple")(coupleId),
+    getUsageByFilmStock: () => invoke("filmUsage:getUsageByFilmStock")(),
   },
 };
 

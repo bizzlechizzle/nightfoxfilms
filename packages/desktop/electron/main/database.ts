@@ -14,6 +14,9 @@ import Database, { type Database as SqliteDatabase } from 'better-sqlite3';
 import { seedCameras } from '../data/camera-seeds';
 import { seedCouples } from '../data/couples-seeds';
 import { seedLenses } from '../data/lenses-seeds';
+import { seedEquipment } from '../data/equipment-seeds';
+import { seedFilmStock } from '../data/film-stock-seeds';
+import { seedProcessingLabs } from '../data/processing-labs-seeds';
 
 let db: SqliteDatabase | null = null;
 
@@ -443,6 +446,24 @@ export function initializeDatabase(dbPath?: string): SqliteDatabase {
   const lensResult = seedLenses(db);
   if (lensResult.added > 0) {
     console.log(`[Database] Seeded ${lensResult.added} known lenses`);
+  }
+
+  // Seed equipment inventory (only adds if they don't exist)
+  const equipmentResult = seedEquipment(db);
+  if (equipmentResult.added > 0) {
+    console.log(`[Database] Seeded ${equipmentResult.added} equipment items`);
+  }
+
+  // Seed film stock types (only adds if they don't exist)
+  const filmStockResult = seedFilmStock(db);
+  if (filmStockResult.added > 0) {
+    console.log(`[Database] Seeded ${filmStockResult.added} film stock types`);
+  }
+
+  // Seed processing labs (only adds if they don't exist)
+  const labsResult = seedProcessingLabs(db);
+  if (labsResult.added > 0) {
+    console.log(`[Database] Seeded ${labsResult.added} processing labs`);
   }
 
   console.log('[Database] Initialized successfully');
@@ -968,6 +989,271 @@ function runMigrations(database: SqliteDatabase): void {
           videographer_count = 2,
           mediums_json = '["modern"]'
         WHERE name = 'Julia & Sven';
+      `,
+    },
+    // Migration 22: Remove ingested status - convert all ingested to editing
+    {
+      id: 22,
+      name: 'remove_ingested_status',
+      sql: `
+        -- Convert all couples with ingested status to editing
+        -- The ingested step is being removed from workflow
+        UPDATE couples
+        SET status = 'editing',
+            date_editing_started = COALESCE(date_editing_started, date_ingested, CURRENT_TIMESTAMP)
+        WHERE status = 'ingested';
+      `,
+    },
+    // Migration 23: Create equipment table for physical inventory tracking
+    {
+      id: 23,
+      name: 'create_equipment_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS equipment (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          equipment_type TEXT NOT NULL CHECK (equipment_type IN ('camera', 'lens', 'audio', 'lighting', 'support', 'accessory', 'media')),
+          category TEXT,
+          medium TEXT CHECK (medium IN ('dadcam', 'super8', 'modern')),
+          camera_id INTEGER REFERENCES cameras(id) ON DELETE SET NULL,
+          make TEXT,
+          model TEXT,
+          serial_number TEXT UNIQUE,
+          purchase_date TEXT,
+          purchase_price REAL,
+          status TEXT DEFAULT 'available' CHECK (status IN ('available', 'loaned', 'maintenance', 'retired', 'lost')),
+          loaner_eligible INTEGER DEFAULT 0,
+          tutorial_url TEXT,
+          image_path TEXT,
+          notes TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_equipment_type ON equipment(equipment_type);
+        CREATE INDEX IF NOT EXISTS idx_equipment_status ON equipment(status);
+        CREATE INDEX IF NOT EXISTS idx_equipment_medium ON equipment(medium);
+        CREATE INDEX IF NOT EXISTS idx_equipment_loaner ON equipment(loaner_eligible);
+        CREATE INDEX IF NOT EXISTS idx_equipment_camera_id ON equipment(camera_id);
+
+        CREATE TRIGGER IF NOT EXISTS tr_equipment_update_timestamp
+        AFTER UPDATE ON equipment
+        BEGIN
+          UPDATE equipment SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 24: Create film_stock and processing_labs tables
+    {
+      id: 24,
+      name: 'create_film_stock_and_labs_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS film_stock (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          stock_type TEXT NOT NULL CHECK (stock_type IN ('film', 'tape')),
+          format TEXT NOT NULL CHECK (format IN ('super8', 'vhs_c', 'hi8', 'minidv')),
+          manufacturer TEXT,
+          asa_iso INTEGER,
+          is_daylight INTEGER,
+          quantity_on_hand INTEGER DEFAULT 0,
+          cost_per_unit REAL,
+          processing_cost REAL,
+          scan_cost REAL,
+          footage_yield_sec INTEGER,
+          expiration_date TEXT,
+          storage_location TEXT,
+          notes TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_film_stock_type ON film_stock(stock_type);
+        CREATE INDEX IF NOT EXISTS idx_film_stock_format ON film_stock(format);
+
+        CREATE TRIGGER IF NOT EXISTS tr_film_stock_update_timestamp
+        AFTER UPDATE ON film_stock
+        BEGIN
+          UPDATE film_stock SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS processing_labs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          website TEXT,
+          email TEXT,
+          phone TEXT,
+          address TEXT,
+          turnaround_days INTEGER,
+          services TEXT,
+          scan_resolutions TEXT,
+          scan_formats TEXT,
+          your_rating INTEGER,
+          notes TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_processing_labs_active ON processing_labs(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_processing_labs_update_timestamp
+        AFTER UPDATE ON processing_labs
+        BEGIN
+          UPDATE processing_labs SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 25: Create camera_loans table for loan workflow
+    {
+      id: 25,
+      name: 'create_camera_loans_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS camera_loans (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          equipment_id INTEGER NOT NULL REFERENCES equipment(id) ON DELETE CASCADE,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          event_type TEXT NOT NULL CHECK (event_type IN ('date_night', 'engagement', 'guest_cam')),
+          status TEXT DEFAULT 'requested' CHECK (status IN ('requested', 'approved', 'preparing', 'shipped', 'delivered', 'active', 'return_shipped', 'received', 'inspected', 'completed', 'cancelled', 'lost', 'damaged')),
+          requested_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          approved_at TEXT,
+          ship_by_date TEXT,
+          event_date TEXT,
+          due_back_date TEXT,
+          shipped_at TEXT,
+          ship_carrier TEXT,
+          ship_tracking TEXT,
+          delivered_at TEXT,
+          return_shipped_at TEXT,
+          return_carrier TEXT,
+          return_tracking TEXT,
+          return_received_at TEXT,
+          inspected_at TEXT,
+          condition_rating TEXT CHECK (condition_rating IN ('excellent', 'good', 'fair', 'damaged', 'lost')),
+          condition_notes TEXT,
+          media_included TEXT,
+          footage_received INTEGER DEFAULT 0,
+          footage_usable INTEGER DEFAULT 0,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_camera_loans_equipment ON camera_loans(equipment_id);
+        CREATE INDEX IF NOT EXISTS idx_camera_loans_couple ON camera_loans(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_camera_loans_status ON camera_loans(status);
+        CREATE INDEX IF NOT EXISTS idx_camera_loans_event_date ON camera_loans(event_date);
+
+        CREATE TRIGGER IF NOT EXISTS tr_camera_loans_update_timestamp
+        AFTER UPDATE ON camera_loans
+        BEGIN
+          UPDATE camera_loans SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        -- Trigger to update equipment status when loan status changes
+        CREATE TRIGGER IF NOT EXISTS tr_camera_loans_update_equipment_status
+        AFTER UPDATE ON camera_loans
+        WHEN NEW.status != OLD.status
+        BEGIN
+          UPDATE equipment
+          SET status = CASE
+            WHEN NEW.status IN ('approved', 'preparing', 'shipped', 'delivered', 'active') THEN 'loaned'
+            WHEN NEW.status IN ('completed', 'cancelled') THEN 'available'
+            WHEN NEW.status = 'lost' THEN 'lost'
+            ELSE status
+          END
+          WHERE id = NEW.equipment_id;
+        END;
+      `,
+    },
+    // Migration 26: Create film_usage table for per-project film tracking
+    {
+      id: 26,
+      name: 'create_film_usage_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS film_usage (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          film_stock_id INTEGER NOT NULL REFERENCES film_stock(id) ON DELETE CASCADE,
+          couple_id INTEGER REFERENCES couples(id) ON DELETE SET NULL,
+          camera_loan_id INTEGER REFERENCES camera_loans(id) ON DELETE SET NULL,
+          equipment_id INTEGER REFERENCES equipment(id) ON DELETE SET NULL,
+          cartridges_used INTEGER NOT NULL DEFAULT 1,
+          shot_date TEXT,
+          scene_notes TEXT,
+          lab_id INTEGER REFERENCES processing_labs(id) ON DELETE SET NULL,
+          lab_sent_at TEXT,
+          lab_tracking_out TEXT,
+          scans_received_at TEXT,
+          scans_download_url TEXT,
+          physical_received_at TEXT,
+          lab_tracking_return TEXT,
+          scan_resolution TEXT,
+          scan_format TEXT,
+          scan_asset_ids TEXT,
+          total_cost REAL,
+          issues TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_film_usage_stock ON film_usage(film_stock_id);
+        CREATE INDEX IF NOT EXISTS idx_film_usage_couple ON film_usage(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_film_usage_loan ON film_usage(camera_loan_id);
+        CREATE INDEX IF NOT EXISTS idx_film_usage_lab ON film_usage(lab_id);
+
+        CREATE TRIGGER IF NOT EXISTS tr_film_usage_update_timestamp
+        AFTER UPDATE ON film_usage
+        BEGIN
+          UPDATE film_usage SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        -- Trigger to decrement film stock when usage is recorded
+        CREATE TRIGGER IF NOT EXISTS tr_film_usage_decrement_stock
+        AFTER INSERT ON film_usage
+        BEGIN
+          UPDATE film_stock
+          SET quantity_on_hand = quantity_on_hand - NEW.cartridges_used
+          WHERE id = NEW.film_stock_id;
+        END;
+      `,
+    },
+    // Migration 27: Create import_sessions table for network-safe import with resume
+    {
+      id: 27,
+      name: 'create_import_sessions_table',
+      sql: `
+        -- Import sessions table for tracking import progress and enabling resume
+        -- Part of network-safe import system (mirrors au archive pattern)
+        CREATE TABLE IF NOT EXISTS import_sessions (
+          session_id TEXT PRIMARY KEY,
+          couple_id INTEGER REFERENCES couples(id) ON DELETE SET NULL,
+          status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'scanning', 'hashing', 'copying', 'validating', 'finalizing', 'completed', 'cancelled', 'failed', 'paused')),
+          last_step INTEGER DEFAULT 0,
+          can_resume INTEGER DEFAULT 1,
+          source_paths TEXT,
+          archive_path TEXT,
+          total_files INTEGER DEFAULT 0,
+          processed_files INTEGER DEFAULT 0,
+          duplicate_files INTEGER DEFAULT 0,
+          error_files INTEGER DEFAULT 0,
+          total_bytes INTEGER DEFAULT 0,
+          processed_bytes INTEGER DEFAULT 0,
+          scan_result TEXT,
+          hash_results TEXT,
+          copy_results TEXT,
+          validation_results TEXT,
+          error TEXT,
+          started_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          completed_at TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_import_sessions_status ON import_sessions(status);
+        CREATE INDEX IF NOT EXISTS idx_import_sessions_couple ON import_sessions(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_import_sessions_can_resume ON import_sessions(can_resume);
       `,
     },
   ];

@@ -40,7 +40,6 @@
 
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
-    ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',

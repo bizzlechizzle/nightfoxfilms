@@ -7,9 +7,13 @@
   import type {
     CoupleWithFiles,
     CoupleStatus,
-    ContractDeliverable
+    ContractDeliverable,
+    CameraLoan,
+    CameraLoanInput,
+    LoanStatus,
+    Equipment,
   } from '@nightfox/core';
-  import { getAPI } from '../lib/api';
+  import { getAPI, type CameraLoanWithDetails } from '../lib/api';
 
   interface Props {
     coupleId: number;
@@ -24,12 +28,45 @@
   let loading = $state(true);
   let importing = $state(false);
 
+  // Camera loan state
+  let loans = $state<CameraLoanWithDetails[]>([]);
+  let availableLoaners = $state<Equipment[]>([]);
+  let showLoanModal = $state(false);
+  let loanFormEquipment = $state<number | ''>('');
+  let loanFormEventType = $state<'wedding' | 'date_night' | 'other'>('date_night');
+  let loanFormShipBy = $state('');
+  let loanFormEventDate = $state('');
+  let loanFormDueBack = $state('');
+  let loanFormNotes = $state('');
+
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
     ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',
+  };
+
+  const loanStatusLabels: Record<LoanStatus, string> = {
+    requested: 'Requested',
+    approved: 'Approved',
+    preparing: 'Preparing',
+    shipped: 'Shipped',
+    delivered: 'Delivered',
+    active: 'Active',
+    return_shipped: 'Return Shipped',
+    received: 'Received',
+    inspected: 'Inspected',
+    completed: 'Completed',
+    cancelled: 'Cancelled',
+    lost: 'Lost',
+    damaged: 'Damaged',
+  };
+
+  const eventTypeLabels: Record<string, string> = {
+    wedding: 'Wedding',
+    date_night: 'Date Night',
+    other: 'Other',
   };
 
   // Parse deliverables from JSON
@@ -178,7 +215,7 @@
   const countdownContext = $derived(() => {
     if (!couple) return '';
     if (isWeddingCountdown()) return 'Wedding';
-    if (['ingested', 'editing'].includes(couple.status)) return 'Editing';
+    if (couple.status === 'editing') return 'Editing';
     if (couple.status === 'delivered') return 'Delivered';
     if (couple.status === 'archived') return 'Archived';
     return 'Due';
@@ -220,7 +257,7 @@
   // Timeline events - completed status derived from workflow progression
   const timelineEvents = $derived(() => {
     if (!couple) return [];
-    const statusOrder = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
+    const statusOrder = ['booked', 'editing', 'delivered', 'archived'];
     const currentIndex = statusOrder.indexOf(couple.status);
 
     const events: Array<{ label: string; date: string | null | undefined; completed: boolean }> = [
@@ -238,10 +275,9 @@
 
     events.push(
       { label: 'Wedding', date: couple.wedding_date, completed: currentIndex >= 1 },
-      { label: 'Ingested', date: couple.date_ingested, completed: currentIndex >= 1 },
-      { label: 'Editing', date: couple.date_editing_started, completed: currentIndex >= 2 },
-      { label: 'Delivered', date: couple.date_delivered, completed: currentIndex >= 3 },
-      { label: 'Archived', date: couple.date_archived, completed: currentIndex >= 4 },
+      { label: 'Editing', date: couple.date_editing_started, completed: currentIndex >= 1 },
+      { label: 'Delivered', date: couple.date_delivered, completed: currentIndex >= 2 },
+      { label: 'Archived', date: couple.date_archived, completed: currentIndex >= 3 },
     );
 
     return events;
@@ -251,11 +287,118 @@
     loading = true;
     try {
       couple = await window.electronAPI.couples.findWithFiles(coupleId);
+      // Load loans for this couple
+      loans = await window.electronAPI.loans.findByCouple(coupleId);
     } catch (e) {
       console.error('Failed to load couple:', e);
     } finally {
       loading = false;
     }
+  }
+
+  async function loadAvailableLoaners() {
+    try {
+      availableLoaners = await window.electronAPI.equipment.findLoanerEligible();
+    } catch (e) {
+      console.error('Failed to load available loaners:', e);
+    }
+  }
+
+  function openLoanModal() {
+    loanFormEquipment = '';
+    loanFormEventType = hasDateNight() ? 'date_night' : 'wedding';
+    loanFormShipBy = '';
+    loanFormEventDate = couple?.date_night_date || couple?.wedding_date || '';
+    loanFormDueBack = '';
+    loanFormNotes = '';
+    loadAvailableLoaners();
+    showLoanModal = true;
+  }
+
+  function closeLoanModal() {
+    showLoanModal = false;
+  }
+
+  async function createLoan() {
+    if (!loanFormEquipment || !loanFormEventDate) return;
+
+    try {
+      const input: CameraLoanInput = {
+        equipment_id: Number(loanFormEquipment),
+        couple_id: coupleId,
+        event_type: loanFormEventType,
+        status: 'requested',
+        ship_by_date: loanFormShipBy || null,
+        event_date: loanFormEventDate,
+        due_back_date: loanFormDueBack || null,
+        notes: loanFormNotes || null,
+      };
+      await window.electronAPI.loans.create(input);
+      closeLoanModal();
+      await loadCouple();
+    } catch (e) {
+      console.error('Failed to create loan:', e);
+    }
+  }
+
+  async function advanceLoanStatus(loanId: number, newStatus: LoanStatus) {
+    try {
+      const result = await window.electronAPI.loans.transitionStatus(loanId, newStatus);
+      if (result.success) {
+        await loadCouple();
+      } else {
+        console.error('Failed to transition loan status:', result.error);
+        alert(result.error || 'Failed to update loan status');
+      }
+    } catch (e) {
+      console.error('Failed to advance loan status:', e);
+    }
+  }
+
+  function getLoanStatusColor(status: LoanStatus): string {
+    switch (status) {
+      case 'requested':
+      case 'approved':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'preparing':
+      case 'shipped':
+        return 'bg-blue-100 text-blue-800';
+      case 'delivered':
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'return_shipped':
+      case 'received':
+      case 'inspected':
+        return 'bg-purple-100 text-purple-800';
+      case 'completed':
+        return 'bg-gray-100 text-gray-600';
+      case 'cancelled':
+        return 'bg-gray-100 text-gray-400';
+      case 'lost':
+      case 'damaged':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  }
+
+  function getNextLoanStatus(currentStatus: LoanStatus): LoanStatus | null {
+    const transitions: Record<LoanStatus, LoanStatus | null> = {
+      requested: 'approved',
+      approved: 'preparing',
+      preparing: 'shipped',
+      shipped: 'delivered',
+      delivered: 'active',
+      active: 'return_shipped',
+      return_shipped: 'received',
+      received: 'inspected',
+      inspected: 'completed',
+      completed: null,
+      cancelled: null,
+      lost: null,
+      damaged: 'completed',
+    };
+    return transitions[currentStatus];
   }
 
   async function importFiles() {
@@ -264,7 +407,13 @@
       const files = await api.dialog.selectFiles();
       if (files.length > 0) {
         importing = true;
-        await api.import.files(files, coupleId);
+        // Pass options object with coupleId
+        // copyToManaged can be enabled when couple has working_path
+        await api.import.files(files, {
+          coupleId,
+          copyToManaged: !!couple?.working_path,
+          managedStoragePath: couple?.working_path || undefined,
+        });
         await loadCouple();
       }
     } catch (e) {
@@ -453,6 +602,49 @@
       </div>
     </section>
 
+    <!-- Camera Loans Section -->
+    <section class="card loans-card">
+      <div class="card-header-row">
+        <h2 class="card-label">Camera Loans</h2>
+        <button class="btn btn-small" onclick={openLoanModal}>
+          + New Loan
+        </button>
+      </div>
+      {#if loans.length === 0}
+        <p class="empty-text">No camera loans for this couple yet</p>
+      {:else}
+        <div class="loans-list">
+          {#each loans as loan (loan.id)}
+            <div class="loan-item">
+              <div class="loan-header">
+                <span class="loan-equipment">{loan.equipment_name}</span>
+                <span class="loan-status {getLoanStatusColor(loan.status as LoanStatus)}">
+                  {loanStatusLabels[loan.status as LoanStatus]}
+                </span>
+              </div>
+              <div class="loan-details">
+                <span class="loan-event-type">{eventTypeLabels[loan.event_type] || loan.event_type}</span>
+                {#if loan.event_date}
+                  <span class="loan-date">Event: {formatDate(loan.event_date)}</span>
+                {/if}
+                {#if loan.ship_by_date}
+                  <span class="loan-date">Ship by: {formatDate(loan.ship_by_date)}</span>
+                {/if}
+              </div>
+              {#if getNextLoanStatus(loan.status as LoanStatus)}
+                <button
+                  class="btn btn-small btn-advance"
+                  onclick={() => advanceLoanStatus(loan.id, getNextLoanStatus(loan.status as LoanStatus)!)}
+                >
+                  Mark as {loanStatusLabels[getNextLoanStatus(loan.status as LoanStatus)!]}
+                </button>
+              {/if}
+            </div>
+          {/each}
+        </div>
+      {/if}
+    </section>
+
     <!-- Files Table -->
     {#if couple.files.length > 0}
       <section class="card">
@@ -561,6 +753,74 @@
     </div>
   {/if}
 </div>
+
+<!-- Loan Modal -->
+{#if showLoanModal}
+  <div class="modal-overlay" onclick={closeLoanModal}>
+    <div class="modal" onclick={(e) => e.stopPropagation()}>
+      <header class="modal-header">
+        <h2>Create Camera Loan</h2>
+        <button class="btn-icon" onclick={closeLoanModal}>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+      <form class="modal-body" onsubmit={(e) => { e.preventDefault(); createLoan(); }}>
+        <div class="form-group">
+          <label for="equipment">Equipment *</label>
+          <select id="equipment" bind:value={loanFormEquipment} required>
+            <option value="">Select equipment...</option>
+            {#each availableLoaners as equip (equip.id)}
+              <option value={equip.id}>{equip.name} ({equip.make} {equip.model})</option>
+            {/each}
+          </select>
+          {#if availableLoaners.length === 0}
+            <p class="form-hint">No loaner equipment available. Add equipment marked as "loaner" in Equipment page.</p>
+          {/if}
+        </div>
+
+        <div class="form-group">
+          <label for="eventType">Event Type *</label>
+          <select id="eventType" bind:value={loanFormEventType}>
+            <option value="date_night">Date Night</option>
+            <option value="wedding">Wedding</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventDate">Event Date *</label>
+            <input type="date" id="eventDate" bind:value={loanFormEventDate} required />
+          </div>
+          <div class="form-group">
+            <label for="shipBy">Ship By</label>
+            <input type="date" id="shipBy" bind:value={loanFormShipBy} />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="dueBack">Due Back</label>
+          <input type="date" id="dueBack" bind:value={loanFormDueBack} />
+        </div>
+
+        <div class="form-group">
+          <label for="loanNotes">Notes</label>
+          <textarea id="loanNotes" bind:value={loanFormNotes} rows="2"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn" onclick={closeLoanModal}>Cancel</button>
+          <button type="submit" class="btn btn-primary" disabled={!loanFormEquipment || !loanFormEventDate}>
+            Create Loan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+{/if}
 
 <style>
   .page-header {
@@ -891,6 +1151,207 @@
     padding: 3rem;
   }
 
+  /* Camera Loans */
+  .loans-card {
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .card-header-row .card-label {
+    margin: 0;
+  }
+
+  .btn-small {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+  }
+
+  .btn-small:hover {
+    border-color: var(--color-text);
+  }
+
+  .empty-text {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    margin: 0;
+  }
+
+  .loans-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .loan-item {
+    padding: 0.75rem;
+    background: var(--color-bg-alt, #f8f8f7);
+    border-radius: 6px;
+  }
+
+  .loan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .loan-equipment {
+    font-weight: 500;
+  }
+
+  .loan-status {
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+
+  .loan-details {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .loan-event-type {
+    font-weight: 500;
+  }
+
+  .btn-advance {
+    margin-top: 0.25rem;
+  }
+
+  /* Status colors */
+  .bg-yellow-100 { background: #FEF3C7; }
+  .text-yellow-800 { color: #92400E; }
+  .bg-blue-100 { background: #DBEAFE; }
+  .text-blue-800 { color: #1E40AF; }
+  .bg-green-100 { background: #D1FAE5; }
+  .text-green-800 { color: #065F46; }
+  .bg-purple-100 { background: #EDE9FE; }
+  .text-purple-800 { color: #5B21B6; }
+  .bg-gray-100 { background: #F3F4F6; }
+  .text-gray-600 { color: #4B5563; }
+  .text-gray-400 { color: #9CA3AF; }
+  .bg-red-100 { background: #FEE2E2; }
+  .text-red-800 { color: #991B1B; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: var(--color-surface);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .btn-icon {
+    padding: 0.25rem;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .btn-icon:hover {
+    background: var(--color-bg-alt);
+    color: var(--color-text);
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.375rem;
+    color: var(--color-text);
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    background: var(--color-surface);
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-text);
+  }
+
+  .form-hint {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    margin: 0.375rem 0 0;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
   /* Responsive */
   @media (max-width: 900px) {
     .top-row, .middle-row, .contact-row {
@@ -899,6 +1360,10 @@
 
     .page-header {
       flex-wrap: wrap;
+    }
+
+    .form-row {
+      grid-template-columns: 1fr;
     }
   }
 </style>

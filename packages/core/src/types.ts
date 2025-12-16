@@ -24,7 +24,7 @@ export type AspectRatio = '16:9' | '9:16' | '1:1' | '4:5' | '4:3';
 
 export type JobStatus = 'pending' | 'processing' | 'complete' | 'error' | 'dead';
 
-export type ImportStatus = 'pending' | 'hashing' | 'extracting' | 'copying' | 'complete' | 'error' | 'skipped';
+export type ImportStatus = 'pending' | 'scanning' | 'hashing' | 'extracting' | 'copying' | 'validating' | 'finalizing' | 'complete' | 'completed' | 'cancelled' | 'failed' | 'paused' | 'error' | 'skipped';
 
 export type SceneDetectionMethod = 'content' | 'adaptive' | 'threshold';
 
@@ -44,6 +44,24 @@ export type DeliverableStatus = 'pending' | 'in_progress' | 'review' | 'delivere
 export type DeliverableCategory = 'edit' | 'timeline' | 'raw' | 'physical' | 'session';
 
 export type EmailType = 'booking_confirmation' | 'preview_ready' | 'delivery' | 'follow_up' | 'thank_you';
+
+// =============================================================================
+// EQUIPMENT & INVENTORY ENUMS
+// =============================================================================
+
+export type EquipmentType = 'camera' | 'lens' | 'audio' | 'lighting' | 'support' | 'accessory' | 'media';
+
+export type EquipmentStatus = 'available' | 'loaned' | 'maintenance' | 'retired' | 'lost';
+
+export type StockType = 'film' | 'tape';
+
+export type FilmFormat = 'super8' | 'vhs_c' | 'hi8' | 'minidv';
+
+export type LoanStatus = 'requested' | 'approved' | 'preparing' | 'shipped' | 'delivered' | 'active' | 'return_shipped' | 'received' | 'inspected' | 'completed' | 'cancelled' | 'lost' | 'damaged';
+
+export type LoanEventType = 'date_night' | 'engagement' | 'guest_cam';
+
+export type ConditionRating = 'excellent' | 'good' | 'fair' | 'damaged' | 'lost';
 
 // Legacy deliverable interface (deprecated - use ContractDeliverable instead)
 export interface CoupleDeliverable {
@@ -331,6 +349,127 @@ export interface Job {
 }
 
 // =============================================================================
+// EQUIPMENT & INVENTORY RECORDS
+// =============================================================================
+
+export interface Equipment {
+  id: number;
+  name: string;
+  equipment_type: EquipmentType;
+  category: string | null;
+  medium: Medium | null;
+  camera_id: number | null;
+  make: string | null;
+  model: string | null;
+  serial_number: string | null;
+  purchase_date: string | null;
+  purchase_price: number | null;
+  status: EquipmentStatus;
+  loaner_eligible: number;
+  tutorial_url: string | null;
+  image_path: string | null;
+  notes: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FilmStock {
+  id: number;
+  name: string;
+  stock_type: StockType;
+  format: FilmFormat;
+  manufacturer: string | null;
+  asa_iso: number | null;
+  is_daylight: number | null;
+  quantity_on_hand: number;
+  cost_per_unit: number | null;
+  processing_cost: number | null;
+  scan_cost: number | null;
+  footage_yield_sec: number | null;
+  expiration_date: string | null;
+  storage_location: string | null;
+  notes: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProcessingLab {
+  id: number;
+  name: string;
+  website: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  turnaround_days: number | null;
+  services: string | null;
+  scan_resolutions: string | null;
+  scan_formats: string | null;
+  your_rating: number | null;
+  notes: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CameraLoan {
+  id: number;
+  equipment_id: number;
+  couple_id: number;
+  event_type: LoanEventType;
+  status: LoanStatus;
+  requested_at: string | null;
+  approved_at: string | null;
+  ship_by_date: string | null;
+  event_date: string | null;
+  due_back_date: string | null;
+  shipped_at: string | null;
+  ship_carrier: string | null;
+  ship_tracking: string | null;
+  delivered_at: string | null;
+  return_shipped_at: string | null;
+  return_carrier: string | null;
+  return_tracking: string | null;
+  return_received_at: string | null;
+  inspected_at: string | null;
+  condition_rating: ConditionRating | null;
+  condition_notes: string | null;
+  media_included: string | null;
+  footage_received: number;
+  footage_usable: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FilmUsage {
+  id: number;
+  film_stock_id: number;
+  couple_id: number | null;
+  camera_loan_id: number | null;
+  equipment_id: number | null;
+  cartridges_used: number;
+  shot_date: string | null;
+  scene_notes: string | null;
+  lab_id: number | null;
+  lab_sent_at: string | null;
+  lab_tracking_out: string | null;
+  scans_received_at: string | null;
+  scans_download_url: string | null;
+  physical_received_at: string | null;
+  lab_tracking_return: string | null;
+  scan_resolution: string | null;
+  scan_format: string | null;
+  scan_asset_ids: string | null;
+  total_cost: number | null;
+  issues: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// =============================================================================
 // INPUT TYPES (for creating/updating records)
 // =============================================================================
 
@@ -436,6 +575,98 @@ export interface ExportInput {
   lut?: string | null;
   normalize_audio?: boolean;
   include_caption?: boolean;
+}
+
+export interface EquipmentInput {
+  name: string;
+  equipment_type: EquipmentType;
+  category?: string | null;
+  medium?: Medium | null;
+  camera_id?: number | null;
+  make?: string | null;
+  model?: string | null;
+  serial_number?: string | null;
+  purchase_date?: string | null;
+  purchase_price?: number | null;
+  status?: EquipmentStatus;
+  loaner_eligible?: boolean;
+  tutorial_url?: string | null;
+  image_path?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+export interface FilmStockInput {
+  name: string;
+  stock_type: StockType;
+  format: FilmFormat;
+  manufacturer?: string | null;
+  asa_iso?: number | null;
+  is_daylight?: boolean | null;
+  quantity_on_hand?: number;
+  cost_per_unit?: number | null;
+  processing_cost?: number | null;
+  scan_cost?: number | null;
+  footage_yield_sec?: number | null;
+  expiration_date?: string | null;
+  storage_location?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+export interface ProcessingLabInput {
+  name: string;
+  website?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  turnaround_days?: number | null;
+  services?: string | null;
+  scan_resolutions?: string[] | null;
+  scan_formats?: string[] | null;
+  your_rating?: number | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+export interface CameraLoanInput {
+  equipment_id: number;
+  couple_id: number;
+  event_type: LoanEventType;
+  status?: LoanStatus;
+  ship_by_date?: string | null;
+  event_date?: string | null;
+  due_back_date?: string | null;
+  ship_carrier?: string | null;
+  ship_tracking?: string | null;
+  return_carrier?: string | null;
+  return_tracking?: string | null;
+  condition_rating?: ConditionRating | null;
+  condition_notes?: string | null;
+  media_included?: string[] | null;
+  footage_received?: boolean;
+  footage_usable?: boolean;
+  notes?: string | null;
+}
+
+export interface FilmUsageInput {
+  film_stock_id: number;
+  couple_id?: number | null;
+  camera_loan_id?: number | null;
+  equipment_id?: number | null;
+  cartridges_used: number;
+  shot_date?: string | null;
+  scene_notes?: string | null;
+  lab_id?: number | null;
+  lab_tracking_out?: string | null;
+  scans_download_url?: string | null;
+  lab_tracking_return?: string | null;
+  scan_resolution?: string | null;
+  scan_format?: string | null;
+  scan_asset_ids?: number[] | null;
+  total_cost?: number | null;
+  issues?: string | null;
+  notes?: string | null;
 }
 
 // =============================================================================
@@ -605,6 +836,18 @@ export interface ImportProgress {
   total: number;
   filename: string;
   status: ImportStatus;
+  // Extended fields for network-safe import pipeline
+  sessionId?: string;
+  step?: number;
+  totalSteps?: number;
+  percent?: number;
+  currentFile?: string;
+  filesProcessed?: number;
+  filesTotal?: number;
+  bytesProcessed?: number;
+  bytesTotal?: number;
+  duplicatesFound?: number;
+  errorsFound?: number;
 }
 
 export interface JobProgress {

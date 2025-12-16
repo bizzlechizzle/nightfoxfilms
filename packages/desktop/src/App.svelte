@@ -6,10 +6,11 @@
   import Calendar from './pages/Calendar.svelte';
   import Import from './pages/Import.svelte';
   import Cameras from './pages/Cameras.svelte';
+  import Equipment from './pages/Equipment.svelte';
   import Stats from './pages/Stats.svelte';
   import Settings from './pages/Settings.svelte';
 
-  type Page = 'dashboard' | 'couples' | 'couple-detail' | 'calendar' | 'import' | 'cameras' | 'stats' | 'settings';
+  type Page = 'dashboard' | 'couples' | 'couple-detail' | 'calendar' | 'import' | 'cameras' | 'equipment' | 'stats' | 'settings';
 
   let currentPage = $state<Page>('dashboard');
   let selectedCoupleId = $state<number | null>(null);
@@ -21,6 +22,7 @@
     { id: 'calendar', label: 'Calendar' },
     { id: 'import', label: 'Import' },
     { id: 'cameras', label: 'Cameras' },
+    { id: 'equipment', label: 'Equipment' },
     { id: 'stats', label: 'Stats' },
   ];
 
@@ -101,6 +103,8 @@
       <Import />
     {:else if currentPage === 'cameras'}
       <Cameras />
+    {:else if currentPage === 'equipment'}
+      <Equipment />
     {:else if currentPage === 'stats'}
       <Stats />
     {:else if currentPage === 'settings'}

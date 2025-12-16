@@ -20,6 +20,11 @@ import {
   filesRepository,
   scenesRepository,
   jobsRepository,
+  equipmentRepository,
+  filmStockRepository,
+  processingLabsRepository,
+  cameraLoansRepository,
+  filmUsageRepository,
 } from '../repositories';
 import { CameraInputSchema, CameraPatternInputSchema, CoupleInputSchema } from '@nightfox/core';
 import {
@@ -416,6 +421,318 @@ ipcMain.handle('lenses:getLensUsageStats', async () => {
 });
 
 // =============================================================================
+// IPC HANDLERS - Equipment
+// =============================================================================
+
+ipcMain.handle('equipment:findAll', async () => {
+  return equipmentRepository.findAll();
+});
+
+ipcMain.handle('equipment:findAllIncludingInactive', async () => {
+  return equipmentRepository.findAllIncludingInactive();
+});
+
+ipcMain.handle('equipment:findById', async (_, id: number) => {
+  return equipmentRepository.findById(id);
+});
+
+ipcMain.handle('equipment:findByType', async (_, type: string) => {
+  return equipmentRepository.findByType(type as any);
+});
+
+ipcMain.handle('equipment:findByMedium', async (_, medium: string) => {
+  return equipmentRepository.findByMedium(medium as any);
+});
+
+ipcMain.handle('equipment:findByStatus', async (_, status: string) => {
+  return equipmentRepository.findByStatus(status as any);
+});
+
+ipcMain.handle('equipment:findAvailable', async () => {
+  return equipmentRepository.findAvailable();
+});
+
+ipcMain.handle('equipment:findLoanerEligible', async () => {
+  return equipmentRepository.findLoanerEligible();
+});
+
+ipcMain.handle('equipment:findAvailableForLoan', async () => {
+  return equipmentRepository.findAvailableForLoan();
+});
+
+ipcMain.handle('equipment:search', async (_, query: string) => {
+  return equipmentRepository.search(query);
+});
+
+ipcMain.handle('equipment:create', async (_, input: unknown) => {
+  return equipmentRepository.create(input as any);
+});
+
+ipcMain.handle('equipment:update', async (_, id: number, input: unknown) => {
+  return equipmentRepository.update(id, input as any);
+});
+
+ipcMain.handle('equipment:updateStatus', async (_, id: number, status: string) => {
+  return equipmentRepository.updateStatus(id, status as any);
+});
+
+ipcMain.handle('equipment:delete', async (_, id: number) => {
+  return equipmentRepository.delete(id);
+});
+
+ipcMain.handle('equipment:getCountsByType', async () => {
+  return equipmentRepository.getCountsByType();
+});
+
+ipcMain.handle('equipment:getCountsByStatus', async () => {
+  return equipmentRepository.getCountsByStatus();
+});
+
+// =============================================================================
+// IPC HANDLERS - Film Stock
+// =============================================================================
+
+ipcMain.handle('filmStock:findAll', async () => {
+  return filmStockRepository.findAll();
+});
+
+ipcMain.handle('filmStock:findById', async (_, id: number) => {
+  return filmStockRepository.findById(id);
+});
+
+ipcMain.handle('filmStock:findByType', async (_, type: string) => {
+  return filmStockRepository.findByType(type as any);
+});
+
+ipcMain.handle('filmStock:findByFormat', async (_, format: string) => {
+  return filmStockRepository.findByFormat(format as any);
+});
+
+ipcMain.handle('filmStock:findInStock', async () => {
+  return filmStockRepository.findInStock();
+});
+
+ipcMain.handle('filmStock:findLowStock', async (_, threshold?: number) => {
+  return filmStockRepository.findLowStock(threshold);
+});
+
+ipcMain.handle('filmStock:findOutOfStock', async () => {
+  return filmStockRepository.findOutOfStock();
+});
+
+ipcMain.handle('filmStock:create', async (_, input: unknown) => {
+  return filmStockRepository.create(input as any);
+});
+
+ipcMain.handle('filmStock:update', async (_, id: number, input: unknown) => {
+  return filmStockRepository.update(id, input as any);
+});
+
+ipcMain.handle('filmStock:adjustQuantity', async (_, id: number, adjustment: number) => {
+  return filmStockRepository.adjustQuantity(id, adjustment);
+});
+
+ipcMain.handle('filmStock:delete', async (_, id: number) => {
+  return filmStockRepository.delete(id);
+});
+
+ipcMain.handle('filmStock:getTotalInventoryValue', async () => {
+  return filmStockRepository.getTotalInventoryValue();
+});
+
+ipcMain.handle('filmStock:getInventoryByFormat', async () => {
+  return filmStockRepository.getInventoryByFormat();
+});
+
+// =============================================================================
+// IPC HANDLERS - Processing Labs
+// =============================================================================
+
+ipcMain.handle('processingLabs:findAll', async () => {
+  return processingLabsRepository.findAll();
+});
+
+ipcMain.handle('processingLabs:findById', async (_, id: number) => {
+  return processingLabsRepository.findById(id);
+});
+
+ipcMain.handle('processingLabs:findByMinRating', async (_, minRating: number) => {
+  return processingLabsRepository.findByMinRating(minRating);
+});
+
+ipcMain.handle('processingLabs:findByService', async (_, service: string) => {
+  return processingLabsRepository.findByService(service);
+});
+
+ipcMain.handle('processingLabs:search', async (_, query: string) => {
+  return processingLabsRepository.search(query);
+});
+
+ipcMain.handle('processingLabs:create', async (_, input: unknown) => {
+  return processingLabsRepository.create(input as any);
+});
+
+ipcMain.handle('processingLabs:update', async (_, id: number, input: unknown) => {
+  return processingLabsRepository.update(id, input as any);
+});
+
+ipcMain.handle('processingLabs:delete', async (_, id: number) => {
+  return processingLabsRepository.delete(id);
+});
+
+ipcMain.handle('processingLabs:getLabUsageStats', async () => {
+  return processingLabsRepository.getLabUsageStats();
+});
+
+// =============================================================================
+// IPC HANDLERS - Camera Loans
+// =============================================================================
+
+ipcMain.handle('loans:findAll', async () => {
+  return cameraLoansRepository.findAll();
+});
+
+ipcMain.handle('loans:findAllWithDetails', async () => {
+  return cameraLoansRepository.findAllWithDetails();
+});
+
+ipcMain.handle('loans:findById', async (_, id: number) => {
+  return cameraLoansRepository.findById(id);
+});
+
+ipcMain.handle('loans:findByIdWithDetails', async (_, id: number) => {
+  return cameraLoansRepository.findByIdWithDetails(id);
+});
+
+ipcMain.handle('loans:findByCouple', async (_, coupleId: number) => {
+  return cameraLoansRepository.findByCouple(coupleId);
+});
+
+ipcMain.handle('loans:findByEquipment', async (_, equipmentId: number) => {
+  return cameraLoansRepository.findByEquipment(equipmentId);
+});
+
+ipcMain.handle('loans:findByStatus', async (_, status: string) => {
+  return cameraLoansRepository.findByStatus(status as any);
+});
+
+ipcMain.handle('loans:findActive', async () => {
+  return cameraLoansRepository.findActive();
+});
+
+ipcMain.handle('loans:findNeedingAttention', async () => {
+  return cameraLoansRepository.findNeedingAttention();
+});
+
+ipcMain.handle('loans:findOverdue', async () => {
+  return cameraLoansRepository.findOverdue();
+});
+
+ipcMain.handle('loans:checkAvailability', async (_, equipmentId: number, startDate: string, endDate: string, excludeLoanId?: number) => {
+  return cameraLoansRepository.checkAvailability(equipmentId, startDate, endDate, excludeLoanId);
+});
+
+ipcMain.handle('loans:create', async (_, input: unknown) => {
+  return cameraLoansRepository.create(input as any);
+});
+
+ipcMain.handle('loans:update', async (_, id: number, input: unknown) => {
+  return cameraLoansRepository.update(id, input as any);
+});
+
+ipcMain.handle('loans:transitionStatus', async (_, id: number, newStatus: string, additionalData?: unknown) => {
+  return cameraLoansRepository.transitionStatus(id, newStatus as any, additionalData as any);
+});
+
+ipcMain.handle('loans:delete', async (_, id: number) => {
+  return cameraLoansRepository.delete(id);
+});
+
+ipcMain.handle('loans:getCountsByStatus', async () => {
+  return cameraLoansRepository.getCountsByStatus();
+});
+
+ipcMain.handle('loans:getCountsByEventType', async () => {
+  return cameraLoansRepository.getCountsByEventType();
+});
+
+// =============================================================================
+// IPC HANDLERS - Film Usage
+// =============================================================================
+
+ipcMain.handle('filmUsage:findAll', async () => {
+  return filmUsageRepository.findAll();
+});
+
+ipcMain.handle('filmUsage:findAllWithDetails', async () => {
+  return filmUsageRepository.findAllWithDetails();
+});
+
+ipcMain.handle('filmUsage:findById', async (_, id: number) => {
+  return filmUsageRepository.findById(id);
+});
+
+ipcMain.handle('filmUsage:findByIdWithDetails', async (_, id: number) => {
+  return filmUsageRepository.findByIdWithDetails(id);
+});
+
+ipcMain.handle('filmUsage:findByCouple', async (_, coupleId: number) => {
+  return filmUsageRepository.findByCouple(coupleId);
+});
+
+ipcMain.handle('filmUsage:findByLoan', async (_, loanId: number) => {
+  return filmUsageRepository.findByLoan(loanId);
+});
+
+ipcMain.handle('filmUsage:findByLab', async (_, labId: number) => {
+  return filmUsageRepository.findByLab(labId);
+});
+
+ipcMain.handle('filmUsage:findPendingAtLab', async () => {
+  return filmUsageRepository.findPendingAtLab();
+});
+
+ipcMain.handle('filmUsage:findAwaitingPhysicalReturn', async () => {
+  return filmUsageRepository.findAwaitingPhysicalReturn();
+});
+
+ipcMain.handle('filmUsage:create', async (_, input: unknown) => {
+  return filmUsageRepository.create(input as any);
+});
+
+ipcMain.handle('filmUsage:update', async (_, id: number, input: unknown) => {
+  return filmUsageRepository.update(id, input as any);
+});
+
+ipcMain.handle('filmUsage:markSentToLab', async (_, id: number, labId: number, trackingNumber?: string) => {
+  return filmUsageRepository.markSentToLab(id, labId, trackingNumber);
+});
+
+ipcMain.handle('filmUsage:markScansReceived', async (_, id: number, downloadUrl?: string, resolution?: string, format?: string) => {
+  return filmUsageRepository.markScansReceived(id, downloadUrl, resolution, format);
+});
+
+ipcMain.handle('filmUsage:markPhysicalReceived', async (_, id: number, trackingNumber?: string) => {
+  return filmUsageRepository.markPhysicalReceived(id, trackingNumber);
+});
+
+ipcMain.handle('filmUsage:delete', async (_, id: number) => {
+  return filmUsageRepository.delete(id);
+});
+
+ipcMain.handle('filmUsage:getTotalCartridgesByCouple', async (_, coupleId: number) => {
+  return filmUsageRepository.getTotalCartridgesByCouple(coupleId);
+});
+
+ipcMain.handle('filmUsage:getTotalCostByCouple', async (_, coupleId: number) => {
+  return filmUsageRepository.getTotalCostByCouple(coupleId);
+});
+
+ipcMain.handle('filmUsage:getUsageByFilmStock', async () => {
+  return filmUsageRepository.getUsageByFilmStock();
+});
+
+// =============================================================================
 // IPC HANDLERS - Files
 // =============================================================================
 
@@ -504,10 +821,12 @@ ipcMain.handle('scenes:delete', async (_, sceneId: number) => {
 // IPC HANDLERS - Import
 // =============================================================================
 
-ipcMain.handle('import:files', async (_, filePaths: string[], coupleId?: number) => {
+ipcMain.handle('import:files', async (_, filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => {
   try {
     const result = await importController.importFiles(filePaths, {
-      coupleId,
+      coupleId: options?.coupleId,
+      copyToManaged: options?.copyToManaged,
+      managedStoragePath: options?.managedStoragePath,
       window: mainWindow ?? undefined,
     });
     return result;
@@ -517,10 +836,12 @@ ipcMain.handle('import:files', async (_, filePaths: string[], coupleId?: number)
   }
 });
 
-ipcMain.handle('import:directory', async (_, dirPath: string, coupleId?: number) => {
+ipcMain.handle('import:directory', async (_, dirPath: string, options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => {
   try {
     const result = await importController.importDirectory(dirPath, {
-      coupleId,
+      coupleId: options?.coupleId,
+      copyToManaged: options?.copyToManaged,
+      managedStoragePath: options?.managedStoragePath,
       window: mainWindow ?? undefined,
     });
     return result;

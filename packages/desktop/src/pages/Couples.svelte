@@ -47,13 +47,12 @@
 
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
-    ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',
   };
 
-  const statusOrder: CoupleStatus[] = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
+  const statusOrder: CoupleStatus[] = ['booked', 'editing', 'delivered', 'archived'];
 
   async function loadCouples() {
     loading = true;
@@ -196,7 +195,7 @@
       return { color: null, daysText: null, label: null };
     }
 
-    // For active work statuses (ingested, editing): show due date countdown
+    // For active work statuses (editing): show due date countdown
     const daysElapsed = Math.floor((today.getTime() - wedding.getTime()) / (1000 * 60 * 60 * 24));
 
     // Skip future weddings for work statuses
@@ -683,7 +682,6 @@
     color: white;
   }
 
-  .status-badge[data-status="ingested"],
   .status-badge[data-status="editing"] {
     background: var(--color-status-warning);
     color: black;

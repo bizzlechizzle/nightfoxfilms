@@ -37,6 +37,25 @@ import type {
   AISceneCaptionResult,
   AICaptionProgress,
   WeddingMomentResult,
+  // Equipment & inventory types
+  Equipment,
+  EquipmentInput,
+  EquipmentType,
+  EquipmentStatus,
+  FilmStock,
+  FilmStockInput,
+  StockType,
+  FilmFormat,
+  ProcessingLab,
+  ProcessingLabInput,
+  // Camera loan types
+  CameraLoan,
+  CameraLoanInput,
+  LoanStatus,
+  LoanEventType,
+  // Film usage types
+  FilmUsage,
+  FilmUsageInput,
 } from './types';
 
 // Get the Electron API from the window object
@@ -109,8 +128,8 @@ interface ElectronAPI {
     delete: (id: number) => Promise<boolean>;
   };
   import: {
-    files: (filePaths: string[], coupleId?: number) => Promise<ImportBatchResult>;
-    directory: (dirPath: string, coupleId?: number) => Promise<ImportBatchResult>;
+    files: (filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => Promise<ImportBatchResult>;
+    directory: (dirPath: string, options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => Promise<ImportBatchResult>;
     scan: (dirPath: string) => Promise<DirectoryScanResult>;
     cancel: () => Promise<boolean>;
     status: () => Promise<ImportStatus>;
@@ -222,6 +241,89 @@ interface ElectronAPI {
     findByVolumeUUID: (volumeUUID: string) => Promise<RegisteredCamera | null>;
     findForMountPoint: (mountPoint: string) => Promise<RegisteredCamera | null>;
   };
+  equipment: {
+    findAll: () => Promise<Equipment[]>;
+    findById: (id: number) => Promise<Equipment | null>;
+    findByType: (type: EquipmentType) => Promise<Equipment[]>;
+    findByMedium: (medium: Medium) => Promise<Equipment[]>;
+    findByStatus: (status: EquipmentStatus) => Promise<Equipment[]>;
+    findAvailable: () => Promise<Equipment[]>;
+    findLoanerEligible: () => Promise<Equipment[]>;
+    findAvailableForLoan: (startDate: string, endDate: string, excludeLoanId?: number) => Promise<Equipment[]>;
+    search: (query: string) => Promise<Equipment[]>;
+    create: (input: EquipmentInput) => Promise<Equipment>;
+    update: (id: number, input: Partial<EquipmentInput>) => Promise<Equipment | null>;
+    updateStatus: (id: number, status: EquipmentStatus) => Promise<Equipment | null>;
+    linkToCameraProfile: (id: number, cameraId: number | null) => Promise<Equipment | null>;
+    delete: (id: number) => Promise<boolean>;
+    getCountsByType: () => Promise<Array<{ type: EquipmentType; count: number }>>;
+    getCountsByStatus: () => Promise<Array<{ status: EquipmentStatus; count: number }>>;
+  };
+  filmStock: {
+    findAll: () => Promise<FilmStock[]>;
+    findById: (id: number) => Promise<FilmStock | null>;
+    findByType: (type: StockType) => Promise<FilmStock[]>;
+    findByFormat: (format: FilmFormat) => Promise<FilmStock[]>;
+    findInStock: () => Promise<FilmStock[]>;
+    findLowStock: (threshold?: number) => Promise<FilmStock[]>;
+    findOutOfStock: () => Promise<FilmStock[]>;
+    search: (query: string) => Promise<FilmStock[]>;
+    create: (input: FilmStockInput) => Promise<FilmStock>;
+    update: (id: number, input: Partial<FilmStockInput>) => Promise<FilmStock | null>;
+    adjustQuantity: (id: number, delta: number) => Promise<FilmStock | null>;
+    delete: (id: number) => Promise<boolean>;
+    getTotalValue: () => Promise<number>;
+    getUsageStats: () => Promise<Array<{ film_stock_id: number; name: string; total_used: number }>>;
+  };
+  processingLabs: {
+    findAll: () => Promise<ProcessingLab[]>;
+    findById: (id: number) => Promise<ProcessingLab | null>;
+    findByMinRating: (rating: number) => Promise<ProcessingLab[]>;
+    findByService: (service: string) => Promise<ProcessingLab[]>;
+    search: (query: string) => Promise<ProcessingLab[]>;
+    create: (input: ProcessingLabInput) => Promise<ProcessingLab>;
+    update: (id: number, input: Partial<ProcessingLabInput>) => Promise<ProcessingLab | null>;
+    delete: (id: number) => Promise<boolean>;
+  };
+  loans: {
+    findAll: () => Promise<CameraLoan[]>;
+    findAllWithDetails: () => Promise<CameraLoanWithDetails[]>;
+    findById: (id: number) => Promise<CameraLoan | null>;
+    findByIdWithDetails: (id: number) => Promise<CameraLoanWithDetails | null>;
+    findByCouple: (coupleId: number) => Promise<CameraLoanWithDetails[]>;
+    findByEquipment: (equipmentId: number) => Promise<CameraLoan[]>;
+    findByStatus: (status: LoanStatus) => Promise<CameraLoanWithDetails[]>;
+    findActive: () => Promise<CameraLoanWithDetails[]>;
+    findNeedingAttention: () => Promise<CameraLoanWithDetails[]>;
+    findOverdue: () => Promise<CameraLoanWithDetails[]>;
+    checkAvailability: (equipmentId: number, startDate: string, endDate: string, excludeLoanId?: number) => Promise<{ available: boolean; conflicts: CameraLoan[] }>;
+    create: (input: CameraLoanInput) => Promise<CameraLoan>;
+    update: (id: number, input: Partial<CameraLoanInput>) => Promise<CameraLoan | null>;
+    transitionStatus: (id: number, newStatus: LoanStatus, additionalData?: Partial<CameraLoanInput>) => Promise<{ success: boolean; loan?: CameraLoan; error?: string }>;
+    delete: (id: number) => Promise<boolean>;
+    getCountsByStatus: () => Promise<Array<{ status: LoanStatus; count: number }>>;
+    getCountsByEventType: () => Promise<Array<{ event_type: LoanEventType; count: number }>>;
+  };
+  filmUsage: {
+    findAll: () => Promise<FilmUsage[]>;
+    findAllWithDetails: () => Promise<FilmUsageWithDetails[]>;
+    findById: (id: number) => Promise<FilmUsage | null>;
+    findByIdWithDetails: (id: number) => Promise<FilmUsageWithDetails | null>;
+    findByCouple: (coupleId: number) => Promise<FilmUsageWithDetails[]>;
+    findByLoan: (loanId: number) => Promise<FilmUsageWithDetails[]>;
+    findByLab: (labId: number) => Promise<FilmUsageWithDetails[]>;
+    findPendingAtLab: () => Promise<FilmUsageWithDetails[]>;
+    findAwaitingPhysicalReturn: () => Promise<FilmUsageWithDetails[]>;
+    create: (input: FilmUsageInput) => Promise<FilmUsage>;
+    update: (id: number, input: Partial<FilmUsageInput>) => Promise<FilmUsage | null>;
+    markSentToLab: (id: number, labId: number, trackingNumber?: string) => Promise<FilmUsage | null>;
+    markScansReceived: (id: number, downloadUrl?: string, resolution?: string, format?: string) => Promise<FilmUsage | null>;
+    markPhysicalReceived: (id: number, trackingNumber?: string) => Promise<FilmUsage | null>;
+    delete: (id: number) => Promise<boolean>;
+    getTotalCartridgesByCouple: (coupleId: number) => Promise<number>;
+    getTotalCostByCouple: (coupleId: number) => Promise<number>;
+    getUsageByFilmStock: () => Promise<Array<{ film_stock_id: number; film_stock_name: string; total_cartridges: number; total_cost: number }>>;
+  };
 }
 
 // USB Device types
@@ -270,6 +372,21 @@ export interface RegisterCameraInput {
   productId?: number | null;
   physicalSerial?: string | null;
   notes?: string | null;
+}
+
+export interface CameraLoanWithDetails extends CameraLoan {
+  equipment_name: string;
+  equipment_medium: string | null;
+  couple_name: string;
+  couple_wedding_date: string | null;
+}
+
+export interface FilmUsageWithDetails extends FilmUsage {
+  film_stock_name: string;
+  film_stock_format: string;
+  couple_name: string | null;
+  lab_name: string | null;
+  equipment_name: string | null;
 }
 
 /**

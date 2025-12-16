@@ -12,7 +12,7 @@ import path from 'path';
 // Status date field mapping
 const STATUS_DATE_FIELDS: Record<CoupleStatus, string | null> = {
   booked: null, // No date field for booked (use created_at)
-  ingested: 'date_ingested',
+  ingested: 'date_ingested', // Legacy status (deprecated)
   editing: 'date_editing_started',
   delivered: 'date_delivered',
   archived: 'date_archived',
@@ -463,7 +463,7 @@ export class CouplesRepository {
     const emailCouples = db
       .prepare(
         `SELECT * FROM couples
-         WHERE status IN ('ingested', 'editing')
+         WHERE status = 'editing'
          AND due_date IS NOT NULL
          AND due_date <= ?
          ORDER BY due_date ASC`
@@ -499,19 +499,17 @@ export class CouplesRepository {
     }));
 
     // 3. Next Wedding To Start Editing
-    // First ingested couple by due_date, or any with due_date within 30 days
+    // Booked couples whose wedding has passed (need to start editing)
     const nextToEditCouples = db
       .prepare(
         `SELECT * FROM couples
-         WHERE status = 'ingested'
-         AND (due_date IS NULL OR due_date <= ?)
-         ORDER BY
-           CASE WHEN due_date IS NOT NULL THEN 0 ELSE 1 END,
-           due_date ASC,
-           wedding_date ASC
+         WHERE status = 'booked'
+         AND wedding_date IS NOT NULL
+         AND wedding_date < ?
+         ORDER BY wedding_date ASC
          LIMIT 3`
       )
-      .all(thirtyDaysLater) as Couple[];
+      .all(today) as Couple[];
 
     const editItems: WhatsNextItem[] = nextToEditCouples.map((couple) => ({
       coupleId: couple.id,
