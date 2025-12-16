@@ -30,6 +30,37 @@ export type SceneDetectionMethod = 'content' | 'adaptive' | 'threshold';
 
 export type Theme = 'light' | 'dark' | 'system';
 
+export type CoupleStatus = 'booked' | 'shot' | 'ingested' | 'editing' | 'delivered' | 'archived';
+
+export type CameraCategory = 'cinema' | 'professional' | 'hybrid' | 'action' | 'consumer' | 'drone' | 'smartphone';
+
+export type DeliverableType = 'highlight' | 'trailer' | 'full_length' | 'raw_footage' | 'social_clips' | 'ceremony' | 'reception';
+
+export type DeliverableStatus = 'pending' | 'in_progress' | 'review' | 'delivered';
+
+export type EmailType = 'booking_confirmation' | 'shot_notification' | 'preview_ready' | 'delivery' | 'follow_up' | 'thank_you';
+
+// Helper types for JSON fields
+export interface CoupleDeliverable {
+  type: DeliverableType;
+  status: DeliverableStatus;
+  notes?: string;
+  delivered_at?: string;
+}
+
+export interface EmailLogEntry {
+  date: string;
+  type: EmailType;
+  sent: boolean;
+  notes?: string;
+}
+
+export interface SocialMedia {
+  tiktok?: string;
+  facebook?: string;
+  youtube?: string;
+}
+
 // =============================================================================
 // DATABASE RECORDS
 // =============================================================================
@@ -43,10 +74,17 @@ export interface Setting {
 export interface Camera {
   id: number;
   name: string;
+  nickname: string | null;
   medium: Medium;
+  category: CameraCategory;
   make: string | null;
   model: string | null;
-  is_default: number; // 0 or 1
+  serial_number: string | null;
+  color_profile: string | null;
+  filename_pattern: string | null;
+  color: string | null;
+  is_active: number; // 0 or 1
+  is_default: number; // 0 or 1 (deprecated, kept for compatibility)
   notes: string | null;
   lut_path: string | null;
   deinterlace: number; // 0 or 1
@@ -66,6 +104,19 @@ export interface CameraPattern {
   created_at: string;
 }
 
+export interface Lens {
+  id: number;
+  name: string;
+  make: string | null;
+  model: string | null;
+  focal_length: string | null;
+  aperture: string | null;
+  mount: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Couple {
   id: number;
   name: string;
@@ -74,6 +125,30 @@ export interface Couple {
   notes: string | null;
   file_count: number;
   total_duration_seconds: number;
+  // Workflow fields
+  status: CoupleStatus;
+  email: string | null;
+  phone: string | null;
+  venue_name: string | null;
+  venue_city: string | null;
+  venue_state: string | null;
+  date_shot: string | null;
+  date_ingested: string | null;
+  date_editing_started: string | null;
+  date_delivered: string | null;
+  date_archived: string | null;
+  source_path: string | null;
+  working_path: string | null;
+  delivery_path: string | null;
+  package_name: string | null;
+  contracted_deliverables: number | null;
+  // Detail view fields (migration 11)
+  due_date: string | null;
+  instagram: string | null;
+  social_media_json: string | null;
+  deliverables_json: string | null;
+  email_log_json: string | null;
+  turnaround_days: number;
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +165,7 @@ export interface File {
   camera_id: number | null;
   detected_make: string | null;
   detected_model: string | null;
+  detected_lens: string | null;
   medium: Medium | null;
   file_type: FileType | null;
   duration_seconds: number | null;
@@ -218,10 +294,17 @@ export interface Job {
 
 export interface CameraInput {
   name: string;
+  nickname?: string | null;
   medium: Medium;
+  category?: CameraCategory;
   make?: string | null;
   model?: string | null;
-  is_default?: boolean;
+  serial_number?: string | null;
+  color_profile?: string | null;
+  filename_pattern?: string | null;
+  color?: string | null;
+  is_active?: boolean;
+  is_default?: boolean; // deprecated
   notes?: string | null;
   lut_path?: string | null;
   deinterlace?: boolean;
@@ -237,10 +320,39 @@ export interface CameraPatternInput {
   priority?: number;
 }
 
+export interface LensInput {
+  name: string;
+  make?: string | null;
+  model?: string | null;
+  focal_length?: string | null;
+  aperture?: string | null;
+  mount?: string | null;
+  notes?: string | null;
+}
+
 export interface CoupleInput {
   name: string;
   wedding_date?: string | null;
   notes?: string | null;
+  // Workflow fields
+  status?: CoupleStatus;
+  email?: string | null;
+  phone?: string | null;
+  venue_name?: string | null;
+  venue_city?: string | null;
+  venue_state?: string | null;
+  source_path?: string | null;
+  working_path?: string | null;
+  delivery_path?: string | null;
+  package_name?: string | null;
+  contracted_deliverables?: number | null;
+  // Detail view fields
+  due_date?: string | null;
+  instagram?: string | null;
+  social_media?: SocialMedia | null;
+  deliverables?: CoupleDeliverable[] | null;
+  email_log?: EmailLogEntry[] | null;
+  turnaround_days?: number;
 }
 
 export interface ImportInput {

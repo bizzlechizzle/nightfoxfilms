@@ -65,6 +65,10 @@ export default defineConfig({
     electron([
       {
         entry: 'electron/main/index.ts',
+        onstart(args) {
+          // Start Electron with the built main process
+          args.startup();
+        },
         vite: {
           build: {
             outDir: 'dist-electron/main',

@@ -81,6 +81,7 @@ export interface VideoInfo {
   frameRate: number;
   codec: string;
   bitrate: number | null;
+  majorBrand: string | null;
   audioCodec: string | null;
   audioChannels: number | null;
   audioSampleRate: number | null;
@@ -118,6 +119,9 @@ export function parseVideoInfo(result: FFProbeResult): VideoInfo {
     bitrate = parseInt(result.format.bit_rate, 10);
   }
 
+  // Parse major_brand from format tags (e.g., "XAVC" for Sony, "qt" for Apple)
+  const majorBrand = (result.format.tags as Record<string, string> | undefined)?.major_brand ?? null;
+
   return {
     duration,
     width: videoStream?.width ?? 0,
@@ -125,6 +129,7 @@ export function parseVideoInfo(result: FFProbeResult): VideoInfo {
     frameRate,
     codec: videoStream?.codec_name ?? 'unknown',
     bitrate,
+    majorBrand,
     audioCodec: audioStream?.codec_name ?? null,
     audioChannels: audioStream?.channels ?? null,
     audioSampleRate: audioStream?.sample_rate ? parseInt(audioStream.sample_rate, 10) : null,

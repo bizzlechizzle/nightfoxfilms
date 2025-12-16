@@ -143,6 +143,124 @@ interface ElectronAPI {
     openPath: (path: string) => Promise<void>;
     showItemInFolder: (path: string) => Promise<void>;
   };
+  signatures: {
+    search: (query: string, limit?: number) => Promise<unknown[]>;
+    getStats: () => Promise<{
+      version: string;
+      camera_count: number;
+      manufacturers: number;
+      categories: Record<string, number>;
+      mediums: Record<string, number>;
+    }>;
+    match: (filePath: string, exifMake?: string, exifModel?: string) => Promise<unknown>;
+    load: () => Promise<{ version: string; camera_count: number; generated_at: string } | null>;
+  };
+  cameraTrainer: {
+    startSession: () => Promise<{
+      id: string;
+      files: Array<{ path: string; filename: string; metadata: unknown; error: string | null }>;
+      status: 'collecting' | 'analyzing' | 'ready' | 'error';
+      minimumFiles: number;
+      error: string | null;
+    }>;
+    getSession: () => Promise<{
+      id: string;
+      files: Array<{ path: string; filename: string; metadata: unknown; error: string | null }>;
+      status: 'collecting' | 'analyzing' | 'ready' | 'error';
+      minimumFiles: number;
+      error: string | null;
+    } | null>;
+    cancelSession: () => Promise<boolean>;
+    addFiles: (paths: string[]) => Promise<{
+      added: number;
+      total: number;
+      minimumMet: boolean;
+      errors: string[];
+    }>;
+    removeFile: (filePath: string) => Promise<{
+      id: string;
+      files: Array<{ path: string; filename: string; metadata: unknown; error: string | null }>;
+      status: 'collecting' | 'analyzing' | 'ready' | 'error';
+      minimumFiles: number;
+      error: string | null;
+    } | null>;
+    analyze: () => Promise<{
+      success: boolean;
+      fingerprint: unknown;
+      suggestedName: string;
+      suggestedMedium: Medium;
+      signature: unknown;
+      filesAnalyzed: number;
+      errors: string[];
+    }>;
+    exportSignature: (signature: unknown) => Promise<string | null>;
+    selectFiles: () => Promise<string[]>;
+    selectFolder: () => Promise<string | null>;
+  };
+  usb: {
+    getDevices: () => Promise<USBDevice[]>;
+    getCameras: () => Promise<USBDevice[]>;
+    getJVCDevices: () => Promise<USBDevice[]>;
+    syncCameras: () => Promise<{ connected: Array<{ device: USBDevice; camera: RegisteredCamera }>; unregistered: USBDevice[] }>;
+  };
+  cameraRegistry: {
+    getAll: () => Promise<RegisteredCamera[]>;
+    register: (input: RegisterCameraInput) => Promise<RegisteredCamera>;
+    registerConnected: (input: { volumeUUID: string; cameraName: string; physicalSerial?: string; notes?: string }) => Promise<RegisteredCamera | null>;
+    update: (input: { cameraId: string; updates: { name?: string; notes?: string; physicalSerial?: string; volumeUUID?: string } }) => Promise<RegisteredCamera | null>;
+    delete: (cameraId: string) => Promise<boolean>;
+    findBySerial: (serial: string) => Promise<RegisteredCamera | null>;
+    findByVolumeUUID: (volumeUUID: string) => Promise<RegisteredCamera | null>;
+    findForMountPoint: (mountPoint: string) => Promise<RegisteredCamera | null>;
+  };
+}
+
+// USB Device types
+export interface VolumeInfo {
+  name: string;
+  mountPoint: string;
+  volumeUUID: string;
+  capacity: number;
+  freeSpace: number;
+  fileSystem: string;
+}
+
+export interface USBDevice {
+  vendorId: number;
+  productId: number;
+  vendorName: string;
+  productName: string;
+  usbSerial: string | null;
+  locationId: string;
+  volumes: VolumeInfo[];
+  primaryVolumeUUID: string | null;
+}
+
+export interface RegisteredCamera {
+  id: string;
+  name: string;
+  usbSerial: string | null;
+  volumeUUID: string | null;
+  vendorId: number | null;
+  productId: number | null;
+  make: string;
+  model: string;
+  physicalSerial: string | null;
+  registeredAt: string;
+  lastSeen: string | null;
+  notes: string | null;
+}
+
+export interface RegisterCameraInput {
+  name: string;
+  make: string;
+  model: string;
+  volumeUUID?: string | null;
+  usbSerial?: string | null;
+  vendorId?: number | null;
+  productId?: number | null;
+  physicalSerial?: string | null;
+  notes?: string | null;
 }
 
 /**
@@ -220,7 +338,7 @@ export function getMediumName(medium: Medium): string {
     case 'super8':
       return 'Super 8';
     case 'modern':
-      return 'Modern';
+      return 'Modern Digital';
     default:
       return medium;
   }

@@ -101,6 +101,13 @@ const api = {
     update: (id, input) => invoke("couples:update")(id, input),
     delete: (id) => invoke("couples:delete")(id),
     exportJson: (id) => invoke("couples:exportJson")(id),
+    // Workflow methods
+    updateStatus: (id, status) => invoke("couples:updateStatus")(id, status),
+    findByStatus: (status) => invoke("couples:findByStatus")(status),
+    getForMonth: (year, month) => invoke("couples:getForMonth")(year, month),
+    getDashboardStats: () => invoke("couples:getDashboardStats")(),
+    getMonthlyStats: (year, month) => invoke("couples:getMonthlyStats")(year, month),
+    getYearlyStats: (year) => invoke("couples:getYearlyStats")(year),
   },
 
   // Cameras
@@ -120,6 +127,21 @@ const api = {
     findByCamera: (cameraId) => invoke("cameraPatterns:findByCamera")(cameraId),
     create: (input) => invoke("cameraPatterns:create")(input),
     delete: (id) => invoke("cameraPatterns:delete")(id),
+  },
+
+  // Lenses (inventory tracking)
+  lenses: {
+    findAll: () => invoke("lenses:findAll")(),
+    findById: (id) => invoke("lenses:findById")(id),
+    findByMake: (make) => invoke("lenses:findByMake")(make),
+    findByMount: (mount) => invoke("lenses:findByMount")(mount),
+    search: (query) => invoke("lenses:search")(query),
+    getUniqueMakes: () => invoke("lenses:getUniqueMakes")(),
+    getUniqueMounts: () => invoke("lenses:getUniqueMounts")(),
+    create: (input) => invoke("lenses:create")(input),
+    update: (id, input) => invoke("lenses:update")(id, input),
+    delete: (id) => invoke("lenses:delete")(id),
+    getLensUsageStats: () => invoke("lenses:getLensUsageStats")(),
   },
 
   // Files
@@ -204,20 +226,45 @@ const api = {
     },
   },
 
-  // Weddings (Photography CMS)
-  weddings: {
-    create: (input) => invoke("weddings:create")(input),
-    findById: (id) => invoke("weddings:findById")(id),
-    findAll: (filters) => invoke("weddings:findAll")(filters),
-    update: (id, input) => invoke("weddings:update")(id, input),
-    updateStatus: (id, status, notes) => invoke("weddings:updateStatus")(id, status, notes),
-    delete: (id) => invoke("weddings:delete")(id),
-    getHistory: (id) => invoke("weddings:getHistory")(id),
-    getDashboardStats: () => invoke("weddings:getDashboardStats")(),
-    getMonthlyStats: (year, month) => invoke("weddings:getMonthlyStats")(year, month),
-    getYearlyStats: (year) => invoke("weddings:getYearlyStats")(year),
-    getForMonth: (year, month) => invoke("weddings:getForMonth")(year, month),
-    selectFolder: () => invoke("weddings:selectFolder")(),
+  // Camera Signatures Database
+  signatures: {
+    search: (query, limit) => invoke("signatures:search")(query, limit),
+    getStats: () => invoke("signatures:getStats")(),
+    match: (filePath, exifMake, exifModel) => invoke("signatures:match")(filePath, exifMake, exifModel),
+    load: () => invoke("signatures:load")(),
+  },
+
+  // Camera Training
+  cameraTrainer: {
+    startSession: () => invoke("cameraTrainer:startSession")(),
+    getSession: () => invoke("cameraTrainer:getSession")(),
+    cancelSession: () => invoke("cameraTrainer:cancelSession")(),
+    addFiles: (paths) => invokeLong("cameraTrainer:addFiles")(paths),
+    removeFile: (filePath) => invoke("cameraTrainer:removeFile")(filePath),
+    analyze: () => invokeLong("cameraTrainer:analyze")(),
+    exportSignature: (signature) => invoke("cameraTrainer:exportSignature")(signature),
+    selectFiles: () => invoke("cameraTrainer:selectFiles")(),
+    selectFolder: () => invoke("cameraTrainer:selectFolder")(),
+  },
+
+  // USB Device Detection
+  usb: {
+    getDevices: () => invoke("usb:getDevices")(),
+    getCameras: () => invoke("usb:getCameras")(),
+    getJVCDevices: () => invoke("usb:getJVCDevices")(),
+    syncCameras: () => invoke("usb:syncCameras")(),
+  },
+
+  // Camera Registry (for identifying footage source)
+  cameraRegistry: {
+    getAll: () => invoke("cameraRegistry:getAll")(),
+    register: (input) => invoke("cameraRegistry:register")(input),
+    registerConnected: (input) => invoke("cameraRegistry:registerConnected")(input),
+    update: (input) => invoke("cameraRegistry:update")(input),
+    delete: (cameraId) => invoke("cameraRegistry:delete")(cameraId),
+    findBySerial: (serial) => invoke("cameraRegistry:findBySerial")(serial),
+    findByVolumeUUID: (volumeUUID) => invoke("cameraRegistry:findByVolumeUUID")(volumeUUID),
+    findForMountPoint: (mountPoint) => invoke("cameraRegistry:findForMountPoint")(mountPoint),
   },
 
   // Shell operations

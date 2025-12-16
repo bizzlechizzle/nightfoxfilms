@@ -1,12 +1,51 @@
 /**
  * Couples Repository
  *
- * CRUD operations for wedding couples/projects.
+ * CRUD operations for wedding couples/projects with workflow tracking.
+ * Manages the video workflow: booked -> shot -> ingested -> editing -> delivered -> archived
  */
 
 import { getDatabase } from '../main/database';
-import type { Couple, CoupleInput, CoupleWithFiles, File } from '@nightfox/core';
+import type { Couple, CoupleInput, CoupleWithFiles, File, CoupleStatus } from '@nightfox/core';
 import path from 'path';
+
+// Status date field mapping
+const STATUS_DATE_FIELDS: Record<CoupleStatus, string | null> = {
+  booked: null, // No date field for booked (use created_at)
+  shot: 'date_shot',
+  ingested: 'date_ingested',
+  editing: 'date_editing_started',
+  delivered: 'date_delivered',
+  archived: 'date_archived',
+};
+
+export interface DashboardStats {
+  byStatus: Record<CoupleStatus, number>;
+  deliveredThisMonth: number;
+  upcomingWeddings: Array<{
+    couple: Couple;
+    daysUntil: number;
+  }>;
+  recentActivity: Array<{
+    couple: Couple;
+    action: string;
+    timestamp: string;
+  }>;
+}
+
+export interface MonthlyStats {
+  weddingsShot: number;
+  weddingsDelivered: number;
+  inProgress: number;
+  filesImported: number;
+}
+
+export interface YearlyStats {
+  totalWeddings: number;
+  totalDelivered: number;
+  deliveryRate: number;
+  avgDaysToDelivery: number;
+}
 
 export class CouplesRepository {
   /**
@@ -234,6 +273,226 @@ export class CouplesRepository {
       scenes,
       exports,
       exported_at: new Date().toISOString(),
+    };
+  }
+
+  // ===========================================================================
+  // WORKFLOW METHODS
+  // ===========================================================================
+
+  /**
+   * Update couple status with timestamp tracking
+   */
+  updateStatus(id: number, status: CoupleStatus, notes?: string): Couple | null {
+    const existing = this.findById(id);
+    if (!existing) return null;
+
+    const db = getDatabase();
+    const dateField = STATUS_DATE_FIELDS[status];
+
+    if (dateField) {
+      // Update status and set the corresponding date field
+      db.prepare(
+        `UPDATE couples SET status = ?, ${dateField} = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+      ).run(status, id);
+    } else {
+      // Just update status (for 'booked')
+      db.prepare(
+        'UPDATE couples SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(status, id);
+    }
+
+    return this.findById(id);
+  }
+
+  /**
+   * Find couples by status
+   */
+  findByStatus(status: CoupleStatus): Couple[] {
+    const db = getDatabase();
+    return db
+      .prepare('SELECT * FROM couples WHERE status = ? ORDER BY wedding_date DESC')
+      .all(status) as Couple[];
+  }
+
+  /**
+   * Get couples for a specific month (for calendar view)
+   */
+  getForMonth(year: number, month: number): Couple[] {
+    const db = getDatabase();
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+
+    return db
+      .prepare(
+        'SELECT * FROM couples WHERE wedding_date >= ? AND wedding_date <= ? ORDER BY wedding_date'
+      )
+      .all(startDate, endDate) as Couple[];
+  }
+
+  /**
+   * Get dashboard statistics
+   */
+  getDashboardStats(): DashboardStats {
+    const db = getDatabase();
+
+    // Count by status
+    const statusCounts = db
+      .prepare(
+        `SELECT status, COUNT(*) as count FROM couples GROUP BY status`
+      )
+      .all() as Array<{ status: CoupleStatus; count: number }>;
+
+    const byStatus: Record<CoupleStatus, number> = {
+      booked: 0,
+      shot: 0,
+      ingested: 0,
+      editing: 0,
+      delivered: 0,
+      archived: 0,
+    };
+
+    for (const row of statusCounts) {
+      if (row.status in byStatus) {
+        byStatus[row.status] = row.count;
+      }
+    }
+
+    // Delivered this month
+    const now = new Date();
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const deliveredThisMonth = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples WHERE date_delivered >= ?`
+      )
+      .get(monthStart) as { count: number };
+
+    // Upcoming weddings (next 30 days)
+    const today = now.toISOString().split('T')[0];
+    const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    const upcomingRows = db
+      .prepare(
+        `SELECT * FROM couples
+         WHERE wedding_date >= ? AND wedding_date <= ? AND status = 'booked'
+         ORDER BY wedding_date`
+      )
+      .all(today, thirtyDaysLater) as Couple[];
+
+    const upcomingWeddings = upcomingRows.map((couple) => ({
+      couple,
+      daysUntil: Math.ceil(
+        (new Date(couple.wedding_date!).getTime() - now.getTime()) / (24 * 60 * 60 * 1000)
+      ),
+    }));
+
+    // Recent activity (last 5 updated)
+    const recentRows = db
+      .prepare(
+        `SELECT * FROM couples ORDER BY updated_at DESC LIMIT 5`
+      )
+      .all() as Couple[];
+
+    const recentActivity = recentRows.map((couple) => ({
+      couple,
+      action: `Status: ${couple.status}`,
+      timestamp: couple.updated_at,
+    }));
+
+    return {
+      byStatus,
+      deliveredThisMonth: deliveredThisMonth.count,
+      upcomingWeddings,
+      recentActivity,
+    };
+  }
+
+  /**
+   * Get monthly statistics
+   */
+  getMonthlyStats(year: number, month: number): MonthlyStats {
+    const db = getDatabase();
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+
+    // Weddings shot this month (by wedding_date)
+    const shotCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples WHERE wedding_date LIKE ?`
+      )
+      .get(`${monthStr}%`) as { count: number };
+
+    // Weddings delivered this month
+    const deliveredCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples WHERE date_delivered LIKE ?`
+      )
+      .get(`${monthStr}%`) as { count: number };
+
+    // In progress (not delivered or archived)
+    const inProgressCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples
+         WHERE status NOT IN ('delivered', 'archived') AND wedding_date LIKE ?`
+      )
+      .get(`${monthStr}%`) as { count: number };
+
+    // Files imported this month
+    const filesCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM files WHERE imported_at LIKE ?`
+      )
+      .get(`${monthStr}%`) as { count: number };
+
+    return {
+      weddingsShot: shotCount.count,
+      weddingsDelivered: deliveredCount.count,
+      inProgress: inProgressCount.count,
+      filesImported: filesCount.count,
+    };
+  }
+
+  /**
+   * Get yearly statistics
+   */
+  getYearlyStats(year: number): YearlyStats {
+    const db = getDatabase();
+    const yearStr = `${year}`;
+
+    // Total weddings this year
+    const totalCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples WHERE wedding_date LIKE ?`
+      )
+      .get(`${yearStr}%`) as { count: number };
+
+    // Total delivered this year
+    const deliveredCount = db
+      .prepare(
+        `SELECT COUNT(*) as count FROM couples WHERE date_delivered LIKE ?`
+      )
+      .get(`${yearStr}%`) as { count: number };
+
+    // Calculate delivery rate
+    const deliveryRate = totalCount.count > 0
+      ? Math.round((deliveredCount.count / totalCount.count) * 100)
+      : 0;
+
+    // Average days to delivery (from wedding_date to date_delivered)
+    const avgDaysResult = db
+      .prepare(
+        `SELECT AVG(julianday(date_delivered) - julianday(wedding_date)) as avg_days
+         FROM couples
+         WHERE date_delivered IS NOT NULL AND wedding_date IS NOT NULL AND wedding_date LIKE ?`
+      )
+      .get(`${yearStr}%`) as { avg_days: number | null };
+
+    return {
+      totalWeddings: totalCount.count,
+      totalDelivered: deliveredCount.count,
+      deliveryRate,
+      avgDaysToDelivery: Math.round(avgDaysResult.avg_days ?? 0),
     };
   }
 }

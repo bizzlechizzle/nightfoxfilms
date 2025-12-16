@@ -119,9 +119,12 @@ export {
   litellmService,
   isLiteLLMInstalled,
   isLiteLLMRunning,
+  isOllamaAvailable,
   startLiteLLM,
   stopLiteLLM,
+  ensureLiteLLMRunning,
   getStatus as getLiteLLMStatus,
+  getEnhancedStatus as getLiteLLMEnhancedStatus,
   captionImage,
   detectWeddingMoment,
   type LiteLLMStatus,
@@ -142,3 +145,54 @@ export {
   type SceneCaptionResult,
   type BatchCaptionProgress,
 } from './captioning-service';
+
+// Signature matcher service
+export {
+  loadSignatureDatabase,
+  reloadSignatureDatabase,
+  matchSignature,
+  findSignatureByMakeModel,
+  searchSignatures,
+  getSignatureDatabaseStats,
+  type CameraSignature,
+  type SignatureDatabase,
+  type SignatureMatchResult,
+} from './signature-matcher-service';
+
+// Camera trainer service
+export {
+  startTrainingSession,
+  getTrainingSession,
+  cancelTrainingSession,
+  addTrainingFiles,
+  removeTrainingFile,
+  analyzeTrainingFiles,
+  exportSignatureJson,
+  type TrainingSession,
+  type TrainingResult,
+  type FileAnalysis,
+} from './camera-trainer-service';
+
+// USB device service
+export {
+  getConnectedUSBDevices,
+  getConnectedCameras,
+  getConnectedJVCDevices,
+  loadCameraRegistry,
+  registerCamera,
+  updateCameraLastSeen,
+  findCameraByUSBSerial,
+  findCameraByVolumeUUID,
+  findCameraByPhysicalSerial,
+  findCameraByName,
+  getRegisteredCameras,
+  updateCamera,
+  deleteRegisteredCamera,
+  syncConnectedCameras,
+  registerConnectedDevice,
+  findCameraForMountPoint,
+  type USBDevice,
+  type VolumeInfo,
+  type RegisteredCamera,
+  type CameraRegistry,
+} from './usb-device-service';

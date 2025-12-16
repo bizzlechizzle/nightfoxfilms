@@ -62,6 +62,7 @@ export interface MediaInfo {
   height: number | null;
   frameRate: number | null;
   mimeType: string | null;
+  majorBrand: string | null;
 }
 
 /**
@@ -107,16 +108,63 @@ export function parseMediaInfo(tags: Tags): MediaInfo {
     }
   }
 
+  // Check for nested Device object (Sony video files via exiftool-vendored)
+  const device = (tags as any).Device as { Manufacturer?: string; ModelName?: string } | undefined;
+  const deviceMake = device?.Manufacturer || null;
+  const deviceModel = device?.ModelName || null;
+
+  // Extract make - check multiple possible fields (video files use different tags)
+  // Priority: Make (photos) > Device.Manufacturer (Sony video) > DeviceManufacturer > Manufacturer
+  let make = extractFirstValue(tags, [
+    'Make',
+    'DeviceManufacturer',  // Sony MP4/XAVC (flattened)
+    'Manufacturer',
+    'HandlerVendorID',
+    'AndroidManufacturer',  // Android phones
+  ]);
+  // Use nested Device.Manufacturer if flat fields are empty
+  if (!make && deviceMake) {
+    make = deviceMake;
+  }
+
+  // Extract model - check multiple possible fields
+  // Priority: Model (photos) > Device.ModelName (Sony video) > DeviceModelName > CameraModelName
+  let model = extractFirstValue(tags, [
+    'Model',
+    'DeviceModelName',     // Sony MP4/XAVC (flattened)
+    'CameraModelName',     // Canon
+    'AndroidModel',        // Android phones
+    'DeviceModel',
+  ]);
+  // Use nested Device.ModelName if flat fields are empty
+  if (!model && deviceModel) {
+    model = deviceModel;
+  }
+
   return {
-    make: (tags as any).Make ?? null,
-    model: (tags as any).Model ?? null,
+    make,
+    model,
     createDate,
     duration,
     width: (tags as any).ImageWidth ?? (tags as any).ExifImageWidth ?? null,
     height: (tags as any).ImageHeight ?? (tags as any).ExifImageHeight ?? null,
     frameRate: (tags as any).VideoFrameRate ?? null,
     mimeType: (tags as any).MIMEType ?? null,
+    majorBrand: (tags as any).MajorBrand ?? null,
   };
+}
+
+/**
+ * Extract first non-null value from a list of tag names
+ */
+function extractFirstValue(tags: Tags, fieldNames: string[]): string | null {
+  for (const field of fieldNames) {
+    const value = (tags as any)[field];
+    if (value !== undefined && value !== null && value !== '') {
+      return typeof value === 'string' ? value : String(value);
+    }
+  }
+  return null;
 }
 
 /**
@@ -132,10 +180,33 @@ export async function getMediaInfo(filePath: string): Promise<MediaInfo> {
  */
 export async function getCameraInfo(filePath: string): Promise<{ make: string | null; model: string | null }> {
   const tags = await getMetadata(filePath);
-  return {
-    make: (tags as any).Make ?? null,
-    model: (tags as any).Model ?? null,
-  };
+
+  // Check for nested Device object (Sony video files via exiftool-vendored)
+  const device = (tags as any).Device as { Manufacturer?: string; ModelName?: string } | undefined;
+
+  let make = extractFirstValue(tags, [
+    'Make',
+    'DeviceManufacturer',
+    'Manufacturer',
+    'HandlerVendorID',
+    'AndroidManufacturer',
+  ]);
+  if (!make && device?.Manufacturer) {
+    make = device.Manufacturer;
+  }
+
+  let model = extractFirstValue(tags, [
+    'Model',
+    'DeviceModelName',
+    'CameraModelName',
+    'AndroidModel',
+    'DeviceModel',
+  ]);
+  if (!model && device?.ModelName) {
+    model = device.ModelName;
+  }
+
+  return { make, model };
 }
 
 /**
@@ -209,14 +280,40 @@ export async function getVideoExifMetadata(filePath: string): Promise<{
  * Convert ExifTool Tags to our ExifToolResult format
  */
 export function toExifToolResult(tags: Tags, filePath: string): ExifToolResult {
+  // Check for nested Device object (Sony video files via exiftool-vendored)
+  const device = (tags as any).Device as { Manufacturer?: string; ModelName?: string } | undefined;
+
+  // Extract make/model using the multi-field logic
+  let make = extractFirstValue(tags, [
+    'Make',
+    'DeviceManufacturer',
+    'Manufacturer',
+    'HandlerVendorID',
+    'AndroidManufacturer',
+  ]);
+  if (!make && device?.Manufacturer) {
+    make = device.Manufacturer;
+  }
+
+  let model = extractFirstValue(tags, [
+    'Model',
+    'DeviceModelName',
+    'CameraModelName',
+    'AndroidModel',
+    'DeviceModel',
+  ]);
+  if (!model && device?.ModelName) {
+    model = device.ModelName;
+  }
+
   return {
     SourceFile: filePath,
     FileName: (tags as any).FileName ?? '',
     FileSize: (tags as any).FileSize ?? '',
     FileType: (tags as any).FileType ?? '',
     MIMEType: (tags as any).MIMEType ?? '',
-    Make: (tags as any).Make,
-    Model: (tags as any).Model,
+    Make: make ?? undefined,
+    Model: model ?? undefined,
     CreateDate: (tags as any).CreateDate?.toString(),
     ModifyDate: (tags as any).ModifyDate?.toString(),
     Duration: (tags as any).Duration,
@@ -227,6 +324,10 @@ export function toExifToolResult(tags: Tags, filePath: string): ExifToolResult {
     AudioSampleRate: (tags as any).AudioSampleRate,
     GPSLatitude: (tags as any).GPSLatitude?.toString(),
     GPSLongitude: (tags as any).GPSLongitude?.toString(),
+    // Include original fields for reference
+    DeviceManufacturer: (tags as any).DeviceManufacturer,
+    DeviceModelName: (tags as any).DeviceModelName,
+    LensModelName: (tags as any).LensModelName,
     ...tags,
   };
 }

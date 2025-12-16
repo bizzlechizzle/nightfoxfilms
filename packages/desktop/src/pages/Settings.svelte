@@ -1,18 +1,26 @@
 <script lang="ts">
   import { getAPI, formatBytes } from '../lib/api';
-  import type { DatabaseStats } from '../lib/types';
+  import type { DatabaseStats, AIStatus } from '../lib/types';
 
   const api = getAPI();
 
+  // General settings
   let storagePath = $state<string | null>(null);
-  let litellmUrl = $state<string>('http://localhost:4000');
-  let litellmVlm = $state<string>('local-vlm');
-  let litellmLlm = $state<string>('local-llm');
   let theme = $state<string>('system');
   let dbPath = $state<string>('');
   let dbStats = $state<DatabaseStats | null>(null);
   let loading = $state(true);
-  let saving = $state(false);
+
+  // AI settings
+  let aiStatus = $state<AIStatus | null>(null);
+  let visionModel = $state<string>('caption-local');
+  let textModel = $state<string>('caption-local');
+  let anthropicKey = $state<string>('');
+  let openaiKey = $state<string>('');
+  let savingAI = $state(false);
+  let testingAI = $state(false);
+  let showAnthropicKey = $state(false);
+  let showOpenaiKey = $state(false);
 
   $effect(() => {
     loadSettings();
@@ -21,19 +29,22 @@
   async function loadSettings() {
     loading = true;
     try {
-      const [settings, dbPathResult, dbStatsResult] = await Promise.all([
+      const [settings, dbPathResult, dbStatsResult, aiStatusResult] = await Promise.all([
         api.settings.getAll(),
         api.database.getLocation(),
         api.database.getStats(),
+        api.ai.getStatus(),
       ]);
 
       storagePath = settings.storage_path ?? null;
-      litellmUrl = settings.litellm_url ?? 'http://localhost:4000';
-      litellmVlm = settings.litellm_model_vlm ?? 'local-vlm';
-      litellmLlm = settings.litellm_model_llm ?? 'local-llm';
+      visionModel = settings.litellm_model_vlm ?? 'caption-local';
+      textModel = settings.litellm_model_llm ?? 'caption-local';
+      anthropicKey = settings.anthropic_api_key ?? '';
+      openaiKey = settings.openai_api_key ?? '';
       theme = settings.theme ?? 'system';
       dbPath = dbPathResult;
       dbStats = dbStatsResult;
+      aiStatus = aiStatusResult;
     } catch (error) {
       console.error('Failed to load settings:', error);
     } finally {
@@ -61,17 +72,19 @@
     }
   }
 
-  async function saveAllSettings() {
-    saving = true;
+  async function saveAISettings() {
+    savingAI = true;
     try {
       await Promise.all([
-        saveSetting('litellm_url', litellmUrl),
-        saveSetting('litellm_model_vlm', litellmVlm),
-        saveSetting('litellm_model_llm', litellmLlm),
-        saveSetting('theme', theme),
+        saveSetting('litellm_model_vlm', visionModel),
+        saveSetting('litellm_model_llm', textModel),
+        saveSetting('anthropic_api_key', anthropicKey || null),
+        saveSetting('openai_api_key', openaiKey || null),
       ]);
+      // Refresh status after saving
+      aiStatus = await api.ai.getStatus();
     } finally {
-      saving = false;
+      savingAI = false;
     }
   }
 
@@ -81,17 +94,31 @@
     }
   }
 
-  async function testLiteLLM() {
+  async function testAI() {
+    testingAI = true;
     try {
       const status = await api.ai.getStatus();
-      if (status.available) {
-        alert('LiteLLM connection successful!');
+      aiStatus = status;
+
+      if (status.installed) {
+        if (status.running) {
+          alert('AI Gateway running at localhost:' + status.port + '\n\nConfigured models:\n- ' + (status.configuredModels.join('\n- ') || 'none'));
+        } else {
+          alert('LiteLLM installed. AI Gateway will start automatically when needed.');
+        }
       } else {
-        alert('LiteLLM not available. Check the URL and ensure the server is running.');
+        alert('LiteLLM not installed.\n\nTo enable AI features, run:\npip install litellm\n\nOr run the setup script:\n./scripts/setup-litellm.sh');
       }
     } catch (error) {
-      alert('Failed to connect to LiteLLM: ' + error);
+      alert('AI test failed: ' + error);
+    } finally {
+      testingAI = false;
     }
+  }
+
+  function maskKey(key: string): string {
+    if (!key || key.length < 8) return key;
+    return key.substring(0, 4) + '...' + key.substring(key.length - 4);
   }
 </script>
 
@@ -154,60 +181,136 @@
 
       <section class="settings-section">
         <h3>AI Integration</h3>
+
+        <!-- Status indicators -->
+        {#if aiStatus}
+          <div class="ai-status">
+            <div class="status-item">
+              <span class="status-dot {aiStatus.installed ? 'status-ok' : 'status-error'}"></span>
+              <span>LiteLLM {aiStatus.installed ? 'Installed' : 'Not Installed'}</span>
+            </div>
+            {#if aiStatus.running}
+              <div class="status-item">
+                <span class="status-dot status-ok"></span>
+                <span>AI Gateway Running (localhost:{aiStatus.port})</span>
+              </div>
+            {/if}
+            {#if aiStatus.ollamaAvailable}
+              <div class="status-item">
+                <span class="status-dot status-ok"></span>
+                <span>Ollama Available (local)</span>
+              </div>
+            {/if}
+            {#if aiStatus.configuredProviders?.length > 0}
+              <div class="status-item">
+                <span class="status-dot status-ok"></span>
+                <span>Providers: {aiStatus.configuredProviders.join(', ')}</span>
+              </div>
+            {/if}
+          </div>
+          {#if !aiStatus.installed}
+            <p class="ai-warning">
+              LiteLLM not installed. Run the setup script to enable AI features:<br/>
+              <code>./scripts/setup-litellm.sh</code>
+            </p>
+          {:else if !aiStatus.ollamaAvailable && !anthropicKey && !openaiKey}
+            <p class="ai-warning">
+              No AI providers configured. Install Ollama for local AI, or add API keys below for cloud models.
+            </p>
+          {/if}
+        {/if}
+
+        <!-- Model selection -->
         <div class="setting-row">
           <div class="setting-info">
-            <label for="litellm-url">LiteLLM Server URL</label>
+            <label for="vision-model">Vision Model</label>
             <p class="setting-description">
-              Base URL for the LiteLLM proxy server
+              Model for image/video analysis (caption-local uses Ollama)
             </p>
           </div>
           <div class="setting-control">
-            <input
-              id="litellm-url"
-              type="text"
-              bind:value={litellmUrl}
-              placeholder="http://localhost:4000"
-            />
+            <select id="vision-model" bind:value={visionModel}>
+              <option value="caption-local">Local (Ollama)</option>
+              <option value="caption-anthropic">Anthropic (Claude)</option>
+              <option value="caption-openai">OpenAI (GPT-4o)</option>
+            </select>
           </div>
         </div>
+
         <div class="setting-row">
           <div class="setting-info">
-            <label for="litellm-vlm">Vision Model</label>
-            <p class="setting-description">
-              Model for image/video analysis
-            </p>
-          </div>
-          <div class="setting-control">
-            <input
-              id="litellm-vlm"
-              type="text"
-              bind:value={litellmVlm}
-              placeholder="local-vlm"
-            />
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-info">
-            <label for="litellm-llm">Text Model</label>
+            <label for="text-model">Text Model</label>
             <p class="setting-description">
               Model for text generation
             </p>
           </div>
           <div class="setting-control">
-            <input
-              id="litellm-llm"
-              type="text"
-              bind:value={litellmLlm}
-              placeholder="local-llm"
-            />
+            <select id="text-model" bind:value={textModel}>
+              <option value="caption-local">Local (Ollama)</option>
+              <option value="caption-anthropic">Anthropic (Claude)</option>
+              <option value="caption-openai">OpenAI (GPT-4o)</option>
+            </select>
           </div>
         </div>
+
+        <!-- Cloud API Keys -->
+        <div class="api-keys-section">
+          <h4>Cloud API Keys (Optional)</h4>
+          <p class="setting-description">Add API keys to enable cloud-based AI models. Keys are stored locally.</p>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <label for="anthropic-key">Anthropic API Key</label>
+            </div>
+            <div class="setting-control">
+              <div class="key-input">
+                <input
+                  id="anthropic-key"
+                  type={showAnthropicKey ? 'text' : 'password'}
+                  bind:value={anthropicKey}
+                  placeholder="sk-ant-..."
+                />
+                <button
+                  class="btn btn-small"
+                  onclick={() => showAnthropicKey = !showAnthropicKey}
+                  type="button"
+                >
+                  {showAnthropicKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <label for="openai-key">OpenAI API Key</label>
+            </div>
+            <div class="setting-control">
+              <div class="key-input">
+                <input
+                  id="openai-key"
+                  type={showOpenaiKey ? 'text' : 'password'}
+                  bind:value={openaiKey}
+                  placeholder="sk-..."
+                />
+                <button
+                  class="btn btn-small"
+                  onclick={() => showOpenaiKey = !showOpenaiKey}
+                  type="button"
+                >
+                  {showOpenaiKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="setting-actions">
-          <button class="btn btn-secondary" onclick={testLiteLLM}>
-            Test Connection
+          <button class="btn btn-secondary" onclick={testAI} disabled={testingAI}>
+            {testingAI ? 'Testing...' : 'Test AI'}
           </button>
-          <button class="btn btn-primary" onclick={saveAllSettings} disabled={saving}>
-            {saving ? 'Saving...' : 'Save AI Settings'}
+          <button class="btn btn-primary" onclick={saveAISettings} disabled={savingAI}>
+            {savingAI ? 'Saving...' : 'Save AI Settings'}
           </button>
         </div>
       </section>
@@ -435,5 +538,86 @@
     background: var(--color-surface);
     color: var(--color-text);
     border: 1px solid var(--color-border);
+  }
+
+  .btn-small {
+    padding: 0.375rem 0.75rem;
+    font-size: var(--step--1);
+    background: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  /* AI Status indicators */
+  .ai-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-alt);
+    border-radius: 4px;
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: var(--step--1);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .status-ok { background: #10b981; }
+  .status-warn { background: #f59e0b; }
+  .status-error { background: #ef4444; }
+
+  .ai-warning {
+    margin: 0.5rem 0 1rem 0;
+    padding: 0.75rem;
+    background: #fef3c7;
+    border-radius: 4px;
+    font-size: var(--step--1);
+    color: #92400e;
+  }
+
+  .ai-warning code {
+    background: rgba(0,0,0,0.1);
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+  }
+
+  /* API Keys section */
+  .api-keys-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .api-keys-section h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: var(--step-0);
+    font-weight: 600;
+  }
+
+  .api-keys-section > .setting-description {
+    margin-bottom: 1rem;
+  }
+
+  .key-input {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .key-input input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
   }
 </style>

@@ -1,8 +1,12 @@
 /**
  * LiteLLM Service
  *
- * Lightweight LiteLLM integration for video captioning.
+ * Seamless LiteLLM integration for video captioning.
+ * Auto-starts on demand, auto-stops after idle timeout.
  * Supports local (Ollama) and cloud (OpenAI, Anthropic) vision models.
+ *
+ * Usage: Just call captionImage() or detectWeddingMoment() - LiteLLM
+ * starts automatically if needed and stops after 10 min of inactivity.
  */
 
 import { spawn, execSync, ChildProcess } from 'child_process';
@@ -10,6 +14,7 @@ import { existsSync, writeFileSync, readFileSync, unlinkSync, mkdirSync } from '
 import { join, dirname } from 'path';
 import { app } from 'electron';
 import { homedir } from 'os';
+import { settingsRepository } from '../repositories/settings-repository';
 
 // =============================================================================
 // TYPES
@@ -68,10 +73,24 @@ let configuredModels: string[] = [];
 // =============================================================================
 
 function getVenvPaths(): string[] {
+  // Get the app's resources directory for bundled apps
+  const resourcesPath = process.resourcesPath || app.getAppPath();
+
+  // Platform-specific venv paths
+  const isWin = process.platform === 'win32';
+  const pythonBin = isWin ? 'Scripts/python.exe' : 'bin/python';
+
   return [
-    join(app.getPath('userData'), 'litellm-venv', 'bin', 'python'),
-    join(process.cwd(), 'scripts', 'litellm-venv', 'bin', 'python'),
-    join(process.cwd(), '..', '..', 'scripts', 'litellm-venv', 'bin', 'python'),
+    // App userData folder (user-installed)
+    join(app.getPath('userData'), 'litellm-venv', pythonBin),
+    // Scripts folder relative to cwd (development)
+    join(process.cwd(), 'scripts', 'litellm-venv', pythonBin),
+    // Scripts folder at project root (when running from packages/desktop)
+    join(process.cwd(), '..', '..', 'scripts', 'litellm-venv', pythonBin),
+    // Bundled in resources folder (production)
+    join(resourcesPath, 'litellm-venv', pythonBin),
+    // Bundled in app resources (production macOS)
+    join(resourcesPath, '..', 'litellm-venv', pythonBin),
   ];
 }
 
@@ -412,11 +431,102 @@ export async function getStatus(): Promise<LiteLLMStatus> {
 }
 
 // =============================================================================
+// OLLAMA DETECTION
+// =============================================================================
+
+/**
+ * Check if Ollama is available at localhost:11434
+ */
+export async function isOllamaAvailable(): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+
+    const response = await fetch('http://localhost:11434/api/tags', {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+// =============================================================================
+// AUTO-ENSURE (Main Entry Point)
+// =============================================================================
+
+/**
+ * Ensure LiteLLM is running before AI operations.
+ * Loads settings from database and starts if needed.
+ * This is the main entry point - called automatically by captionImage/detectWeddingMoment.
+ */
+export async function ensureLiteLLMRunning(): Promise<boolean> {
+  // Already running? Just reset idle timer
+  if (await isLiteLLMRunning()) {
+    resetIdleTimer();
+    return true;
+  }
+
+  // Load settings from database
+  const settings = loadSettingsFromDatabase();
+
+  // Start LiteLLM
+  const started = await startLiteLLM(settings);
+  if (started) {
+    resetIdleTimer();
+  }
+  return started;
+}
+
+/**
+ * Load LiteLLM settings from the database.
+ * Used internally by ensureLiteLLMRunning().
+ */
+function loadSettingsFromDatabase(): LiteLLMSettings {
+  const allSettings = settingsRepository.getAll();
+
+  return {
+    port: parseInt(allSettings.litellm_port || '4000', 10) || DEFAULT_PORT,
+    defaultModel: allSettings.litellm_model_vlm || 'caption-local',
+    ollamaEnabled: allSettings.ollama_enabled !== 'false', // Default to true
+    ollamaModel: allSettings.ollama_model || 'llava:7b',
+    anthropicKey: allSettings.anthropic_api_key || null,
+    openaiKey: allSettings.openai_api_key || null,
+  };
+}
+
+/**
+ * Get enhanced status including Ollama availability and configured providers.
+ */
+export async function getEnhancedStatus(): Promise<LiteLLMStatus & {
+  ollamaAvailable: boolean;
+  configuredProviders: string[];
+}> {
+  const baseStatus = await getStatus();
+  const ollamaAvailable = await isOllamaAvailable();
+  const settings = loadSettingsFromDatabase();
+
+  const configuredProviders: string[] = [];
+  if (ollamaAvailable) configuredProviders.push('ollama');
+  if (settings.anthropicKey) configuredProviders.push('anthropic');
+  if (settings.openaiKey) configuredProviders.push('openai');
+
+  return {
+    ...baseStatus,
+    ollamaAvailable,
+    configuredProviders,
+  };
+}
+
+// =============================================================================
 // CAPTIONING
 // =============================================================================
 
 /**
- * Caption an image using vision model
+ * Caption an image using vision model.
+ * All requests go through LiteLLM proxy (unified gateway).
  */
 export async function captionImage(
   imageBase64: string,
@@ -425,8 +535,10 @@ export async function captionImage(
 ): Promise<CaptionResult> {
   const startTime = Date.now();
 
-  if (!(await isLiteLLMRunning())) {
-    throw new Error('LiteLLM proxy not running');
+  // Ensure LiteLLM is running
+  const ready = await ensureLiteLLMRunning();
+  if (!ready) {
+    throw new Error('AI service not available. Install LiteLLM to enable AI features.');
   }
 
   resetIdleTimer();
@@ -457,7 +569,7 @@ export async function captionImage(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`LiteLLM error (${response.status}): ${errorText}`);
+    throw new Error(`AI service error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
@@ -477,7 +589,8 @@ export async function captionImage(
 }
 
 /**
- * Detect wedding moment type from image
+ * Detect wedding moment type from image.
+ * All requests go through LiteLLM proxy (unified gateway).
  */
 export async function detectWeddingMoment(
   imageBase64: string,
@@ -487,10 +600,9 @@ export async function detectWeddingMoment(
   confidence: number;
   description: string;
 }> {
-  const startTime = Date.now();
-
-  if (!(await isLiteLLMRunning())) {
-    throw new Error('LiteLLM proxy not running');
+  const ready = await ensureLiteLLMRunning();
+  if (!ready) {
+    throw new Error('AI service not available. Install LiteLLM to enable AI features.');
   }
 
   resetIdleTimer();
@@ -533,7 +645,7 @@ Only respond with valid JSON.`;
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`LiteLLM error (${response.status}): ${errorText}`);
+    throw new Error(`AI service error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
@@ -562,9 +674,12 @@ Only respond with valid JSON.`;
 export const litellmService = {
   isInstalled: isLiteLLMInstalled,
   isRunning: isLiteLLMRunning,
+  isOllamaAvailable,
   start: startLiteLLM,
   stop: stopLiteLLM,
+  ensure: ensureLiteLLMRunning,
   getStatus,
+  getEnhancedStatus,
   resetIdleTimer,
   cleanupOrphan,
   captionImage,

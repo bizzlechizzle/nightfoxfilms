@@ -1,0 +1,133 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Camera Signature Database",
+  "description": "Comprehensive database of camera signatures for automatic identification from metadata",
+  "type": "object",
+  "required": ["version", "generated_at", "camera_count", "cameras"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the database"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this database was generated"
+    },
+    "camera_count": {
+      "type": "integer",
+      "description": "Total number of cameras in database"
+    },
+    "sources": {
+      "type": "object",
+      "description": "Source data versions used",
+      "properties": {
+        "exiftool": { "type": "string" },
+        "openmvg": { "type": "string" },
+        "manual": { "type": "string" }
+      }
+    },
+    "cameras": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/CameraSignature" }
+    }
+  },
+  "definitions": {
+    "CameraSignature": {
+      "type": "object",
+      "required": ["id", "make", "model", "category", "medium"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable UUID for this camera"
+        },
+        "make": {
+          "type": "string",
+          "description": "Manufacturer name (e.g., Sony, Canon)"
+        },
+        "model": {
+          "type": "string",
+          "description": "Primary model name"
+        },
+        "model_variants": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Alternative names in EXIF (e.g., ILCE-FX3, FX3)"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["cinema", "professional", "prosumer", "consumer", "action", "drone", "smartphone", "scanner", "webcam", "unknown"],
+          "description": "Camera category"
+        },
+        "medium": {
+          "type": "string",
+          "enum": ["modern", "dadcam", "super8"],
+          "description": "Nightfox medium classification"
+        },
+        "year_released": {
+          "type": ["integer", "null"],
+          "description": "Year camera was released"
+        },
+        "matching": {
+          "type": "object",
+          "description": "Rules for identifying this camera from metadata",
+          "properties": {
+            "exif_make": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "EXIF Make values (case-insensitive match)"
+            },
+            "exif_model": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "EXIF Model values (case-insensitive match)"
+            },
+            "filename_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Glob patterns for filenames (e.g., C*.MP4)"
+            },
+            "folder_patterns": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Folder structure patterns"
+            }
+          }
+        },
+        "technical": {
+          "type": "object",
+          "description": "Technical specifications",
+          "properties": {
+            "sensor_width_mm": { "type": ["number", "null"] },
+            "sensor_height_mm": { "type": ["number", "null"] },
+            "max_resolution": { "type": ["string", "null"] },
+            "native_codec": { "type": ["string", "null"] }
+          }
+        },
+        "processing": {
+          "type": "object",
+          "description": "Processing hints for Nightfox",
+          "properties": {
+            "deinterlace": { "type": "boolean", "default": false },
+            "audio_channels": {
+              "type": "string",
+              "enum": ["stereo", "mono", "none"],
+              "default": "stereo"
+            },
+            "suggested_lut": { "type": ["string", "null"] }
+          }
+        },
+        "source": {
+          "type": "string",
+          "enum": ["exiftool", "openmvg", "manual", "user"],
+          "description": "Where this entry came from"
+        },
+        "verified": {
+          "type": "boolean",
+          "default": false,
+          "description": "Has this been manually verified"
+        }
+      }
+    }
+  }
+}

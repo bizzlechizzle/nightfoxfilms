@@ -16,14 +16,10 @@ import {
   camerasRepository,
   cameraPatternsRepository,
   couplesRepository,
+  lensesRepository,
   filesRepository,
   scenesRepository,
   jobsRepository,
-  weddingsRepository,
-  type CreateWeddingInput,
-  type UpdateWeddingInput,
-  type WeddingFilters,
-  type WeddingStatus,
 } from '../repositories';
 import { CameraInputSchema, CameraPatternInputSchema, CoupleInputSchema } from '@nightfox/core';
 import {
@@ -39,6 +35,31 @@ import {
   exportClip,
   litellmService,
   captioningService,
+  // Signature matching & training
+  loadSignatureDatabase,
+  matchSignature,
+  searchSignatures,
+  getSignatureDatabaseStats,
+  startTrainingSession,
+  getTrainingSession,
+  cancelTrainingSession,
+  addTrainingFiles,
+  removeTrainingFile,
+  analyzeTrainingFiles,
+  exportSignatureJson,
+  // USB device & camera registration
+  getConnectedUSBDevices,
+  getConnectedCameras,
+  getConnectedJVCDevices,
+  getRegisteredCameras,
+  registerCamera,
+  updateCamera,
+  deleteRegisteredCamera,
+  syncConnectedCameras,
+  registerConnectedDevice,
+  findCameraByUSBSerial,
+  findCameraByVolumeUUID,
+  findCameraForMountPoint,
   type LiteLLMSettings,
 } from '../services';
 
@@ -214,6 +235,31 @@ ipcMain.handle('couples:exportJson', async (_, id: number) => {
   return result.filePath;
 });
 
+// Workflow methods
+ipcMain.handle('couples:updateStatus', async (_, id: number, status: string) => {
+  return couplesRepository.updateStatus(id, status as any);
+});
+
+ipcMain.handle('couples:findByStatus', async (_, status: string) => {
+  return couplesRepository.findByStatus(status as any);
+});
+
+ipcMain.handle('couples:getForMonth', async (_, year: number, month: number) => {
+  return couplesRepository.getForMonth(year, month);
+});
+
+ipcMain.handle('couples:getDashboardStats', async () => {
+  return couplesRepository.getDashboardStats();
+});
+
+ipcMain.handle('couples:getMonthlyStats', async (_, year: number, month: number) => {
+  return couplesRepository.getMonthlyStats(year, month);
+});
+
+ipcMain.handle('couples:getYearlyStats', async (_, year: number) => {
+  return couplesRepository.getYearlyStats(year);
+});
+
 // =============================================================================
 // IPC HANDLERS - Cameras
 // =============================================================================
@@ -310,6 +356,59 @@ ipcMain.handle('cameraPatterns:create', async (_, input: unknown) => {
 
 ipcMain.handle('cameraPatterns:delete', async (_, id: number) => {
   return cameraPatternsRepository.delete(id);
+});
+
+// =============================================================================
+// IPC HANDLERS - Lenses
+// =============================================================================
+
+ipcMain.handle('lenses:findAll', async () => {
+  return lensesRepository.findAll();
+});
+
+ipcMain.handle('lenses:findById', async (_, id: number) => {
+  return lensesRepository.findById(id);
+});
+
+ipcMain.handle('lenses:findByMake', async (_, make: string) => {
+  return lensesRepository.findByMake(make);
+});
+
+ipcMain.handle('lenses:findByMount', async (_, mount: string) => {
+  return lensesRepository.findByMount(mount);
+});
+
+ipcMain.handle('lenses:search', async (_, query: string) => {
+  return lensesRepository.search(query);
+});
+
+ipcMain.handle('lenses:getUniqueMakes', async () => {
+  return lensesRepository.getUniqueMakes();
+});
+
+ipcMain.handle('lenses:getUniqueMounts', async () => {
+  return lensesRepository.getUniqueMounts();
+});
+
+ipcMain.handle('lenses:create', async (_, input: unknown) => {
+  // Simple validation - LensInput is straightforward
+  const validated = input as { name: string; make?: string; model?: string; focal_length?: string; aperture?: string; mount?: string; notes?: string };
+  if (!validated.name) {
+    throw new Error('Lens name is required');
+  }
+  return lensesRepository.create(validated);
+});
+
+ipcMain.handle('lenses:update', async (_, id: number, input: unknown) => {
+  return lensesRepository.update(id, input as any);
+});
+
+ipcMain.handle('lenses:delete', async (_, id: number) => {
+  return lensesRepository.delete(id);
+});
+
+ipcMain.handle('lenses:getLensUsageStats', async () => {
+  return lensesRepository.getLensUsageStats();
 });
 
 // =============================================================================
@@ -607,10 +706,19 @@ ipcMain.handle('sharpness:getScore', async (_, fileId: number, timeSeconds?: num
 
 ipcMain.handle('ai:getStatus', async () => {
   try {
-    return await litellmService.getStatus();
+    return await litellmService.getEnhancedStatus();
   } catch (error) {
     console.error('[ai:getStatus] Error:', error);
-    return { installed: false, running: false, managedByApp: false, port: 4000, configuredModels: [], lastError: String(error) };
+    return {
+      installed: false,
+      running: false,
+      managedByApp: false,
+      port: 4000,
+      configuredModels: [],
+      lastError: String(error),
+      ollamaAvailable: false,
+      configuredProviders: [],
+    };
   }
 });
 
@@ -785,105 +893,280 @@ ipcMain.handle('jobs:cancel', async (_, jobId: number) => {
 });
 
 // =============================================================================
-// IPC HANDLERS - Weddings (Photography CMS)
+// IPC HANDLERS - Camera Signatures Database
 // =============================================================================
 
-ipcMain.handle('weddings:create', async (_, input: CreateWeddingInput) => {
-  return weddingsRepository.create(input);
+ipcMain.handle('signatures:search', async (_, query: string, limit?: number) => {
+  try {
+    return searchSignatures(query, limit);
+  } catch (error) {
+    console.error('[signatures:search] Error:', error);
+    return [];
+  }
 });
 
-ipcMain.handle('weddings:findById', async (_, id: string) => {
-  return weddingsRepository.findById(id);
+ipcMain.handle('signatures:getStats', async () => {
+  try {
+    return getSignatureDatabaseStats();
+  } catch (error) {
+    console.error('[signatures:getStats] Error:', error);
+    return { version: '0.0.0', camera_count: 0, manufacturers: 0, categories: {}, mediums: {} };
+  }
 });
 
-ipcMain.handle('weddings:findAll', async (_, filters?: WeddingFilters) => {
-  return weddingsRepository.findAll(filters);
+ipcMain.handle('signatures:match', async (_, filePath: string, exifMake?: string, exifModel?: string) => {
+  try {
+    return matchSignature(filePath, exifMake, exifModel);
+  } catch (error) {
+    console.error('[signatures:match] Error:', error);
+    return null;
+  }
 });
 
-ipcMain.handle('weddings:update', async (_, id: string, input: UpdateWeddingInput) => {
-  return weddingsRepository.update(id, input);
+ipcMain.handle('signatures:load', async () => {
+  try {
+    const db = loadSignatureDatabase();
+    return { version: db.version, camera_count: db.camera_count, generated_at: db.generated_at };
+  } catch (error) {
+    console.error('[signatures:load] Error:', error);
+    return null;
+  }
 });
 
-ipcMain.handle('weddings:updateStatus', async (_, id: string, status: WeddingStatus, notes?: string) => {
-  return weddingsRepository.updateStatus(id, status, notes);
+// =============================================================================
+// IPC HANDLERS - Camera Training
+// =============================================================================
+
+ipcMain.handle('cameraTrainer:startSession', async () => {
+  try {
+    return startTrainingSession();
+  } catch (error) {
+    console.error('[cameraTrainer:startSession] Error:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('weddings:delete', async (_, id: string) => {
-  return weddingsRepository.delete(id);
+ipcMain.handle('cameraTrainer:getSession', async () => {
+  return getTrainingSession();
 });
 
-ipcMain.handle('weddings:getHistory', async (_, id: string) => {
-  return weddingsRepository.getStatusHistory(id);
+ipcMain.handle('cameraTrainer:cancelSession', async () => {
+  cancelTrainingSession();
+  return true;
 });
 
-ipcMain.handle('weddings:getDashboardStats', async () => {
-  return weddingsRepository.getDashboardStats();
+ipcMain.handle('cameraTrainer:addFiles', async (_, paths: string[]) => {
+  try {
+    return await addTrainingFiles(paths);
+  } catch (error) {
+    console.error('[cameraTrainer:addFiles] Error:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('weddings:getMonthlyStats', async (_, year: number, month: number) => {
-  return weddingsRepository.getMonthlyStats(year, month);
+ipcMain.handle('cameraTrainer:removeFile', async (_, filePath: string) => {
+  try {
+    removeTrainingFile(filePath);
+    return getTrainingSession();
+  } catch (error) {
+    console.error('[cameraTrainer:removeFile] Error:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('weddings:getYearlyStats', async (_, year: number) => {
-  return weddingsRepository.getYearlyStats(year);
+ipcMain.handle('cameraTrainer:analyze', async () => {
+  try {
+    return await analyzeTrainingFiles();
+  } catch (error) {
+    console.error('[cameraTrainer:analyze] Error:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('weddings:getForMonth', async (_, year: number, month: number) => {
-  return weddingsRepository.getWeddingsForMonth(year, month);
+ipcMain.handle('cameraTrainer:exportSignature', async (_, signature: unknown) => {
+  try {
+    const json = exportSignatureJson(signature as any);
+
+    // Show save dialog
+    const result = await dialog.showSaveDialog({
+      title: 'Export Camera Signature',
+      defaultPath: 'camera-signature.json',
+      filters: [{ name: 'JSON Files', extensions: ['json'] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return null;
+    }
+
+    fs.writeFileSync(result.filePath, json);
+    return result.filePath;
+  } catch (error) {
+    console.error('[cameraTrainer:exportSignature] Error:', error);
+    throw error;
+  }
 });
 
-ipcMain.handle('weddings:selectFolder', async () => {
+ipcMain.handle('cameraTrainer:selectFiles', async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ['openFile', 'multiSelections'],
+    filters: [
+      { name: 'Video Files', extensions: ['mp4', 'mov', 'avi', 'mkv', 'mts', 'm2ts', 'mxf', 'mpg', 'mpeg', 'r3d', 'braw'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  });
+  return result.canceled ? [] : result.filePaths;
+});
+
+ipcMain.handle('cameraTrainer:selectFolder', async () => {
   const result = await dialog.showOpenDialog({
     properties: ['openDirectory'],
   });
+  return result.canceled ? null : result.filePaths[0];
+});
 
-  if (result.canceled || !result.filePaths[0]) {
+// =============================================================================
+// USB DEVICE & CAMERA REGISTRATION HANDLERS
+// =============================================================================
+
+ipcMain.handle('usb:getDevices', async () => {
+  try {
+    return await getConnectedUSBDevices();
+  } catch (error) {
+    console.error('[USB] Failed to get devices:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('usb:getCameras', async () => {
+  try {
+    return await getConnectedCameras();
+  } catch (error) {
+    console.error('[USB] Failed to get cameras:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('usb:getJVCDevices', async () => {
+  try {
+    return await getConnectedJVCDevices();
+  } catch (error) {
+    console.error('[USB] Failed to get JVC devices:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('usb:syncCameras', async () => {
+  try {
+    return await syncConnectedCameras();
+  } catch (error) {
+    console.error('[USB] Failed to sync cameras:', error);
+    return { connected: [], unregistered: [] };
+  }
+});
+
+ipcMain.handle('cameraRegistry:getAll', async () => {
+  try {
+    return getRegisteredCameras();
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to get cameras:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('cameraRegistry:register', async (_, input: {
+  name: string;
+  make: string;
+  model: string;
+  volumeUUID?: string | null;
+  usbSerial?: string | null;
+  vendorId?: number | null;
+  productId?: number | null;
+  physicalSerial?: string | null;
+  notes?: string | null;
+}) => {
+  try {
+    return registerCamera(
+      input.name,
+      input.make,
+      input.model,
+      input.volumeUUID,
+      input.usbSerial,
+      input.vendorId,
+      input.productId,
+      input.physicalSerial,
+      input.notes
+    );
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to register camera:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('cameraRegistry:registerConnected', async (_, input: {
+  volumeUUID: string;
+  cameraName: string;
+  physicalSerial?: string;
+  notes?: string;
+}) => {
+  try {
+    return await registerConnectedDevice(
+      input.volumeUUID,
+      input.cameraName,
+      input.physicalSerial,
+      input.notes
+    );
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to register connected device:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('cameraRegistry:update', async (_, input: {
+  cameraId: string;
+  updates: { name?: string; notes?: string; physicalSerial?: string; volumeUUID?: string };
+}) => {
+  try {
+    return updateCamera(input.cameraId, input.updates);
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to update camera:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('cameraRegistry:delete', async (_, cameraId: string) => {
+  try {
+    return deleteRegisteredCamera(cameraId);
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to delete camera:', error);
+    throw error;
+  }
+});
+
+ipcMain.handle('cameraRegistry:findBySerial', async (_, serial: string) => {
+  try {
+    return findCameraByUSBSerial(serial);
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to find camera:', error);
     return null;
   }
+});
 
-  const folderPath = result.filePaths[0];
-
-  // Count images in folder
-  const imageExtensions = ['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.cr2', '.nef', '.arw', '.raw', '.dng'];
-  let imageCount = 0;
-
+ipcMain.handle('cameraRegistry:findByVolumeUUID', async (_, volumeUUID: string) => {
   try {
-    const entries = fs.readdirSync(folderPath, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isFile()) {
-        const ext = path.extname(entry.name).toLowerCase();
-        if (imageExtensions.includes(ext)) {
-          imageCount++;
-        }
-      }
-    }
-  } catch {
-    // Ignore errors reading directory
+    return findCameraByVolumeUUID(volumeUUID);
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to find camera by volume UUID:', error);
+    return null;
   }
+});
 
-  // Try to parse metadata from folder name
-  // Common formats: "2024-06-15 Smith & Jones", "Smith Jones Wedding", etc.
-  const folderName = path.basename(folderPath);
-  const parsedMeta: { partnerAName?: string; partnerBName?: string; weddingDate?: string } = {};
-
-  // Try to extract date
-  const dateMatch = folderName.match(/(\d{4}-\d{2}-\d{2})|(\d{2}-\d{2}-\d{4})/);
-  if (dateMatch) {
-    parsedMeta.weddingDate = dateMatch[1] || dateMatch[2];
+ipcMain.handle('cameraRegistry:findForMountPoint', async (_, mountPoint: string) => {
+  try {
+    return await findCameraForMountPoint(mountPoint);
+  } catch (error) {
+    console.error('[CameraRegistry] Failed to find camera for mount point:', error);
+    return null;
   }
-
-  // Try to extract names from "Name & Name" pattern
-  const nameMatch = folderName.match(/([A-Z][a-z]+)\s*[&+]\s*([A-Z][a-z]+)/);
-  if (nameMatch) {
-    parsedMeta.partnerAName = nameMatch[1];
-    parsedMeta.partnerBName = nameMatch[2];
-  }
-
-  return {
-    path: folderPath,
-    imageCount,
-    parsedMeta: Object.keys(parsedMeta).length > 0 ? parsedMeta : undefined,
-  };
 });
 
 // =============================================================================

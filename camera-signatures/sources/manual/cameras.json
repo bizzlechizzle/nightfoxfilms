@@ -1,0 +1,725 @@
+{
+  "source": "manual",
+  "description": "Hand-curated camera signatures for wedding video production",
+  "curated_by": "nightfox-team",
+  "curated_at": "2025-01-01T00:00:00Z",
+  "camera_count": 85,
+  "cameras": [
+    {
+      "make": "Sony",
+      "model": "FX3",
+      "model_variants": ["ILCE-FX3", "FX3", "Cinema Line FX3"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2021,
+      "technical": { "sensor_width_mm": 35.6, "max_resolution": "4240x2832" },
+      "filename_patterns": ["C*.MP4", "C*.MXF"],
+      "folder_patterns": ["PRIVATE/M4ROOT/*"],
+      "notes": "Popular wedding cinema camera"
+    },
+    {
+      "make": "Sony",
+      "model": "FX6",
+      "model_variants": ["ILME-FX6", "FX6"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 35.6 },
+      "filename_patterns": ["C*.MP4", "C*.MXF"],
+      "folder_patterns": ["PRIVATE/M4ROOT/*"]
+    },
+    {
+      "make": "Sony",
+      "model": "A7S III",
+      "model_variants": ["ILCE-7SM3", "A7SM3", "A7S3", "a7S III"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 35.6 },
+      "filename_patterns": ["C*.MP4"],
+      "folder_patterns": ["PRIVATE/M4ROOT/*"]
+    },
+    {
+      "make": "Sony",
+      "model": "A7 IV",
+      "model_variants": ["ILCE-7M4", "A7M4", "A74", "a7 IV"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2021,
+      "technical": { "sensor_width_mm": 35.6 },
+      "filename_patterns": ["C*.MP4"]
+    },
+    {
+      "make": "Sony",
+      "model": "A7C",
+      "model_variants": ["ILCE-7C", "A7C"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 35.6 }
+    },
+    {
+      "make": "Sony",
+      "model": "ZV-E1",
+      "model_variants": ["ZV-E1", "ZVE1"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2023,
+      "technical": { "sensor_width_mm": 35.6 }
+    },
+    {
+      "make": "Sony",
+      "model": "FS7",
+      "model_variants": ["PXW-FS7", "FS7", "FS7 II"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2014,
+      "technical": { "sensor_width_mm": 23.6 }
+    },
+    {
+      "make": "Canon",
+      "model": "C70",
+      "model_variants": ["EOS C70", "C70"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 26.2 },
+      "filename_patterns": ["*.MXF", "*.MP4"],
+      "folder_patterns": ["CONTENTS/CLIPS/*"]
+    },
+    {
+      "make": "Canon",
+      "model": "C300 Mark III",
+      "model_variants": ["EOS C300 Mark III", "C300 III", "C300MK3"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 26.2 }
+    },
+    {
+      "make": "Canon",
+      "model": "R5",
+      "model_variants": ["EOS R5", "R5"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 36.0 },
+      "filename_patterns": ["MVI_*.MP4", "*.MOV"]
+    },
+    {
+      "make": "Canon",
+      "model": "R6",
+      "model_variants": ["EOS R6", "R6"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 36.0 }
+    },
+    {
+      "make": "Canon",
+      "model": "R5 C",
+      "model_variants": ["EOS R5 C", "R5C"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 36.0 }
+    },
+    {
+      "make": "Canon",
+      "model": "5D Mark IV",
+      "model_variants": ["EOS 5D Mark IV", "5D4", "5DMK4", "5D Mark IV"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2016,
+      "technical": { "sensor_width_mm": 36.0 },
+      "filename_patterns": ["MVI_*.MOV"]
+    },
+    {
+      "make": "Panasonic",
+      "model": "GH5",
+      "model_variants": ["DC-GH5", "DMC-GH5", "GH5"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2017,
+      "technical": { "sensor_width_mm": 17.3 },
+      "filename_patterns": ["P*.MOV", "P*.MP4"]
+    },
+    {
+      "make": "Panasonic",
+      "model": "GH5S",
+      "model_variants": ["DC-GH5S", "GH5S"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2018,
+      "technical": { "sensor_width_mm": 17.3 }
+    },
+    {
+      "make": "Panasonic",
+      "model": "GH6",
+      "model_variants": ["DC-GH6", "GH6"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 17.3 }
+    },
+    {
+      "make": "Panasonic",
+      "model": "S5",
+      "model_variants": ["DC-S5", "S5", "Lumix S5"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 35.6 }
+    },
+    {
+      "make": "Panasonic",
+      "model": "S1H",
+      "model_variants": ["DC-S1H", "S1H", "Lumix S1H"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 35.6 }
+    },
+    {
+      "make": "Panasonic",
+      "model": "BGH1",
+      "model_variants": ["DC-BGH1", "BGH1"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 17.3 }
+    },
+    {
+      "make": "Blackmagic",
+      "model": "Pocket Cinema Camera 4K",
+      "model_variants": ["BMPCC 4K", "Pocket 4K", "BMPCC4K"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2018,
+      "technical": { "sensor_width_mm": 18.96 },
+      "filename_patterns": ["*.BRAW", "*.DNG"]
+    },
+    {
+      "make": "Blackmagic",
+      "model": "Pocket Cinema Camera 6K",
+      "model_variants": ["BMPCC 6K", "Pocket 6K", "BMPCC6K"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 23.1 }
+    },
+    {
+      "make": "Blackmagic",
+      "model": "Pocket Cinema Camera 6K Pro",
+      "model_variants": ["BMPCC 6K Pro", "Pocket 6K Pro"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2021,
+      "technical": { "sensor_width_mm": 23.1 }
+    },
+    {
+      "make": "Blackmagic",
+      "model": "URSA Mini Pro 4.6K G2",
+      "model_variants": ["URSA Mini Pro G2", "URSA Mini 4.6K"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 25.34 }
+    },
+    {
+      "make": "RED",
+      "model": "Komodo",
+      "model_variants": ["KOMODO 6K", "RED Komodo"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 27.03 },
+      "filename_patterns": ["*.R3D"]
+    },
+    {
+      "make": "RED",
+      "model": "V-Raptor",
+      "model_variants": ["DSMC3 V-RAPTOR", "V-Raptor 8K"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2021,
+      "technical": { "sensor_width_mm": 40.96 }
+    },
+    {
+      "make": "Fujifilm",
+      "model": "X-T4",
+      "model_variants": ["X-T4", "XT4"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 23.5 }
+    },
+    {
+      "make": "Fujifilm",
+      "model": "X-H2S",
+      "model_variants": ["X-H2S", "XH2S"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 23.5 }
+    },
+    {
+      "make": "DJI",
+      "model": "Mavic 3",
+      "model_variants": ["Mavic 3", "Mavic 3 Cine"],
+      "category": "drone",
+      "medium": "modern",
+      "year_released": 2021,
+      "filename_patterns": ["DJI_*.MP4", "DJI_*.MOV"]
+    },
+    {
+      "make": "DJI",
+      "model": "Mini 3 Pro",
+      "model_variants": ["Mini 3 Pro", "DJI Mini 3 Pro"],
+      "category": "drone",
+      "medium": "modern",
+      "year_released": 2022,
+      "filename_patterns": ["DJI_*.MP4"]
+    },
+    {
+      "make": "DJI",
+      "model": "Inspire 3",
+      "model_variants": ["Inspire 3"],
+      "category": "drone",
+      "medium": "modern",
+      "year_released": 2023,
+      "filename_patterns": ["DJI_*.MP4"]
+    },
+    {
+      "make": "DJI",
+      "model": "Ronin 4D",
+      "model_variants": ["Ronin 4D", "Ronin 4D-6K", "Ronin 4D-8K"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2021
+    },
+    {
+      "make": "GoPro",
+      "model": "HERO11 Black",
+      "model_variants": ["HERO11 Black", "Hero11", "GoPro Hero 11"],
+      "category": "action",
+      "medium": "modern",
+      "year_released": 2022,
+      "filename_patterns": ["GH*.MP4", "GX*.MP4", "GP*.MP4"]
+    },
+    {
+      "make": "GoPro",
+      "model": "HERO12 Black",
+      "model_variants": ["HERO12 Black", "Hero12"],
+      "category": "action",
+      "medium": "modern",
+      "year_released": 2023,
+      "filename_patterns": ["GH*.MP4", "GX*.MP4"]
+    },
+    {
+      "make": "Apple",
+      "model": "iPhone 15 Pro",
+      "model_variants": ["iPhone 15 Pro", "iPhone15,2"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2023,
+      "filename_patterns": ["IMG_*.MOV", "IMG_*.MP4"]
+    },
+    {
+      "make": "Apple",
+      "model": "iPhone 15 Pro Max",
+      "model_variants": ["iPhone 15 Pro Max", "iPhone15,3"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2023
+    },
+    {
+      "make": "Apple",
+      "model": "iPhone 14 Pro",
+      "model_variants": ["iPhone 14 Pro", "iPhone15,2"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2022
+    },
+    {
+      "make": "Apple",
+      "model": "iPhone 13 Pro",
+      "model_variants": ["iPhone 13 Pro"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2021
+    },
+    {
+      "make": "Sony",
+      "model": "HDR-CX405",
+      "model_variants": ["HDR-CX405", "Handycam CX405"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2015,
+      "filename_patterns": ["*.MTS", "*.M2TS"],
+      "notes": "Common guest camera at weddings"
+    },
+    {
+      "make": "Sony",
+      "model": "HDR-CX675",
+      "model_variants": ["HDR-CX675"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2016,
+      "filename_patterns": ["*.MTS", "*.M2TS"]
+    },
+    {
+      "make": "Sony",
+      "model": "DCR-SR68",
+      "model_variants": ["DCR-SR68"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2010,
+      "filename_patterns": ["*.MPG"]
+    },
+    {
+      "make": "Canon",
+      "model": "VIXIA HF R800",
+      "model_variants": ["VIXIA HF R800", "HF R800", "LEGRIA HF R806"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2017,
+      "filename_patterns": ["MVI_*.MP4"]
+    },
+    {
+      "make": "Canon",
+      "model": "VIXIA HF G50",
+      "model_variants": ["VIXIA HF G50", "HF G50"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2019
+    },
+    {
+      "make": "Panasonic",
+      "model": "HC-V770",
+      "model_variants": ["HC-V770", "HC-V770K"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2015,
+      "filename_patterns": ["*.MTS"]
+    },
+    {
+      "make": "Panasonic",
+      "model": "HC-VX870",
+      "model_variants": ["HC-VX870", "HC-VX870K"],
+      "category": "consumer",
+      "medium": "modern",
+      "year_released": 2015
+    },
+    {
+      "make": "JVC",
+      "model": "GY-HM170",
+      "model_variants": ["GY-HM170", "GY-HM170U"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2015
+    },
+    {
+      "make": "JVC",
+      "model": "Everio GZ-R10",
+      "model_variants": ["GZ-R10", "Everio R"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2014,
+      "filename_patterns": ["MOV*.MP4"]
+    },
+    {
+      "make": "Canon",
+      "model": "ZR960",
+      "model_variants": ["ZR960"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2008,
+      "filename_patterns": ["MVI_*.AVI"],
+      "processing": { "deinterlace": true }
+    },
+    {
+      "make": "Canon",
+      "model": "Elura 100",
+      "model_variants": ["Elura 100"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2005,
+      "processing": { "deinterlace": true }
+    },
+    {
+      "make": "Sony",
+      "model": "DCR-TRV350",
+      "model_variants": ["DCR-TRV350", "Digital8 TRV350"],
+      "category": "consumer",
+      "medium": "dadcam",
+      "year_released": 2003,
+      "processing": { "deinterlace": true },
+      "notes": "Digital8 camcorder"
+    },
+    {
+      "make": "Canon",
+      "model": "XL1",
+      "model_variants": ["XL1", "XL1S"],
+      "category": "prosumer",
+      "medium": "dadcam",
+      "year_released": 1998,
+      "processing": { "deinterlace": true },
+      "notes": "Classic prosumer MiniDV"
+    },
+    {
+      "make": "Sony",
+      "model": "VX2000",
+      "model_variants": ["DCR-VX2000", "VX2000"],
+      "category": "prosumer",
+      "medium": "dadcam",
+      "year_released": 2000,
+      "processing": { "deinterlace": true },
+      "notes": "Classic prosumer MiniDV"
+    },
+    {
+      "make": "Panasonic",
+      "model": "DVX100",
+      "model_variants": ["AG-DVX100", "DVX100", "DVX100A", "DVX100B"],
+      "category": "prosumer",
+      "medium": "dadcam",
+      "year_released": 2002,
+      "processing": { "deinterlace": true },
+      "notes": "First affordable 24p camera"
+    },
+    {
+      "make": "Canon",
+      "model": "XH A1",
+      "model_variants": ["XH A1", "XHA1"],
+      "category": "prosumer",
+      "medium": "dadcam",
+      "year_released": 2006,
+      "processing": { "deinterlace": true }
+    },
+    {
+      "make": "Sony",
+      "model": "HVR-Z1U",
+      "model_variants": ["HVR-Z1U", "HVR-Z1", "Z1U"],
+      "category": "prosumer",
+      "medium": "dadcam",
+      "year_released": 2004,
+      "processing": { "deinterlace": true },
+      "notes": "HDV professional camcorder"
+    },
+    {
+      "make": "Wolverine",
+      "model": "MovieMaker Pro",
+      "model_variants": ["MovieMaker Pro", "8mm Film Scanner"],
+      "category": "scanner",
+      "medium": "super8",
+      "notes": "Super8/8mm film scanner"
+    },
+    {
+      "make": "RetroScan",
+      "model": "Universal",
+      "model_variants": ["RetroScan Universal", "MovieStuff RetroScan"],
+      "category": "scanner",
+      "medium": "super8",
+      "notes": "Professional film scanner"
+    },
+    {
+      "make": "Kodak",
+      "model": "Reels",
+      "model_variants": ["Kodak Reels"],
+      "category": "scanner",
+      "medium": "super8",
+      "notes": "Kodak digitization service output"
+    },
+    {
+      "make": "Nikon",
+      "model": "Z6 II",
+      "model_variants": ["Z 6II", "Z6 II", "Z6II"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 35.9 }
+    },
+    {
+      "make": "Nikon",
+      "model": "Z8",
+      "model_variants": ["Z 8", "Z8"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2023,
+      "technical": { "sensor_width_mm": 35.9 }
+    },
+    {
+      "make": "Nikon",
+      "model": "Z9",
+      "model_variants": ["Z 9", "Z9"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2021,
+      "technical": { "sensor_width_mm": 35.9 }
+    },
+    {
+      "make": "Canon",
+      "model": "XA40",
+      "model_variants": ["XA40"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2019,
+      "notes": "Common B-cam for weddings"
+    },
+    {
+      "make": "Canon",
+      "model": "XA50",
+      "model_variants": ["XA50"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2019
+    },
+    {
+      "make": "Sony",
+      "model": "PXW-Z90",
+      "model_variants": ["PXW-Z90", "Z90"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2017
+    },
+    {
+      "make": "Sony",
+      "model": "PXW-Z150",
+      "model_variants": ["PXW-Z150", "Z150"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2016
+    },
+    {
+      "make": "Insta360",
+      "model": "ONE X2",
+      "model_variants": ["ONE X2", "Insta360 ONE X2"],
+      "category": "action",
+      "medium": "modern",
+      "year_released": 2020,
+      "notes": "360 camera for wedding coverage"
+    },
+    {
+      "make": "Insta360",
+      "model": "X3",
+      "model_variants": ["X3", "Insta360 X3"],
+      "category": "action",
+      "medium": "modern",
+      "year_released": 2022
+    },
+    {
+      "make": "Sony",
+      "model": "A6400",
+      "model_variants": ["ILCE-6400", "A6400", "a6400"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 23.5 }
+    },
+    {
+      "make": "Sony",
+      "model": "A6600",
+      "model_variants": ["ILCE-6600", "A6600", "a6600"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 23.5 }
+    },
+    {
+      "make": "Sony",
+      "model": "FX30",
+      "model_variants": ["ILME-FX30", "FX30"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 23.5 }
+    },
+    {
+      "make": "Canon",
+      "model": "R7",
+      "model_variants": ["EOS R7", "R7"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 22.3 }
+    },
+    {
+      "make": "Canon",
+      "model": "R8",
+      "model_variants": ["EOS R8", "R8"],
+      "category": "prosumer",
+      "medium": "modern",
+      "year_released": 2023,
+      "technical": { "sensor_width_mm": 36.0 }
+    },
+    {
+      "make": "Atomos",
+      "model": "Ninja V",
+      "model_variants": ["Ninja V", "ATOMOS NINJA V"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2018,
+      "notes": "External recorder - files may have this as make"
+    },
+    {
+      "make": "Atomos",
+      "model": "Shogun 7",
+      "model_variants": ["Shogun 7", "ATOMOS SHOGUN 7"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2019
+    },
+    {
+      "make": "Samsung",
+      "model": "Galaxy S23 Ultra",
+      "model_variants": ["SM-S918", "Galaxy S23 Ultra"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2023
+    },
+    {
+      "make": "Google",
+      "model": "Pixel 8 Pro",
+      "model_variants": ["Pixel 8 Pro"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2023
+    },
+    {
+      "make": "Google",
+      "model": "Pixel 7 Pro",
+      "model_variants": ["Pixel 7 Pro"],
+      "category": "smartphone",
+      "medium": "modern",
+      "year_released": 2022
+    },
+    {
+      "make": "ARRI",
+      "model": "ALEXA Mini LF",
+      "model_variants": ["ALEXA Mini LF", "Alexa Mini LF"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2019,
+      "technical": { "sensor_width_mm": 36.7 },
+      "notes": "High-end cinema camera"
+    },
+    {
+      "make": "ARRI",
+      "model": "ALEXA 35",
+      "model_variants": ["ALEXA 35"],
+      "category": "cinema",
+      "medium": "modern",
+      "year_released": 2022,
+      "technical": { "sensor_width_mm": 27.99 }
+    },
+    {
+      "make": "Leica",
+      "model": "SL2-S",
+      "model_variants": ["SL2-S", "Leica SL2-S"],
+      "category": "professional",
+      "medium": "modern",
+      "year_released": 2020,
+      "technical": { "sensor_width_mm": 36.0 }
+    }
+  ]
+}

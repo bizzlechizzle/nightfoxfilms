@@ -62,14 +62,20 @@ export class CamerasRepository {
     const db = getDatabase();
     const result = db
       .prepare(
-        `INSERT INTO cameras (name, medium, make, model, is_default, notes, lut_path, deinterlace, audio_channels, sharpness_baseline, transcode_preset)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO cameras (name, nickname, medium, make, model, serial_number, color_profile, filename_pattern, color, is_active, is_default, notes, lut_path, deinterlace, audio_channels, sharpness_baseline, transcode_preset)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         input.name,
+        input.nickname ?? null,
         input.medium,
         input.make ?? null,
         input.model ?? null,
+        input.serial_number ?? null,
+        input.color_profile ?? null,
+        input.filename_pattern ?? null,
+        input.color ?? null,
+        input.is_active !== false ? 1 : 0,
         input.is_default ? 1 : 0,
         input.notes ?? null,
         input.lut_path ?? null,
@@ -97,6 +103,10 @@ export class CamerasRepository {
       updates.push('name = ?');
       values.push(input.name);
     }
+    if (input.nickname !== undefined) {
+      updates.push('nickname = ?');
+      values.push(input.nickname);
+    }
     if (input.medium !== undefined) {
       updates.push('medium = ?');
       values.push(input.medium);
@@ -108,6 +118,26 @@ export class CamerasRepository {
     if (input.model !== undefined) {
       updates.push('model = ?');
       values.push(input.model);
+    }
+    if (input.serial_number !== undefined) {
+      updates.push('serial_number = ?');
+      values.push(input.serial_number);
+    }
+    if (input.color_profile !== undefined) {
+      updates.push('color_profile = ?');
+      values.push(input.color_profile);
+    }
+    if (input.filename_pattern !== undefined) {
+      updates.push('filename_pattern = ?');
+      values.push(input.filename_pattern);
+    }
+    if (input.color !== undefined) {
+      updates.push('color = ?');
+      values.push(input.color);
+    }
+    if (input.is_active !== undefined) {
+      updates.push('is_active = ?');
+      values.push(input.is_active ? 1 : 0);
     }
     if (input.is_default !== undefined) {
       updates.push('is_default = ?');

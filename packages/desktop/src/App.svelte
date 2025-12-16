@@ -2,55 +2,45 @@
   // Nightfox Films - Main Application Shell
   import Dashboard from './pages/Dashboard.svelte';
   import Couples from './pages/Couples.svelte';
+  import CoupleDetail from './pages/CoupleDetail.svelte';
+  import Calendar from './pages/Calendar.svelte';
   import Import from './pages/Import.svelte';
   import Cameras from './pages/Cameras.svelte';
+  import Stats from './pages/Stats.svelte';
   import Settings from './pages/Settings.svelte';
 
-  // Wedding CMS Pages
-  import WeddingsDashboard from './pages/WeddingsDashboard.svelte';
-  import WeddingsList from './pages/WeddingsList.svelte';
-  import WeddingDetail from './pages/WeddingDetail.svelte';
-  import WeddingsCalendar from './pages/WeddingsCalendar.svelte';
-  import WeddingsStats from './pages/WeddingsStats.svelte';
+  type Page = 'dashboard' | 'couples' | 'couple-detail' | 'calendar' | 'import' | 'cameras' | 'stats' | 'settings';
 
-  type Page = 'dashboard' | 'couples' | 'import' | 'cameras' | 'settings' |
-              'weddings-dashboard' | 'weddings-list' | 'wedding-detail' | 'weddings-calendar' | 'weddings-stats';
+  let currentPage = $state<Page>('dashboard');
+  let selectedCoupleId = $state<number | null>(null);
 
-  let currentPage = $state<Page>('weddings-dashboard');
-  let selectedWeddingId = $state<string | null>(null);
-
-  // Navigation sections
-  const videoPages: { id: Page; label: string }[] = [
+  // Navigation pages
+  const mainPages: { id: Page; label: string }[] = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'couples', label: 'Couples' },
+    { id: 'couples', label: 'Projects' },
+    { id: 'calendar', label: 'Calendar' },
     { id: 'import', label: 'Import' },
     { id: 'cameras', label: 'Cameras' },
-  ];
-
-  const photoPages: { id: Page; label: string }[] = [
-    { id: 'weddings-dashboard', label: 'Dashboard' },
-    { id: 'weddings-list', label: 'Weddings' },
-    { id: 'weddings-calendar', label: 'Calendar' },
-    { id: 'weddings-stats', label: 'Stats' },
+    { id: 'stats', label: 'Stats' },
   ];
 
   const utilityPages: { id: Page; label: string }[] = [
     { id: 'settings', label: 'Settings' },
   ];
 
-  function handleWeddingNavigate(page: string, weddingId?: string) {
-    if (page === 'wedding-detail' && weddingId) {
-      selectedWeddingId = weddingId;
-      currentPage = 'wedding-detail';
-    } else if (page === 'weddings-list') {
-      currentPage = 'weddings-list';
-      selectedWeddingId = null;
+  function handleCoupleNavigate(page: string, coupleId?: number) {
+    if (page === 'couple-detail' && coupleId) {
+      selectedCoupleId = coupleId;
+      currentPage = 'couple-detail';
+    } else if (page === 'couples') {
+      currentPage = 'couples';
+      selectedCoupleId = null;
     }
   }
 
   function handleBackFromDetail() {
-    currentPage = 'weddings-list';
-    selectedWeddingId = null;
+    currentPage = 'couples';
+    selectedCoupleId = null;
   }
 </script>
 
@@ -62,34 +52,15 @@
       <span class="tagline">Films</span>
     </div>
 
-    <!-- Photography Section -->
+    <!-- Main Navigation -->
     <div class="nav-section">
-      <span class="nav-section__label">Photography</span>
       <ul class="nav-links">
-        {#each photoPages as page}
+        {#each mainPages as page}
           <li>
             <button
               class="nav-link"
-              class:active={currentPage === page.id}
-              onclick={() => { currentPage = page.id; selectedWeddingId = null; }}
-            >
-              {page.label}
-            </button>
-          </li>
-        {/each}
-      </ul>
-    </div>
-
-    <!-- Videography Section -->
-    <div class="nav-section">
-      <span class="nav-section__label">Videography</span>
-      <ul class="nav-links">
-        {#each videoPages as page}
-          <li>
-            <button
-              class="nav-link"
-              class:active={currentPage === page.id}
-              onclick={() => currentPage = page.id}
+              class:active={currentPage === page.id || (page.id === 'couples' && currentPage === 'couple-detail')}
+              onclick={() => { currentPage = page.id; selectedCoupleId = null; }}
             >
               {page.label}
             </button>
@@ -119,25 +90,21 @@
   <!-- Main Content Area -->
   <main class="content">
     {#if currentPage === 'dashboard'}
-      <Dashboard />
+      <Dashboard onnavigate={handleCoupleNavigate} />
     {:else if currentPage === 'couples'}
-      <Couples />
+      <Couples onnavigate={handleCoupleNavigate} />
+    {:else if currentPage === 'couple-detail' && selectedCoupleId}
+      <CoupleDetail coupleId={selectedCoupleId} onback={handleBackFromDetail} />
+    {:else if currentPage === 'calendar'}
+      <Calendar onnavigate={handleCoupleNavigate} />
     {:else if currentPage === 'import'}
       <Import />
     {:else if currentPage === 'cameras'}
       <Cameras />
+    {:else if currentPage === 'stats'}
+      <Stats />
     {:else if currentPage === 'settings'}
       <Settings />
-    {:else if currentPage === 'weddings-dashboard'}
-      <WeddingsDashboard onnavigate={handleWeddingNavigate} />
-    {:else if currentPage === 'weddings-list'}
-      <WeddingsList onnavigate={handleWeddingNavigate} />
-    {:else if currentPage === 'wedding-detail' && selectedWeddingId}
-      <WeddingDetail weddingId={selectedWeddingId} onback={handleBackFromDetail} />
-    {:else if currentPage === 'weddings-calendar'}
-      <WeddingsCalendar onnavigate={handleWeddingNavigate} />
-    {:else if currentPage === 'weddings-stats'}
-      <WeddingsStats />
     {/if}
   </main>
 </div>
@@ -172,17 +139,6 @@
     margin-bottom: 0;
     padding-top: 1rem;
     border-top: 1px solid var(--color-border);
-  }
-
-  .nav-section__label {
-    display: block;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-muted);
-    padding: 0 0.5rem;
-    margin-bottom: 0.5rem;
   }
 
   .logo h1 {

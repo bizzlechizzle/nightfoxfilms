@@ -11,6 +11,9 @@ import { app } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import Database, { type Database as SqliteDatabase } from 'better-sqlite3';
+import { seedCameras } from '../data/camera-seeds';
+import { seedCouples } from '../data/couples-seeds';
+import { seedLenses } from '../data/lenses-seeds';
 
 let db: SqliteDatabase | null = null;
 
@@ -424,6 +427,24 @@ export function initializeDatabase(dbPath?: string): SqliteDatabase {
   // Run migrations
   runMigrations(db);
 
+  // Seed pre-trained cameras (only adds if they don't exist)
+  const cameraResult = seedCameras(db);
+  if (cameraResult.added > 0) {
+    console.log(`[Database] Seeded ${cameraResult.added} pre-trained cameras`);
+  }
+
+  // Seed historical couples (only adds if they don't exist)
+  const coupleResult = seedCouples(db);
+  if (coupleResult.added > 0) {
+    console.log(`[Database] Seeded ${coupleResult.added} historical couples`);
+  }
+
+  // Seed known lenses (only adds if they don't exist)
+  const lensResult = seedLenses(db);
+  if (lensResult.added > 0) {
+    console.log(`[Database] Seeded ${lensResult.added} known lenses`);
+  }
+
   console.log('[Database] Initialized successfully');
 
   return db;
@@ -515,12 +536,12 @@ function runMigrations(database: SqliteDatabase): void {
         ALTER TABLE scenes ADD COLUMN wedding_moment TEXT;
       `,
     },
-    // Migration 6: Add wedding photography CMS tables
+    // Migration 6: Add wedding videography CMS tables
     {
       id: 6,
       name: 'add_wedding_cms_tables',
       sql: `
-        -- Wedding Photography Tracking Table
+        -- Wedding Videography Tracking Table
         CREATE TABLE IF NOT EXISTS weddings (
             id TEXT PRIMARY KEY NOT NULL,
             partner_a_name TEXT NOT NULL,
@@ -585,6 +606,193 @@ function runMigrations(database: SqliteDatabase): void {
         BEGIN
             UPDATE weddings SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
         END;
+      `,
+    },
+    // Migration 7: Enhance couples table with workflow tracking (replaces photography CMS)
+    {
+      id: 7,
+      name: 'enhance_couples_workflow',
+      sql: `
+        -- Add workflow status to couples
+        ALTER TABLE couples ADD COLUMN status TEXT DEFAULT 'booked' CHECK (status IN ('booked', 'shot', 'ingested', 'editing', 'delivered', 'archived'));
+
+        -- Add contact info
+        ALTER TABLE couples ADD COLUMN email TEXT;
+        ALTER TABLE couples ADD COLUMN phone TEXT;
+
+        -- Add venue info
+        ALTER TABLE couples ADD COLUMN venue_name TEXT;
+        ALTER TABLE couples ADD COLUMN venue_city TEXT;
+        ALTER TABLE couples ADD COLUMN venue_state TEXT;
+
+        -- Add workflow timestamps
+        ALTER TABLE couples ADD COLUMN date_shot TEXT;
+        ALTER TABLE couples ADD COLUMN date_ingested TEXT;
+        ALTER TABLE couples ADD COLUMN date_editing_started TEXT;
+        ALTER TABLE couples ADD COLUMN date_delivered TEXT;
+        ALTER TABLE couples ADD COLUMN date_archived TEXT;
+
+        -- Add path tracking
+        ALTER TABLE couples ADD COLUMN source_path TEXT;
+        ALTER TABLE couples ADD COLUMN working_path TEXT;
+        ALTER TABLE couples ADD COLUMN delivery_path TEXT;
+
+        -- Add package info
+        ALTER TABLE couples ADD COLUMN package_name TEXT;
+        ALTER TABLE couples ADD COLUMN contracted_deliverables INTEGER;
+
+        -- Add index for status queries
+        CREATE INDEX IF NOT EXISTS idx_couples_status ON couples(status);
+      `,
+    },
+    // Migration 8: Add lens tracking and camera categories
+    {
+      id: 8,
+      name: 'add_lens_tracking_and_camera_category',
+      sql: `
+        -- Add category to cameras (cinema, professional, hybrid, action, consumer, drone, smartphone)
+        ALTER TABLE cameras ADD COLUMN category TEXT DEFAULT 'hybrid' CHECK (category IN ('cinema', 'professional', 'hybrid', 'action', 'consumer', 'drone', 'smartphone'));
+
+        -- Add detected_lens to files (extracted from XML sidecar metadata)
+        ALTER TABLE files ADD COLUMN detected_lens TEXT;
+
+        -- Create lenses table for lens inventory
+        CREATE TABLE IF NOT EXISTS lenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            make TEXT,
+            model TEXT,
+            focal_length TEXT,
+            aperture TEXT,
+            mount TEXT,
+            notes TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_lenses_make ON lenses(make);
+        CREATE INDEX IF NOT EXISTS idx_lenses_mount ON lenses(mount);
+        CREATE INDEX IF NOT EXISTS idx_files_detected_lens ON files(detected_lens);
+
+        -- Trigger to update lenses.updated_at
+        CREATE TRIGGER IF NOT EXISTS tr_lenses_update_timestamp
+        AFTER UPDATE ON lenses
+        BEGIN
+            UPDATE lenses SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 9: Camera profile enhancements
+    {
+      id: 9,
+      name: 'camera_profile_enhancements',
+      sql: `
+        -- Add nickname for user-friendly display name
+        ALTER TABLE cameras ADD COLUMN nickname TEXT;
+
+        -- Add filename pattern for per-camera export naming
+        ALTER TABLE cameras ADD COLUMN filename_pattern TEXT;
+
+        -- Add serial number to differentiate identical camera models
+        ALTER TABLE cameras ADD COLUMN serial_number TEXT;
+
+        -- Add color profile (gamma) for LUT suggestions
+        ALTER TABLE cameras ADD COLUMN color_profile TEXT;
+
+        -- Add color for UI identification
+        ALTER TABLE cameras ADD COLUMN color TEXT;
+
+        -- Add active flag to hide old cameras without deleting
+        ALTER TABLE cameras ADD COLUMN is_active INTEGER DEFAULT 1;
+
+        -- Index for serial number lookups (matching files to cameras)
+        CREATE INDEX IF NOT EXISTS idx_cameras_serial ON cameras(serial_number);
+
+        -- Index for active cameras
+        CREATE INDEX IF NOT EXISTS idx_cameras_active ON cameras(is_active);
+      `,
+    },
+    // Migration 10: Clean up category garbage from camera notes
+    {
+      id: 10,
+      name: 'cleanup_camera_notes',
+      sql: `
+        -- Remove "Category: X. " prefix from notes
+        UPDATE cameras
+        SET notes = TRIM(
+          REPLACE(
+            REPLACE(
+              REPLACE(
+                REPLACE(
+                  REPLACE(
+                    REPLACE(
+                      REPLACE(
+                        REPLACE(notes, 'Category: cinema. ', ''),
+                        'Category: professional. ', ''),
+                      'Category: hybrid. ', ''),
+                    'Category: action. ', ''),
+                  'Category: consumer. ', ''),
+                'Category: drone. ', ''),
+              'Category: smartphone. ', ''),
+            'Category: unknown. ', '')
+        )
+        WHERE notes LIKE 'Category:%';
+
+        -- Also handle capitalized versions (Prosumer, etc)
+        UPDATE cameras
+        SET notes = TRIM(
+          REPLACE(
+            REPLACE(
+              REPLACE(
+                REPLACE(
+                  REPLACE(
+                    REPLACE(
+                      REPLACE(
+                        REPLACE(
+                          REPLACE(notes, 'Category: Cinema. ', ''),
+                          'Category: Professional. ', ''),
+                        'Category: Hybrid. ', ''),
+                      'Category: Prosumer. ', ''),
+                    'Category: Action. ', ''),
+                  'Category: Consumer. ', ''),
+                'Category: Drone. ', ''),
+              'Category: Smartphone. ', ''),
+            'Category: Unknown. ', '')
+        )
+        WHERE notes LIKE 'Category:%';
+
+        -- Clean up any remaining category patterns
+        UPDATE cameras
+        SET notes = NULL
+        WHERE notes = '' OR notes LIKE 'Auto-trained from % sample files.';
+      `,
+    },
+    // Migration 11: Add couple detail fields for dashboard redesign
+    {
+      id: 11,
+      name: 'add_couple_detail_fields',
+      sql: `
+        -- Due date for delivery deadline
+        ALTER TABLE couples ADD COLUMN due_date TEXT;
+
+        -- Social media
+        ALTER TABLE couples ADD COLUMN instagram TEXT;
+        ALTER TABLE couples ADD COLUMN social_media_json TEXT;
+
+        -- Deliverables tracking (JSON array of items with status)
+        ALTER TABLE couples ADD COLUMN deliverables_json TEXT;
+
+        -- Email/communication log
+        ALTER TABLE couples ADD COLUMN email_log_json TEXT;
+
+        -- Custom turnaround days (default 120 = 4 months)
+        ALTER TABLE couples ADD COLUMN turnaround_days INTEGER DEFAULT 120;
+
+        -- Calculate due_date for existing couples without one
+        -- Due date = wedding_date + turnaround_days
+        UPDATE couples
+        SET due_date = date(wedding_date, '+120 days')
+        WHERE due_date IS NULL AND wedding_date IS NOT NULL;
       `,
     },
   ];

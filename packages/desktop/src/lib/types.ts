@@ -104,7 +104,7 @@ export interface JobStats {
 }
 
 /**
- * AI/LiteLLM status
+ * AI/LiteLLM status (enhanced with provider info)
  */
 export interface AIStatus {
   installed: boolean;
@@ -113,6 +113,8 @@ export interface AIStatus {
   port: number;
   configuredModels: string[];
   lastError: string | null;
+  ollamaAvailable: boolean;
+  configuredProviders: string[];
 }
 
 /**
