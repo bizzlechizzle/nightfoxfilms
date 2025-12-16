@@ -34,18 +34,35 @@ export type CoupleStatus = 'booked' | 'ingested' | 'editing' | 'delivered' | 'ar
 
 export type CameraCategory = 'cinema' | 'professional' | 'hybrid' | 'action' | 'consumer' | 'drone' | 'smartphone';
 
+// Legacy deliverable type (deprecated - use ContractDeliverable instead)
 export type DeliverableType = 'highlight' | 'trailer' | 'full_length' | 'raw_footage' | 'social_clips' | 'ceremony' | 'reception';
 
 export type DeliverableStatus = 'pending' | 'in_progress' | 'review' | 'delivered';
 
+export type DeliverableCategory = 'edit' | 'timeline' | 'raw' | 'physical' | 'session';
+
 export type EmailType = 'booking_confirmation' | 'preview_ready' | 'delivery' | 'follow_up' | 'thank_you';
 
-// Helper types for JSON fields
+// Legacy deliverable interface (deprecated - use ContractDeliverable instead)
 export interface CoupleDeliverable {
   type: DeliverableType;
   status: DeliverableStatus;
   notes?: string;
   delivered_at?: string;
+}
+
+/**
+ * New deliverable structure for contract-based tracking
+ * Replaces CoupleDeliverable with more detailed fields
+ */
+export interface ContractDeliverable {
+  code: string;                    // References deliverables-reference.ts codes
+  category: DeliverableCategory;   // edit, timeline, raw, physical, session
+  name: string;                    // Display name (e.g., "2-4 Minute Highlight Film")
+  medium: Medium | 'mixed' | null; // Which medium this deliverable uses
+  status: DeliverableStatus;       // pending, in_progress, review, delivered
+  notes?: string;                  // Optional notes
+  delivered_at?: string;           // ISO date when delivered
 }
 
 export interface EmailLogEntry {
@@ -129,7 +146,9 @@ export interface Couple {
   status: CoupleStatus;
   email: string | null;
   phone: string | null;
+  phone_2: string | null;              // Second partner's phone
   venue_name: string | null;
+  venue_address: string | null;        // Street address (e.g., "76 Pearl Street")
   venue_city: string | null;
   venue_state: string | null;
   date_ingested: string | null;
@@ -148,6 +167,25 @@ export interface Couple {
   deliverables_json: string | null;
   email_log_json: string | null;
   turnaround_days: number;
+  // Contract fields (migration 15)
+  videographer_count: number;          // 1 or 2
+  mediums_json: string | null;         // JSON array of Medium[]
+  package_price: number | null;        // Price in dollars
+  // Location fields (migration 16)
+  getting_ready_1_name: string | null;     // "Bride's Hotel", "Groom's House"
+  getting_ready_1_address: string | null;  // Full address
+  getting_ready_2_name: string | null;     // Second getting ready location
+  getting_ready_2_address: string | null;  // Second address
+  ceremony_venue_name: string | null;      // If ceremony at different location
+  ceremony_venue_address: string | null;   // Ceremony address
+  // Partner contact fields (migration 18)
+  partner_1_name: string | null;           // "Julia Bartsch"
+  partner_1_email: string | null;
+  partner_1_instagram: string | null;
+  partner_2_name: string | null;           // "Sven Patterson"
+  partner_2_email: string | null;
+  partner_2_instagram: string | null;
+  mailing_address: string | null;          // Shared mailing address
   created_at: string;
   updated_at: string;
 }
@@ -337,7 +375,9 @@ export interface CoupleInput {
   status?: CoupleStatus;
   email?: string | null;
   phone?: string | null;
+  phone_2?: string | null;
   venue_name?: string | null;
+  venue_address?: string | null;
   venue_city?: string | null;
   venue_state?: string | null;
   source_path?: string | null;
@@ -349,9 +389,28 @@ export interface CoupleInput {
   due_date?: string | null;
   instagram?: string | null;
   social_media?: SocialMedia | null;
-  deliverables?: CoupleDeliverable[] | null;
+  deliverables?: ContractDeliverable[] | null;  // Updated to use ContractDeliverable
   email_log?: EmailLogEntry[] | null;
   turnaround_days?: number;
+  // Contract fields
+  videographer_count?: number;
+  mediums?: Medium[];
+  package_price?: number | null;
+  // Location fields
+  getting_ready_1_name?: string | null;
+  getting_ready_1_address?: string | null;
+  getting_ready_2_name?: string | null;
+  getting_ready_2_address?: string | null;
+  ceremony_venue_name?: string | null;
+  ceremony_venue_address?: string | null;
+  // Partner contact fields
+  partner_1_name?: string | null;
+  partner_1_email?: string | null;
+  partner_1_instagram?: string | null;
+  partner_2_name?: string | null;
+  partner_2_email?: string | null;
+  partner_2_instagram?: string | null;
+  mailing_address?: string | null;
 }
 
 export interface ImportInput {

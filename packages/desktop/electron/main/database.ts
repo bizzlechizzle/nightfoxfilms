@@ -840,6 +840,98 @@ function runMigrations(database: SqliteDatabase): void {
           AND status NOT IN ('delivered', 'archived');
       `,
     },
+    // Migration 15: Add contract fields and update Julia & Sven with contract data
+    {
+      id: 15,
+      name: 'add_contract_fields_and_julia_sven',
+      sql: `
+        -- Add videographer count (1 or 2)
+        ALTER TABLE couples ADD COLUMN videographer_count INTEGER DEFAULT 1;
+
+        -- Add mediums JSON array (e.g., '["modern"]' or '["super8", "dadcam", "modern"]')
+        ALTER TABLE couples ADD COLUMN mediums_json TEXT;
+
+        -- Add package price in dollars
+        ALTER TABLE couples ADD COLUMN package_price INTEGER;
+
+        -- Update Julia & Sven with full contract data
+        UPDATE couples
+        SET
+          videographer_count = 2,
+          mediums_json = '["modern"]',
+          package_price = 3400,
+          package_name = 'Modern Digital (Two Videographers)',
+          venue_name = 'Pearl Street Grill and Brewery',
+          venue_city = 'Buffalo',
+          venue_state = 'NY',
+          phone = '7169014672',
+          contracted_deliverables = 3,
+          deliverables_json = '[{"code":"highlight_modern","category":"edit","name":"2-4 Minute Highlight Film","medium":"modern","status":"pending"},{"code":"ceremony_speeches_uncut","category":"timeline","name":"Uncut Ceremony & Speeches","medium":"modern","status":"pending"},{"code":"raw_modern","category":"raw","name":"Raw Footage","medium":"modern","status":"pending"}]'
+        WHERE name = 'Julia & Sven' AND wedding_date = '2025-12-31';
+      `,
+    },
+    // Migration 16: Add location fields for getting ready and ceremony
+    {
+      id: 16,
+      name: 'add_location_fields',
+      sql: `
+        -- Getting ready locations (hide after wedding date)
+        ALTER TABLE couples ADD COLUMN getting_ready_1_name TEXT;
+        ALTER TABLE couples ADD COLUMN getting_ready_1_address TEXT;
+        ALTER TABLE couples ADD COLUMN getting_ready_2_name TEXT;
+        ALTER TABLE couples ADD COLUMN getting_ready_2_address TEXT;
+
+        -- Ceremony venue (if different from reception)
+        ALTER TABLE couples ADD COLUMN ceremony_venue_name TEXT;
+        ALTER TABLE couples ADD COLUMN ceremony_venue_address TEXT;
+      `,
+    },
+    // Migration 17: Add venue_address and phone_2 fields, update Julia & Sven
+    {
+      id: 17,
+      name: 'add_venue_address_phone_2',
+      sql: `
+        -- Street address for venue
+        ALTER TABLE couples ADD COLUMN venue_address TEXT;
+
+        -- Second partner phone number
+        ALTER TABLE couples ADD COLUMN phone_2 TEXT;
+
+        -- Update Julia & Sven with contract details
+        UPDATE couples
+        SET
+          venue_address = '76 Pearl Street',
+          phone_2 = '7742671370'
+        WHERE name = 'Julia & Sven' AND wedding_date = '2025-12-31';
+      `,
+    },
+    // Migration 18: Add partner contact fields
+    {
+      id: 18,
+      name: 'add_partner_contact_fields',
+      sql: `
+        -- Partner 1 contact info
+        ALTER TABLE couples ADD COLUMN partner_1_name TEXT;
+        ALTER TABLE couples ADD COLUMN partner_1_email TEXT;
+        ALTER TABLE couples ADD COLUMN partner_1_instagram TEXT;
+
+        -- Partner 2 contact info
+        ALTER TABLE couples ADD COLUMN partner_2_name TEXT;
+        ALTER TABLE couples ADD COLUMN partner_2_email TEXT;
+        ALTER TABLE couples ADD COLUMN partner_2_instagram TEXT;
+
+        -- Shared mailing address
+        ALTER TABLE couples ADD COLUMN mailing_address TEXT;
+
+        -- Update Julia & Sven with partner details from contract
+        UPDATE couples
+        SET
+          partner_1_name = 'Julia Bartsch',
+          partner_2_name = 'Sven Patterson',
+          mailing_address = '65 Cambridge Rd, Hilton, NY 15568'
+        WHERE name = 'Julia & Sven' AND wedding_date = '2025-12-31';
+      `,
+    },
   ];
 
   // Apply pending migrations

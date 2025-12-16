@@ -7,10 +7,9 @@
   import type {
     CoupleWithFiles,
     CoupleStatus,
-    CoupleDeliverable,
-    DeliverableType,
-    EmailLogEntry
+    ContractDeliverable
   } from '@nightfox/core';
+  import { getAPI } from '../lib/api';
 
   interface Props {
     coupleId: number;
@@ -19,8 +18,11 @@
 
   const { coupleId, onback }: Props = $props();
 
+  const api = getAPI();
+
   let couple = $state<CoupleWithFiles | null>(null);
   let loading = $state(true);
+  let importing = $state(false);
 
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
@@ -30,18 +32,8 @@
     archived: 'Archived',
   };
 
-  const deliverableLabels: Record<DeliverableType, string> = {
-    highlight: 'Highlight Film',
-    trailer: 'Trailer',
-    full_length: 'Full Length',
-    raw_footage: 'Raw Footage',
-    social_clips: 'Social Clips',
-    ceremony: 'Ceremony',
-    reception: 'Reception',
-  };
-
-  // Parse deliverables from JSON or generate defaults
-  const deliverables = $derived<CoupleDeliverable[]>(() => {
+  // Parse deliverables from JSON
+  const deliverables = $derived<ContractDeliverable[]>(() => {
     if (!couple) return [];
     if (couple.deliverables_json) {
       try {
@@ -50,24 +42,30 @@
         return [];
       }
     }
-    // Generate defaults based on contracted count
-    const count = couple.contracted_deliverables || 2;
-    const defaults: CoupleDeliverable[] = [
-      { type: 'highlight', status: 'pending' },
-      { type: 'trailer', status: 'pending' },
-    ];
-    if (count > 2) defaults.push({ type: 'full_length', status: 'pending' });
-    if (count > 3) defaults.push({ type: 'social_clips', status: 'pending' });
-    return defaults.slice(0, count);
+    return [];
   });
 
-  // Parse email log
-  const emailLog = $derived<EmailLogEntry[]>(() => {
-    if (!couple?.email_log_json) return [];
+  // Filter to only edit deliverables (highlight films, teasers, etc.)
+  const editDeliverables = $derived(() => {
+    return deliverables().filter(d => d.category === 'edit');
+  });
+
+  // Format medium for display
+  const mediumDisplay = $derived(() => {
+    if (!couple?.mediums_json) return 'Medium not specified';
     try {
-      return JSON.parse(couple.email_log_json);
+      const mediums = JSON.parse(couple.mediums_json) as string[];
+      if (mediums.length === 0) return 'Medium not specified';
+      const labels: Record<string, string> = {
+        modern: 'Modern 4K Digital',
+        dadcam: 'Dad Cam',
+        super8: 'Super 8',
+      };
+      if (mediums.length === 1) return labels[mediums[0]] || mediums[0];
+      if (mediums.length === 3) return 'Super 8 + Dad Cam + Modern Digital';
+      return mediums.map(m => labels[m]?.split(' ')[0] || m).join(' + ');
     } catch {
-      return [];
+      return 'Medium not specified';
     }
   });
 
@@ -93,8 +91,39 @@
     return Math.ceil((dueD.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   });
 
-  // Urgency class
+  // Is this a wedding countdown (booked status with future wedding)?
+  const isWeddingCountdown = $derived(() => {
+    if (!couple) return false;
+    if (couple.status !== 'booked') return false;
+    if (!couple.wedding_date) return false;
+    const wedding = new Date(couple.wedding_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    wedding.setHours(0, 0, 0, 0);
+    return wedding.getTime() >= today.getTime();
+  });
+
+  // Days until wedding (for booked status)
+  const daysUntilWedding = $derived(() => {
+    if (!couple?.wedding_date) return null;
+    const wedding = new Date(couple.wedding_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    wedding.setHours(0, 0, 0, 0);
+    return Math.ceil((wedding.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  });
+
+  // Urgency class - different thresholds for wedding countdown vs due date
   const daysLeftClass = $derived(() => {
+    if (isWeddingCountdown()) {
+      const days = daysUntilWedding();
+      if (days === null) return '';
+      if (days < 0) return 'overdue';
+      if (days < 7) return 'urgent';
+      if (days < 15) return 'warning';
+      return 'ok';
+    }
+    // Due date logic for post-wedding statuses
     const days = daysLeft();
     if (days === null) return '';
     if (days < 0) return 'overdue';
@@ -103,17 +132,67 @@
     return 'ok';
   });
 
-  // Pending emails based on status
-  const pendingEmails = $derived(() => {
-    if (!couple) return [];
-    const sentTypes = new Set(emailLog().filter(e => e.sent).map(e => e.type));
-    const pending: string[] = [];
+  // Countdown display (number + unit) - converts to weeks when > 14 days
+  const countdownDisplay = $derived(() => {
+    const days = isWeddingCountdown() ? daysUntilWedding() : daysLeft();
+    if (days === null) return { number: '-', unit: '' };
+    if (days === 0) return { number: '0', unit: 'Days' };
+    if (days < 0) {
+      const absDays = Math.abs(days);
+      if (absDays > 14) {
+        const weeks = Math.floor(absDays / 7);
+        return { number: weeks, unit: weeks === 1 ? 'Week' : 'Weeks' };
+      }
+      return { number: absDays, unit: absDays === 1 ? 'Day' : 'Days' };
+    }
+    if (days > 14) {
+      const weeks = Math.floor(days / 7);
+      return { number: weeks, unit: weeks === 1 ? 'Week' : 'Weeks' };
+    }
+    return { number: days, unit: days === 1 ? 'Day' : 'Days' };
+  });
 
-    if (!sentTypes.has('booking_confirmation')) pending.push('Booking Confirmation');
-    if (['editing', 'delivered', 'archived'].includes(couple.status) && !sentTypes.has('preview_ready')) pending.push('Preview Ready');
-    if (['delivered', 'archived'].includes(couple.status) && !sentTypes.has('delivery')) pending.push('Delivery Email');
+  // Context label based on status
+  const countdownContext = $derived(() => {
+    if (!couple) return '';
+    if (isWeddingCountdown()) return 'Wedding';
+    if (['ingested', 'editing'].includes(couple.status)) return 'Editing';
+    if (couple.status === 'delivered') return 'Delivered';
+    if (couple.status === 'archived') return 'Archived';
+    return 'Due';
+  });
 
-    return pending;
+  // Show getting ready section only before wedding date
+  const showGettingReady = $derived(() => {
+    if (!couple) return false;
+    // Show if we have any getting ready data
+    const hasData = couple.getting_ready_1_name || couple.getting_ready_1_address ||
+                    couple.getting_ready_2_name || couple.getting_ready_2_address;
+    if (!hasData) return false;
+    // Hide after wedding date
+    if (!couple.wedding_date) return true;
+    const wedding = new Date(couple.wedding_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    wedding.setHours(0, 0, 0, 0);
+    return wedding >= today;
+  });
+
+  // Show separate ceremony venue if different from reception
+  const hasSeparateCeremony = $derived(() => {
+    if (!couple?.ceremony_venue_name) return false;
+    return couple.ceremony_venue_name !== couple.venue_name;
+  });
+
+  // Show addresses only if wedding is within 30 days (for day-of logistics)
+  const showAddresses = $derived(() => {
+    if (!couple?.wedding_date) return false;
+    const wedding = new Date(couple.wedding_date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    wedding.setHours(0, 0, 0, 0);
+    const daysUntil = Math.ceil((wedding.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntil >= 0 && daysUntil <= 30;
   });
 
   // Timeline events - completed status derived from workflow progression
@@ -139,6 +218,22 @@
       console.error('Failed to load couple:', e);
     } finally {
       loading = false;
+    }
+  }
+
+  async function importFiles() {
+    if (importing) return;
+    try {
+      const files = await api.dialog.selectFiles();
+      if (files.length > 0) {
+        importing = true;
+        await api.import.files(files, coupleId);
+        await loadCouple();
+      }
+    } catch (e) {
+      console.error('Failed to import files:', e);
+    } finally {
+      importing = false;
     }
   }
 
@@ -189,93 +284,105 @@
     <!-- Header -->
     <header class="page-header">
       <button class="btn btn-back" onclick={onback}>Back</button>
+      <button class="btn btn-back" onclick={importFiles} disabled={importing}>
+        {importing ? 'Importing...' : 'Import'}
+      </button>
       <div class="header-content">
         <h1>{couple.name}</h1>
         <p class="page-subtitle">{formatDateLong(couple.wedding_date)}</p>
       </div>
     </header>
 
-    <!-- Top Row: Due Date | Deliverables | Emails Due -->
+    <!-- Top Row: Countdown | Deliverables -->
     <div class="card-row top-row">
-      <!-- Due Date Card -->
-      <div class="card due-date-card">
-        <h2 class="card-label">Due Date</h2>
-        <p class="big-date">{formatDate(dueDate())}</p>
-        {#if daysLeft() !== null}
-          <p class="days-left {daysLeftClass()}">
-            {#if daysLeft()! < 0}
-              {Math.abs(daysLeft()!)} days overdue
-            {:else if daysLeft() === 0}
-              Due today
-            {:else}
-              {daysLeft()} days left
-            {/if}
-          </p>
-        {/if}
+      <!-- Countdown Card -->
+      <div class="card countdown-card {daysLeftClass()}">
+        <span class="countdown-number">{countdownDisplay().number}</span>
+        <span class="countdown-unit">{countdownDisplay().unit}</span>
+        <span class="countdown-context">{countdownContext()}</span>
       </div>
 
-      <!-- Deliverables Card -->
+      <!-- Deliverables Card (clean) -->
       <div class="card deliverables-card">
-        <h2 class="card-label">Deliverables</h2>
-        <ul class="deliverables-list">
-          {#each deliverables() as d}
-            <li class="deliverable-item {d.status}">
-              <span class="deliverable-name">{deliverableLabels[d.type] || d.type}</span>
-              <span class="deliverable-status">{d.status.replace('_', ' ')}</span>
-            </li>
-          {/each}
-        </ul>
-      </div>
-
-      <!-- Mediums / Emails Due Card -->
-      <div class="card comms-card">
-        <div class="comms-section">
-          <h2 class="card-label">Mediums</h2>
-          <p class="comms-value">{couple.file_count} files</p>
-        </div>
-        <div class="comms-section">
-          <h2 class="card-label">Emails Due</h2>
-          {#if pendingEmails().length === 0}
-            <p class="all-sent">All sent</p>
-          {:else}
-            <ul class="emails-list">
-              {#each pendingEmails() as email}
-                <li>{email}</li>
-              {/each}
-            </ul>
-          {/if}
-        </div>
+        <p class="videographer-line">{couple.videographer_count || 1} Videographer{(couple.videographer_count || 1) > 1 ? 's' : ''}</p>
+        <p class="medium-line">{mediumDisplay()}</p>
+        {#each editDeliverables() as edit}
+          <p class="edit-line">{edit.name}</p>
+        {/each}
+        <p class="included-line">Raw Footage & Timeline</p>
       </div>
     </div>
 
     <!-- Middle Row: Project Details | Contact -->
     <div class="card-row middle-row">
-      <!-- Project Details Card -->
+      <!-- Details Card -->
       <div class="card project-card">
-        <h2 class="card-label">Project Details</h2>
+        <h2 class="card-label">Details</h2>
         <dl class="details-grid">
-          <div class="detail-row">
-            <dt>Venue</dt>
-            <dd>
-              {#if couple.venue_name}
-                {couple.venue_name}{#if couple.venue_city}, {couple.venue_city}{/if}{#if couple.venue_state}, {couple.venue_state}{/if}
-              {:else}
-                -
-              {/if}
-            </dd>
-          </div>
-          <div class="detail-row">
-            <dt>Package</dt>
-            <dd>{couple.package_name || '-'}</dd>
-          </div>
-          <div class="detail-row">
-            <dt>Duration</dt>
-            <dd>{formatDuration(couple.total_duration_seconds)}</dd>
-          </div>
-          <div class="detail-row">
-            <dt>Folder</dt>
-            <dd>{couple.folder_name || '-'}</dd>
-          </div>
+          {#if showGettingReady()}
+            {#if couple.getting_ready_1_name || couple.getting_ready_1_address}
+              <div class="detail-row">
+                <dt>Getting Ready</dt>
+                <dd>
+                  {#if couple.getting_ready_1_name}{couple.getting_ready_1_name}{/if}
+                  {#if showAddresses() && couple.getting_ready_1_address}
+                    {#if couple.getting_ready_1_name}<br />{/if}
+                    {couple.getting_ready_1_address}
+                  {/if}
+                </dd>
+              </div>
+            {/if}
+            {#if couple.getting_ready_2_name || couple.getting_ready_2_address}
+              <div class="detail-row">
+                <dt>Getting Ready</dt>
+                <dd>
+                  {#if couple.getting_ready_2_name}{couple.getting_ready_2_name}{/if}
+                  {#if showAddresses() && couple.getting_ready_2_address}
+                    {#if couple.getting_ready_2_name}<br />{/if}
+                    {couple.getting_ready_2_address}
+                  {/if}
+                </dd>
+              </div>
+            {/if}
+          {/if}
+          {#if hasSeparateCeremony()}
+            <div class="detail-row">
+              <dt>Ceremony</dt>
+              <dd>
+                {couple.ceremony_venue_name}
+                {#if showAddresses() && couple.ceremony_venue_address}<br />{couple.ceremony_venue_address}{/if}
+              </dd>
+            </div>
+            <div class="detail-row">
+              <dt>Reception</dt>
+              <dd>
+                {#if couple.venue_name}
+                  {couple.venue_name}
+                  {#if showAddresses()}
+                    {#if couple.venue_address}<br />{couple.venue_address}{/if}
+                    {#if couple.venue_city}, {couple.venue_city}{/if}{#if couple.venue_state}, {couple.venue_state}{/if}
+                  {/if}
+                {:else}
+                  -
+                {/if}
+              </dd>
+            </div>
+          {:else}
+            <div class="detail-row">
+              <dt>Venue</dt>
+              <dd>
+                {#if couple.venue_name}
+                  {couple.venue_name}
+                  {#if showAddresses()}
+                    {#if couple.venue_address}<br />{couple.venue_address}{/if}
+                    {#if couple.venue_city}, {couple.venue_city}{/if}{#if couple.venue_state}, {couple.venue_state}{/if}
+                  {/if}
+                {:else}
+                  -
+                {/if}
+              </dd>
+            </div>
+          {/if}
           {#if couple.notes}
             <div class="detail-row full">
               <dt>Notes</dt>
@@ -285,42 +392,6 @@
         </dl>
       </div>
 
-      <!-- Contact Card -->
-      <div class="card contact-card">
-        <h2 class="card-label">Contact</h2>
-        <dl class="details-grid">
-          <div class="detail-row">
-            <dt>Phone</dt>
-            <dd>
-              {#if couple.phone}
-                <a href="tel:{couple.phone}">{couple.phone}</a>
-              {:else}
-                -
-              {/if}
-            </dd>
-          </div>
-          <div class="detail-row">
-            <dt>Email</dt>
-            <dd>
-              {#if couple.email}
-                <a href="mailto:{couple.email}">{couple.email}</a>
-              {:else}
-                -
-              {/if}
-            </dd>
-          </div>
-          <div class="detail-row">
-            <dt>Instagram</dt>
-            <dd>
-              {#if couple.instagram}
-                <a href="https://instagram.com/{couple.instagram}" target="_blank" rel="noopener">@{couple.instagram}</a>
-              {:else}
-                -
-              {/if}
-            </dd>
-          </div>
-        </dl>
-      </div>
     </div>
 
     <!-- Timeline Section -->
@@ -369,6 +440,77 @@
           </table>
         </div>
       </section>
+    {/if}
+
+    <!-- Contact Section: Partner 1 | Partner 2 -->
+    {#if couple.partner_1_name || couple.phone || couple.partner_2_name || couple.phone_2}
+      <div class="card-row contact-row">
+        <!-- Partner 1 -->
+        <div class="card partner-card">
+          <h2 class="card-label">{couple.partner_1_name || 'Partner 1'}</h2>
+          <dl class="details-grid">
+            {#if couple.phone}
+              <div class="detail-row">
+                <dt>Phone</dt>
+                <dd><a href="tel:{couple.phone}">{couple.phone}</a></dd>
+              </div>
+            {/if}
+            {#if couple.partner_1_email}
+              <div class="detail-row">
+                <dt>Email</dt>
+                <dd><a href="mailto:{couple.partner_1_email}">{couple.partner_1_email}</a></dd>
+              </div>
+            {:else if couple.email && !couple.partner_2_email}
+              <div class="detail-row">
+                <dt>Email</dt>
+                <dd><a href="mailto:{couple.email}">{couple.email}</a></dd>
+              </div>
+            {/if}
+            {#if couple.partner_1_instagram}
+              <div class="detail-row">
+                <dt>Instagram</dt>
+                <dd><a href="https://instagram.com/{couple.partner_1_instagram}" target="_blank" rel="noopener">@{couple.partner_1_instagram}</a></dd>
+              </div>
+            {:else if couple.instagram && !couple.partner_2_instagram}
+              <div class="detail-row">
+                <dt>Instagram</dt>
+                <dd><a href="https://instagram.com/{couple.instagram}" target="_blank" rel="noopener">@{couple.instagram}</a></dd>
+              </div>
+            {/if}
+            {#if couple.mailing_address}
+              <div class="detail-row">
+                <dt>Address</dt>
+                <dd>{couple.mailing_address}</dd>
+              </div>
+            {/if}
+          </dl>
+        </div>
+
+        <!-- Partner 2 -->
+        <div class="card partner-card">
+          <h2 class="card-label">{couple.partner_2_name || 'Partner 2'}</h2>
+          <dl class="details-grid">
+            {#if couple.phone_2}
+              <div class="detail-row">
+                <dt>Phone</dt>
+                <dd><a href="tel:{couple.phone_2}">{couple.phone_2}</a></dd>
+              </div>
+            {/if}
+            {#if couple.partner_2_email}
+              <div class="detail-row">
+                <dt>Email</dt>
+                <dd><a href="mailto:{couple.partner_2_email}">{couple.partner_2_email}</a></dd>
+              </div>
+            {/if}
+            {#if couple.partner_2_instagram}
+              <div class="detail-row">
+                <dt>Instagram</dt>
+                <dd><a href="https://instagram.com/{couple.partner_2_instagram}" target="_blank" rel="noopener">@{couple.partner_2_instagram}</a></dd>
+              </div>
+            {/if}
+          </dl>
+        </div>
+      </div>
     {/if}
   {:else}
     <div class="empty-state">
@@ -419,11 +561,20 @@
   }
 
   .top-row {
-    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-columns: 1fr 2.5fr;
+    align-items: stretch;
   }
 
   .middle-row {
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1fr;
+  }
+
+  .contact-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .partner-card {
+    margin-bottom: 0;
   }
 
   .card {
@@ -442,89 +593,74 @@
     color: var(--color-text-muted);
   }
 
-  /* Due Date Card */
-  .big-date {
-    font-size: 1.375rem;
-    font-weight: 600;
-    margin: 0 0 0.5rem;
+  /* Countdown Card (centered, flexbox) */
+  .countdown-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 120px;
   }
 
-  .days-left {
-    font-size: 0.875rem;
+  .countdown-number {
+    font-size: 36px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--color-text, #1C1C1A);
+  }
+
+  .countdown-unit {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--color-text-muted, #5C5C58);
+    margin-top: 8px;
+  }
+
+  .countdown-context {
+    font-size: 13px;
+    font-weight: 400;
+    color: #8A8A86;
+    margin-top: 8px;
+  }
+
+  /* Urgency states */
+  .countdown-card.warning .countdown-number { color: #C9A227; }
+  .countdown-card.urgent .countdown-number { color: #B85C4A; }
+  .countdown-card.overdue .countdown-number { color: #B85C4A; }
+  .countdown-card.overdue .countdown-context::before { content: 'Overdue - '; }
+
+  /* Deliverables Card (clean layout, right-aligned) */
+  .deliverables-card {
+    text-align: right;
+  }
+
+  .videographer-line {
+    font-size: 17px;
     font-weight: 500;
     margin: 0;
   }
 
-  .days-left.ok { color: #047857; }
-  .days-left.warning { color: #b45309; }
-  .days-left.urgent { color: #dc2626; }
-  .days-left.overdue { color: #dc2626; font-weight: 600; }
-
-  /* Deliverables */
-  .deliverables-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  .medium-line {
+    font-size: 15px;
+    color: var(--color-text-muted, #5C5C58);
+    margin: 0 0 16px;
   }
 
-  .deliverable-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+  .edit-line {
+    font-size: 15px;
+    margin: 0 0 8px;
   }
 
-  .deliverable-item:last-child {
-    border-bottom: none;
-  }
-
-  .deliverable-name {
-    font-size: 0.875rem;
-  }
-
-  .deliverable-status {
-    font-size: 0.6875rem;
-    text-transform: uppercase;
-    padding: 0.125rem 0.5rem;
-    background: #e5e7eb;
-    color: #374151;
-  }
-
-  .deliverable-item.in_progress .deliverable-status { background: #dbeafe; color: #1d4ed8; }
-  .deliverable-item.review .deliverable-status { background: #fef3c7; color: #b45309; }
-  .deliverable-item.delivered .deliverable-status { background: #d1fae5; color: #047857; }
-
-  /* Comms Card */
-  .comms-section {
-    margin-bottom: 1rem;
-  }
-
-  .comms-section:last-child {
+  .edit-line:last-of-type {
     margin-bottom: 0;
   }
 
-  .comms-value {
-    margin: 0;
-    font-size: 0.875rem;
-  }
-
-  .all-sent {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #047857;
-  }
-
-  .emails-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    font-size: 0.875rem;
-  }
-
-  .emails-list li {
-    padding: 0.125rem 0;
-    color: #b45309;
+  .included-line {
+    font-size: 13px;
+    color: var(--color-text-muted, #8A8A86);
+    margin: 16px 0 0;
   }
 
   /* Details Grid */
@@ -706,7 +842,7 @@
 
   /* Responsive */
   @media (max-width: 900px) {
-    .top-row, .middle-row {
+    .top-row, .middle-row, .contact-row {
       grid-template-columns: 1fr;
     }
 

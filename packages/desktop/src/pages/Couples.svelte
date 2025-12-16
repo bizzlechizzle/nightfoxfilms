@@ -166,27 +166,48 @@
     return `${minutes}m`;
   }
 
-  function getDueDateStatus(weddingDate: string | null, status: CoupleStatus): { color: 'green' | 'yellow' | 'red' | null; daysText: string | null } {
-    // Only show for active work statuses
-    if (!weddingDate || status === 'booked' || status === 'delivered' || status === 'archived') {
-      return { color: null, daysText: null };
+  function getDueDateStatus(weddingDate: string | null, status: CoupleStatus): { color: 'green' | 'yellow' | 'red' | null; daysText: string | null; label: 'wedding' | 'due' | null } {
+    if (!weddingDate) {
+      return { color: null, daysText: null, label: null };
     }
 
     const wedding = new Date(weddingDate);
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    wedding.setHours(0, 0, 0, 0);
+    const daysUntilWedding = Math.ceil((wedding.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    // For booked status with future wedding: show wedding countdown
+    if (status === 'booked' && daysUntilWedding >= 0) {
+      let color: 'green' | 'yellow' | 'red';
+      if (daysUntilWedding >= 30) {
+        color = 'green';
+      } else if (daysUntilWedding >= 15) {
+        color = 'yellow';
+      } else {
+        color = 'red';
+      }
+      const daysText = daysUntilWedding === 0 ? 'Today' : `${daysUntilWedding} days`;
+      return { color, daysText, label: 'wedding' };
+    }
+
+    // Skip delivered/archived - no urgency display needed
+    if (status === 'delivered' || status === 'archived') {
+      return { color: null, daysText: null, label: null };
+    }
+
+    // For active work statuses (ingested, editing): show due date countdown
     const daysElapsed = Math.floor((today.getTime() - wedding.getTime()) / (1000 * 60 * 60 * 24));
 
-    // Skip future weddings
+    // Skip future weddings for work statuses
     if (daysElapsed < 0) {
-      return { color: null, daysText: null };
+      return { color: null, daysText: null, label: null };
     }
 
     const deadline = 180; // 6 months
     const daysRemaining = deadline - daysElapsed;
 
     let color: 'green' | 'yellow' | 'red';
-    let daysText: string;
-
     if (daysElapsed <= 120) {
       color = 'green';
     } else if (daysElapsed <= 150) {
@@ -195,13 +216,14 @@
       color = 'red';
     }
 
+    let daysText: string;
     if (daysRemaining > 0) {
       daysText = `${daysRemaining} days left`;
     } else {
       daysText = `${Math.abs(daysRemaining)} days overdue`;
     }
 
-    return { color, daysText };
+    return { color, daysText, label: 'due' };
   }
 
   // Get counts by status (use displayedCouples for dashboard view)
