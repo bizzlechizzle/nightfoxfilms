@@ -10,11 +10,62 @@ import type {
   ImportBatchResult,
   ImportProgress,
   ImportResult,
+  FootageType,
+  Couple,
 } from '@nightfox/core';
 
 import { importService, type ImportOptions } from './import-service';
 import { filesRepository } from '../repositories/files-repository';
 import { camerasRepository } from '../repositories/cameras-repository';
+import { couplesRepository } from '../repositories/couples-repository';
+
+/**
+ * Determine footage type based on recording date vs couple's key dates
+ *
+ * Logic:
+ * - If recorded on date_night_date → 'date_night'
+ * - If recorded day before wedding → 'rehearsal'
+ * - If recorded on or after wedding_date → 'wedding'
+ * - Otherwise → 'other'
+ */
+function determineFootageType(
+  recordedAt: string | null,
+  couple: Couple | null
+): FootageType {
+  if (!recordedAt || !couple?.wedding_date) {
+    return 'other';
+  }
+
+  // Parse dates (strip time, compare just dates)
+  const recorded = new Date(recordedAt);
+  recorded.setHours(0, 0, 0, 0);
+
+  const wedding = new Date(couple.wedding_date);
+  wedding.setHours(0, 0, 0, 0);
+
+  // Check date night first (if couple has one)
+  if (couple.date_night_date) {
+    const dateNight = new Date(couple.date_night_date);
+    dateNight.setHours(0, 0, 0, 0);
+    if (recorded.getTime() === dateNight.getTime()) {
+      return 'date_night';
+    }
+  }
+
+  // Check rehearsal (day before wedding)
+  const rehearsal = new Date(wedding);
+  rehearsal.setDate(rehearsal.getDate() - 1);
+  if (recorded.getTime() === rehearsal.getTime()) {
+    return 'rehearsal';
+  }
+
+  // Check wedding day or after
+  if (recorded.getTime() >= wedding.getTime()) {
+    return 'wedding';
+  }
+
+  return 'other';
+}
 
 /**
  * Extended import options for controller
@@ -37,6 +88,9 @@ export class ImportController {
     options: ImportControllerOptions = {}
   ): Promise<ImportBatchResult> {
     const { coupleId, copyToManaged, managedStoragePath, window } = options;
+
+    // Load couple data for footage type detection
+    const couple = coupleId ? couplesRepository.findById(coupleId) : null;
 
     // Load all cameras with patterns for matching
     const cameras = camerasRepository.findAllWithPatterns();
@@ -90,6 +144,10 @@ export class ImportController {
         });
         continue;
       }
+
+      // Determine footage type based on recording date vs couple's key dates
+      const footageType = determineFootageType(fileData.recorded_at, couple);
+      fileData.footage_type = footageType;
 
       // Insert into database
       try {

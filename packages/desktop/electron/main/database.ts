@@ -932,6 +932,44 @@ function runMigrations(database: SqliteDatabase): void {
         WHERE name = 'Julia & Sven' AND wedding_date = '2025-12-31';
       `,
     },
+    // Migration 19: Add date_night_date field for engagement sessions
+    {
+      id: 19,
+      name: 'add_date_night_date',
+      sql: `
+        -- Date night / engagement session date (shown in timeline before wedding)
+        ALTER TABLE couples ADD COLUMN date_night_date TEXT;
+
+        -- Update Julia & Sven to include Date Night in deliverables
+        UPDATE couples
+        SET deliverables_json = '[{"code":"highlight_modern","category":"edit","name":"2-4 Minute Highlight Film","medium":"modern","status":"pending"},{"code":"ceremony_speeches_uncut","category":"timeline","name":"Uncut Ceremony & Speeches","medium":"modern","status":"pending"},{"code":"raw_modern","category":"raw","name":"Raw Footage","medium":"modern","status":"pending"},{"code":"session_datenight","category":"session","name":"Date Night","medium":null,"status":"pending"}]'
+        WHERE name = 'Julia & Sven' AND wedding_date = '2025-12-31';
+      `,
+    },
+    // Migration 20: Add footage_type field to files for categorization
+    {
+      id: 20,
+      name: 'add_footage_type',
+      sql: `
+        -- Footage type based on recording date vs couple's key dates
+        -- Values: 'date_night', 'rehearsal', 'wedding', 'other'
+        ALTER TABLE files ADD COLUMN footage_type TEXT DEFAULT 'other';
+      `,
+    },
+    // Migration 21: Ensure Julia & Sven have complete deliverables (fixes existing databases)
+    {
+      id: 21,
+      name: 'fix_julia_sven_deliverables',
+      sql: `
+        -- Force update Julia & Sven deliverables with Date Night included
+        UPDATE couples
+        SET
+          deliverables_json = '[{"code":"highlight_modern","category":"edit","name":"2-4 Minute Highlight Film","medium":"modern","status":"pending"},{"code":"ceremony_speeches_uncut","category":"timeline","name":"Uncut Ceremony & Speeches","medium":"modern","status":"pending"},{"code":"raw_modern","category":"raw","name":"Raw Footage","medium":"modern","status":"pending"},{"code":"session_datenight","category":"session","name":"Date Night","medium":null,"status":"pending"}]',
+          videographer_count = 2,
+          mediums_json = '["modern"]'
+        WHERE name = 'Julia & Sven';
+      `,
+    },
   ];
 
   // Apply pending migrations

@@ -50,6 +50,28 @@
     return deliverables().filter(d => d.category === 'edit');
   });
 
+  // Check if Date Night is included (session category deliverables)
+  const hasDateNight = $derived(() => {
+    const dels = deliverables();
+    return dels.some(d => d.code === 'session_datenight' || d.category === 'session');
+  });
+
+  // Check if Raw Footage or Timeline deliverables exist
+  const hasRawOrTimeline = $derived(() => {
+    const dels = deliverables();
+    return dels.some(d => d.category === 'raw' || d.category === 'timeline');
+  });
+
+  // Helper: Check if a date has passed
+  const isDatePast = (dateStr: string | null): boolean => {
+    if (!dateStr) return false;
+    const date = new Date(dateStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    date.setHours(0, 0, 0, 0);
+    return date < today;
+  };
+
   // Format medium for display
   const mediumDisplay = $derived(() => {
     if (!couple?.mediums_json) return 'Medium not specified';
@@ -200,14 +222,29 @@
     if (!couple) return [];
     const statusOrder = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
     const currentIndex = statusOrder.indexOf(couple.status);
-    return [
+
+    const events: Array<{ label: string; date: string | null | undefined; completed: boolean }> = [
       { label: 'Booked', date: couple.created_at?.split('T')[0], completed: true },
+    ];
+
+    // Add Date Night if couple has it (between Booked and Wedding)
+    if (hasDateNight()) {
+      events.push({
+        label: 'Date Night',
+        date: couple.date_night_date,
+        completed: isDatePast(couple.date_night_date),
+      });
+    }
+
+    events.push(
       { label: 'Wedding', date: couple.wedding_date, completed: currentIndex >= 1 },
       { label: 'Ingested', date: couple.date_ingested, completed: currentIndex >= 1 },
       { label: 'Editing', date: couple.date_editing_started, completed: currentIndex >= 2 },
       { label: 'Delivered', date: couple.date_delivered, completed: currentIndex >= 3 },
       { label: 'Archived', date: couple.date_archived, completed: currentIndex >= 4 },
-    ];
+    );
+
+    return events;
   });
 
   async function loadCouple() {
@@ -309,7 +346,12 @@
         {#each editDeliverables() as edit}
           <p class="edit-line">{edit.name}</p>
         {/each}
-        <p class="included-line">Raw Footage & Timeline</p>
+        {#if hasRawOrTimeline()}
+          <p class="included-line">Raw Footage & Timeline</p>
+        {/if}
+        {#if hasDateNight()}
+          <p class="included-line">Date Night</p>
+        {/if}
       </div>
     </div>
 
@@ -631,14 +673,18 @@
   .countdown-card.overdue .countdown-number { color: #B85C4A; }
   .countdown-card.overdue .countdown-context::before { content: 'Overdue - '; }
 
-  /* Deliverables Card (clean layout, right-aligned) */
+  /* Deliverables Card (clean layout, right-aligned, vertically centered) */
   .deliverables-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     text-align: right;
   }
 
   .videographer-line {
-    font-size: 17px;
-    font-weight: 500;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
     margin: 0;
   }
 
@@ -649,7 +695,8 @@
   }
 
   .edit-line {
-    font-size: 15px;
+    font-size: 17px;
+    font-weight: 500;
     margin: 0 0 8px;
   }
 
@@ -660,7 +707,11 @@
   .included-line {
     font-size: 13px;
     color: var(--color-text-muted, #8A8A86);
-    margin: 16px 0 0;
+    margin: 8px 0 0;
+  }
+
+  .included-line:first-of-type {
+    margin-top: 16px;
   }
 
   /* Details Grid */

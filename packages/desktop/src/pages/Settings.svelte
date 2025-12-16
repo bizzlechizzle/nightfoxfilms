@@ -137,9 +137,6 @@
         <div class="setting-row">
           <div class="setting-info">
             <label>Managed Storage Path</label>
-            <p class="setting-description">
-              Location where imported files are copied (optional)
-            </p>
           </div>
           <div class="setting-control">
             <div class="path-input">
@@ -313,37 +310,6 @@
             {savingAI ? 'Saving...' : 'Save AI Settings'}
           </button>
         </div>
-      </section>
-
-      <section class="settings-section">
-        <h3>Database</h3>
-        <div class="setting-row">
-          <div class="setting-info">
-            <label>Database Location</label>
-            <p class="setting-description setting-path">{dbPath}</p>
-          </div>
-          <div class="setting-control">
-            <button class="btn btn-secondary" onclick={showDatabaseInFinder}>
-              Show in Finder
-            </button>
-          </div>
-        </div>
-        {#if dbStats}
-          <div class="db-stats">
-            <div class="db-stat">
-              <span class="stat-value">{dbStats.tables}</span>
-              <span class="stat-label">Tables</span>
-            </div>
-            <div class="db-stat">
-              <span class="stat-value">{dbStats.totalRows}</span>
-              <span class="stat-label">Records</span>
-            </div>
-            <div class="db-stat">
-              <span class="stat-value">{formatBytes(dbStats.sizeBytes)}</span>
-              <span class="stat-label">Size</span>
-            </div>
-          </div>
-        {/if}
       </section>
 
       <section class="settings-section">

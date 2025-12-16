@@ -11,6 +11,7 @@ import type {
   FileMetadata,
   FileSidecar,
   FileType,
+  FootageType,
   Medium,
 } from '@nightfox/core';
 
@@ -27,6 +28,7 @@ export interface FileCreateInput {
   detected_model?: string | null;
   medium?: Medium | null;
   file_type?: FileType | null;
+  footage_type?: FootageType | null;
   duration_seconds?: number | null;
   width?: number | null;
   height?: number | null;
@@ -188,8 +190,8 @@ export class FilesRepository {
         `INSERT INTO files (
           blake3, original_filename, original_path, managed_path, extension, file_size,
           couple_id, camera_id, detected_make, detected_model, medium, file_type,
-          duration_seconds, width, height, frame_rate, codec, bitrate, recorded_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          footage_type, duration_seconds, width, height, frame_rate, codec, bitrate, recorded_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         input.blake3,
@@ -204,6 +206,7 @@ export class FilesRepository {
         input.detected_model ?? null,
         input.medium ?? null,
         input.file_type ?? null,
+        input.footage_type ?? 'other',
         input.duration_seconds ?? null,
         input.width ?? null,
         input.height ?? null,
@@ -250,6 +253,7 @@ export class FilesRepository {
       'detected_model',
       'medium',
       'file_type',
+      'footage_type',
       'duration_seconds',
       'width',
       'height',

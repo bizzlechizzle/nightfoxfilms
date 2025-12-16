@@ -28,6 +28,8 @@ export type ImportStatus = 'pending' | 'hashing' | 'extracting' | 'copying' | 'c
 
 export type SceneDetectionMethod = 'content' | 'adaptive' | 'threshold';
 
+export type FootageType = 'date_night' | 'rehearsal' | 'wedding' | 'other';
+
 export type Theme = 'light' | 'dark' | 'system';
 
 export type CoupleStatus = 'booked' | 'ingested' | 'editing' | 'delivered' | 'archived';
@@ -186,6 +188,8 @@ export interface Couple {
   partner_2_email: string | null;
   partner_2_instagram: string | null;
   mailing_address: string | null;          // Shared mailing address
+  // Session fields (migration 19)
+  date_night_date: string | null;          // Date of engagement/date night shoot
   created_at: string;
   updated_at: string;
 }
@@ -205,6 +209,7 @@ export interface File {
   detected_lens: string | null;
   medium: Medium | null;
   file_type: FileType | null;
+  footage_type: FootageType;
   duration_seconds: number | null;
   width: number | null;
   height: number | null;
@@ -411,6 +416,8 @@ export interface CoupleInput {
   partner_2_email?: string | null;
   partner_2_instagram?: string | null;
   mailing_address?: string | null;
+  // Session fields
+  date_night_date?: string | null;
 }
 
 export interface ImportInput {
