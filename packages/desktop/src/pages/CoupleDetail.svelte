@@ -193,7 +193,6 @@
         <h1>{couple.name}</h1>
         <p class="page-subtitle">{formatDateLong(couple.wedding_date)}</p>
       </div>
-      <span class="status-badge {couple.status}">{statusLabels[couple.status]}</span>
     </header>
 
     <!-- Top Row: Due Date | Deliverables | Emails Due -->
@@ -385,38 +384,32 @@
     align-items: center;
     gap: 1.5rem;
     margin-bottom: 2rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--color-border);
+  }
+
+  /* Inset all content below header */
+  .card-row,
+  .card:not(.card-row .card),
+  .timeline-card {
+    margin-left: 2rem;
+    margin-right: 2rem;
   }
 
   .header-content {
-    flex: 1;
+    margin-left: auto;
+    text-align: right;
   }
 
   .header-content h1 {
     margin: 0;
-    font-size: 1.75rem;
+    font-size: 3.5rem;
     font-weight: 600;
   }
 
   .page-subtitle {
-    margin: 0.25rem 0 0;
+    margin: -0.25rem 0 0;
+    padding-left: 25%;
     color: var(--color-text-muted);
   }
-
-  .status-badge {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .status-badge.booked { background: #dbeafe; color: #1d4ed8; }
-  .status-badge.ingested { background: #e0e7ff; color: #4338ca; }
-  .status-badge.editing { background: #fce7f3; color: #be185d; }
-  .status-badge.delivered { background: #d1fae5; color: #047857; }
-  .status-badge.archived { background: #e5e7eb; color: #374151; }
 
   /* Card Layout */
   .card-row {
