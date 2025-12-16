@@ -30,7 +30,7 @@ export type SceneDetectionMethod = 'content' | 'adaptive' | 'threshold';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export type CoupleStatus = 'booked' | 'shot' | 'ingested' | 'editing' | 'delivered' | 'archived';
+export type CoupleStatus = 'booked' | 'ingested' | 'editing' | 'delivered' | 'archived';
 
 export type CameraCategory = 'cinema' | 'professional' | 'hybrid' | 'action' | 'consumer' | 'drone' | 'smartphone';
 
@@ -38,7 +38,7 @@ export type DeliverableType = 'highlight' | 'trailer' | 'full_length' | 'raw_foo
 
 export type DeliverableStatus = 'pending' | 'in_progress' | 'review' | 'delivered';
 
-export type EmailType = 'booking_confirmation' | 'shot_notification' | 'preview_ready' | 'delivery' | 'follow_up' | 'thank_you';
+export type EmailType = 'booking_confirmation' | 'preview_ready' | 'delivery' | 'follow_up' | 'thank_you';
 
 // Helper types for JSON fields
 export interface CoupleDeliverable {
@@ -132,7 +132,6 @@ export interface Couple {
   venue_name: string | null;
   venue_city: string | null;
   venue_state: string | null;
-  date_shot: string | null;
   date_ingested: string | null;
   date_editing_started: string | null;
   date_delivered: string | null;

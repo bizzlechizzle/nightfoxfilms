@@ -24,7 +24,6 @@
 
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
-    shot: 'Shot',
     ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
@@ -78,7 +77,7 @@
     if (couple.due_date) return couple.due_date;
     if (!couple.wedding_date) return null;
     const wedding = new Date(couple.wedding_date);
-    const turnaround = couple.turnaround_days || 120;
+    const turnaround = couple.turnaround_days || 180;
     wedding.setDate(wedding.getDate() + turnaround);
     return wedding.toISOString().split('T')[0];
   });
@@ -111,24 +110,24 @@
     const pending: string[] = [];
 
     if (!sentTypes.has('booking_confirmation')) pending.push('Booking Confirmation');
-    if (couple.status !== 'booked' && !sentTypes.has('shot_notification')) pending.push('Shot Notification');
     if (['editing', 'delivered', 'archived'].includes(couple.status) && !sentTypes.has('preview_ready')) pending.push('Preview Ready');
     if (['delivered', 'archived'].includes(couple.status) && !sentTypes.has('delivery')) pending.push('Delivery Email');
 
     return pending;
   });
 
-  // Timeline events
+  // Timeline events - completed status derived from workflow progression
   const timelineEvents = $derived(() => {
     if (!couple) return [];
+    const statusOrder = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
+    const currentIndex = statusOrder.indexOf(couple.status);
     return [
       { label: 'Booked', date: couple.created_at?.split('T')[0], completed: true },
-      { label: 'Wedding', date: couple.wedding_date, completed: couple.status !== 'booked' },
-      { label: 'Shot', date: couple.date_shot, completed: !!couple.date_shot },
-      { label: 'Ingested', date: couple.date_ingested, completed: !!couple.date_ingested },
-      { label: 'Editing', date: couple.date_editing_started, completed: !!couple.date_editing_started },
-      { label: 'Delivered', date: couple.date_delivered, completed: !!couple.date_delivered },
-      { label: 'Archived', date: couple.date_archived, completed: !!couple.date_archived },
+      { label: 'Wedding', date: couple.wedding_date, completed: currentIndex >= 1 },
+      { label: 'Ingested', date: couple.date_ingested, completed: currentIndex >= 1 },
+      { label: 'Editing', date: couple.date_editing_started, completed: currentIndex >= 2 },
+      { label: 'Delivered', date: couple.date_delivered, completed: currentIndex >= 3 },
+      { label: 'Archived', date: couple.date_archived, completed: currentIndex >= 4 },
     ];
   });
 
@@ -414,7 +413,6 @@
   }
 
   .status-badge.booked { background: #dbeafe; color: #1d4ed8; }
-  .status-badge.shot { background: #fef3c7; color: #b45309; }
   .status-badge.ingested { background: #e0e7ff; color: #4338ca; }
   .status-badge.editing { background: #fce7f3; color: #be185d; }
   .status-badge.delivered { background: #d1fae5; color: #047857; }

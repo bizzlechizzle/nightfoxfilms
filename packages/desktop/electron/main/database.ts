@@ -785,14 +785,59 @@ function runMigrations(database: SqliteDatabase): void {
         -- Email/communication log
         ALTER TABLE couples ADD COLUMN email_log_json TEXT;
 
-        -- Custom turnaround days (default 120 = 4 months)
-        ALTER TABLE couples ADD COLUMN turnaround_days INTEGER DEFAULT 120;
+        -- Custom turnaround days (default 180 = 6 months)
+        ALTER TABLE couples ADD COLUMN turnaround_days INTEGER DEFAULT 180;
 
         -- Calculate due_date for existing couples without one
         -- Due date = wedding_date + turnaround_days
         UPDATE couples
         SET due_date = date(wedding_date, '+120 days')
         WHERE due_date IS NULL AND wedding_date IS NOT NULL;
+      `,
+    },
+    // Migration 12: Fix turnaround days from 120 to 180 (6 months)
+    {
+      id: 12,
+      name: 'fix_turnaround_days_180',
+      sql: `
+        -- Update default turnaround to 180 days for all couples using old default
+        UPDATE couples SET turnaround_days = 180 WHERE turnaround_days = 120;
+
+        -- Recalculate all due dates based on 180 day turnaround
+        UPDATE couples
+        SET due_date = date(wedding_date, '+180 days')
+        WHERE wedding_date IS NOT NULL;
+      `,
+    },
+    // Migration 13: Mark all weddings before Sep 14, 2025 as delivered
+    {
+      id: 13,
+      name: 'mark_past_weddings_delivered',
+      sql: `
+        UPDATE couples
+        SET status = 'delivered'
+        WHERE wedding_date IS NOT NULL
+          AND wedding_date >= '1970-01-01'
+          AND wedding_date <= '2025-09-13';
+      `,
+    },
+    // Migration 14: Remove 'shot' status - convert to 'ingested', mark recent weddings as ingested
+    {
+      id: 14,
+      name: 'remove_shot_status',
+      sql: `
+        -- Convert any 'shot' status to 'ingested' (shot status is being removed)
+        UPDATE couples
+        SET status = 'ingested'
+        WHERE status = 'shot';
+
+        -- Mark weddings from Sep 14, 2025 through Dec 15, 2025 as ingested
+        UPDATE couples
+        SET status = 'ingested'
+        WHERE wedding_date IS NOT NULL
+          AND wedding_date >= '2025-09-14'
+          AND wedding_date <= '2025-12-15'
+          AND status NOT IN ('delivered', 'archived');
       `,
     },
   ];

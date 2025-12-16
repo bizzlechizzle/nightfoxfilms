@@ -4,7 +4,7 @@
    * Follows Braun/Ulm functional minimalism
    */
   interface MonthlyStats {
-    weddingsShot: number;
+    weddingsOccurred: number;
     weddingsDelivered: number;
     inProgress: number;
     filesImported: number;
@@ -62,7 +62,7 @@
   }
 
   const maxWeddingsInMonth = $derived(() => {
-    return Math.max(...monthlyStats.map(m => m.weddingsShot), 1);
+    return Math.max(...monthlyStats.map(m => m.weddingsOccurred), 1);
   });
 </script>
 
@@ -112,10 +112,10 @@
             <div class="chart-bar-container">
               <div
                 class="chart-bar"
-                style="height: {(stats.weddingsShot / maxWeddingsInMonth()) * 100}%"
+                style="height: {(stats.weddingsOccurred / maxWeddingsInMonth()) * 100}%"
               >
-                {#if stats.weddingsShot > 0}
-                  <span class="chart-bar__value">{stats.weddingsShot}</span>
+                {#if stats.weddingsOccurred > 0}
+                  <span class="chart-bar__value">{stats.weddingsOccurred}</span>
                 {/if}
               </div>
               <span class="chart-bar__label">{monthNames[i]}</span>
@@ -133,7 +133,7 @@
           <thead>
             <tr>
               <th>Month</th>
-              <th>Shot</th>
+              <th>Occurred</th>
               <th>Delivered</th>
               <th>In Progress</th>
               <th>Files Imported</th>
@@ -143,7 +143,7 @@
             {#each monthlyStats as stats, i}
               <tr>
                 <td>{monthNames[i]}</td>
-                <td>{stats.weddingsShot}</td>
+                <td>{stats.weddingsOccurred}</td>
                 <td>{stats.weddingsDelivered}</td>
                 <td>{stats.inProgress}</td>
                 <td>{stats.filesImported.toLocaleString()}</td>

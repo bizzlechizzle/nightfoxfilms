@@ -106,6 +106,7 @@ const api = {
     findByStatus: (status) => invoke("couples:findByStatus")(status),
     getForMonth: (year, month) => invoke("couples:getForMonth")(year, month),
     getDashboardStats: () => invoke("couples:getDashboardStats")(),
+    getWhatsNextData: () => invoke("couples:getWhatsNextData")(),
     getMonthlyStats: (year, month) => invoke("couples:getMonthlyStats")(year, month),
     getYearlyStats: (year) => invoke("couples:getYearlyStats")(year),
   },

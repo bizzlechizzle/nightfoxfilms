@@ -17,7 +17,7 @@
   // Navigation pages
   const mainPages: { id: Page; label: string }[] = [
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'couples', label: 'Projects' },
+    { id: 'couples', label: 'Couples' },
     { id: 'calendar', label: 'Calendar' },
     { id: 'import', label: 'Import' },
     { id: 'cameras', label: 'Cameras' },

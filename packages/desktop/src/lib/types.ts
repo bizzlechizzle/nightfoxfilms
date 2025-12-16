@@ -94,6 +94,72 @@ export interface CoupleStats {
 }
 
 /**
+ * Dashboard statistics
+ */
+export interface DashboardStats {
+  byStatus: Record<string, number>;
+  deliveredThisMonth: number;
+  upcomingWeddings: Array<{
+    couple: import('@nightfox/core').Couple;
+    daysUntil: number;
+  }>;
+  recentActivity: Array<{
+    couple: import('@nightfox/core').Couple;
+    action: string;
+    timestamp: string;
+  }>;
+}
+
+/**
+ * What's Next item for dashboard
+ */
+export interface WhatsNextItem {
+  coupleId: number;
+  date: string;
+  coupleName: string;
+  venue: string;
+  daysUntil: number;
+  isUrgent: boolean;
+}
+
+/**
+ * What's Next section for dashboard
+ */
+export interface WhatsNextSection {
+  label: string;
+  key: string;
+  items: WhatsNextItem[];
+  emptyMessage: string;
+}
+
+/**
+ * What's Next data for dashboard
+ */
+export interface WhatsNextData {
+  sections: WhatsNextSection[];
+}
+
+/**
+ * Monthly statistics
+ */
+export interface MonthlyStats {
+  weddingsOccurred: number;
+  weddingsDelivered: number;
+  inProgress: number;
+  filesImported: number;
+}
+
+/**
+ * Yearly statistics
+ */
+export interface YearlyStats {
+  totalWeddings: number;
+  totalDelivered: number;
+  deliveryRate: number;
+  avgDaysToDelivery: number;
+}
+
+/**
  * Job statistics
  */
 export interface JobStats {

@@ -252,6 +252,10 @@ ipcMain.handle('couples:getDashboardStats', async () => {
   return couplesRepository.getDashboardStats();
 });
 
+ipcMain.handle('couples:getWhatsNextData', async () => {
+  return couplesRepository.getWhatsNextData();
+});
+
 ipcMain.handle('couples:getMonthlyStats', async (_, year: number, month: number) => {
   return couplesRepository.getMonthlyStats(year, month);
 });

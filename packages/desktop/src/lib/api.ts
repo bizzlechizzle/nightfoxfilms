@@ -26,6 +26,10 @@ import type {
   ImportStatus,
   FileFilters,
   CoupleStats,
+  DashboardStats,
+  WhatsNextData,
+  MonthlyStats,
+  YearlyStats,
   JobStats,
   AIStatus,
   AISettings,
@@ -70,6 +74,11 @@ interface ElectronAPI {
     findWithFiles: (id: number) => Promise<CoupleWithFiles | null>;
     search: (query: string) => Promise<Couple[]>;
     getStats: (id: number) => Promise<CoupleStats | null>;
+    getForMonth: (year: number, month: number) => Promise<Couple[]>;
+    getDashboardStats: () => Promise<DashboardStats>;
+    getWhatsNextData: () => Promise<WhatsNextData>;
+    getMonthlyStats: (year: number, month: number) => Promise<MonthlyStats>;
+    getYearlyStats: (year: number) => Promise<YearlyStats>;
     create: (input: CoupleInput) => Promise<Couple>;
     update: (id: number, input: Partial<CoupleInput>) => Promise<Couple | null>;
     delete: (id: number) => Promise<boolean>;

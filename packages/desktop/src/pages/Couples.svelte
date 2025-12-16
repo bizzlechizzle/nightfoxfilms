@@ -47,14 +47,13 @@
 
   const statusLabels: Record<CoupleStatus, string> = {
     booked: 'Booked',
-    shot: 'Shot',
     ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',
   };
 
-  const statusOrder: CoupleStatus[] = ['booked', 'shot', 'ingested', 'editing', 'delivered', 'archived'];
+  const statusOrder: CoupleStatus[] = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
 
   async function loadCouples() {
     loading = true;
@@ -167,6 +166,44 @@
     return `${minutes}m`;
   }
 
+  function getDueDateStatus(weddingDate: string | null, status: CoupleStatus): { color: 'green' | 'yellow' | 'red' | null; daysText: string | null } {
+    // Only show for active work statuses
+    if (!weddingDate || status === 'booked' || status === 'delivered' || status === 'archived') {
+      return { color: null, daysText: null };
+    }
+
+    const wedding = new Date(weddingDate);
+    const today = new Date();
+    const daysElapsed = Math.floor((today.getTime() - wedding.getTime()) / (1000 * 60 * 60 * 24));
+
+    // Skip future weddings
+    if (daysElapsed < 0) {
+      return { color: null, daysText: null };
+    }
+
+    const deadline = 180; // 6 months
+    const daysRemaining = deadline - daysElapsed;
+
+    let color: 'green' | 'yellow' | 'red';
+    let daysText: string;
+
+    if (daysElapsed <= 120) {
+      color = 'green';
+    } else if (daysElapsed <= 150) {
+      color = 'yellow';
+    } else {
+      color = 'red';
+    }
+
+    if (daysRemaining > 0) {
+      daysText = `${daysRemaining} days left`;
+    } else {
+      daysText = `${Math.abs(daysRemaining)} days overdue`;
+    }
+
+    return { color, daysText };
+  }
+
   // Get counts by status (use displayedCouples for dashboard view)
   const statusCounts = $derived(() => {
     const list = displayedCouples();
@@ -257,6 +294,7 @@
     {/if}
     <div class="couples-list">
       {#each displayedCouples() as couple}
+        {@const dueStatus = getDueDateStatus(couple.wedding_date, couple.status)}
         <div
           class="couple-card"
           role="button"
@@ -267,7 +305,14 @@
           <div class="couple-card__main">
             <div class="couple-card__info">
               <span class="couple-card__name">{couple.name}</span>
-              <span class="couple-card__date">{formatDate(couple.wedding_date)}</span>
+              <span
+                class="couple-card__date"
+                class:due-date--green={dueStatus.color === 'green'}
+                class:due-date--yellow={dueStatus.color === 'yellow'}
+                class:due-date--red={dueStatus.color === 'red'}
+              >
+                {formatDate(couple.wedding_date)}{#if dueStatus.daysText} ({dueStatus.daysText}){/if}
+              </span>
             </div>
             <div class="couple-card__stats">
               <span class="stat">
@@ -557,13 +602,25 @@
   }
 
   .couple-card__name {
-    font-size: var(--step-0);
+    font-size: var(--step-1);
     font-weight: 500;
   }
 
   .couple-card__date {
     font-size: var(--step--1);
     color: var(--color-text-muted);
+  }
+
+  .due-date--green {
+    color: var(--color-status-success);
+  }
+
+  .due-date--yellow {
+    color: var(--color-status-warning);
+  }
+
+  .due-date--red {
+    color: var(--color-status-error);
   }
 
   .couple-card__stats {
@@ -604,7 +661,6 @@
     color: white;
   }
 
-  .status-badge[data-status="shot"],
   .status-badge[data-status="ingested"],
   .status-badge[data-status="editing"] {
     background: var(--color-status-warning);

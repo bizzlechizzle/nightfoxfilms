@@ -2,7 +2,7 @@
  * Couples Repository
  *
  * CRUD operations for wedding couples/projects with workflow tracking.
- * Manages the video workflow: booked -> shot -> ingested -> editing -> delivered -> archived
+ * Manages the video workflow: booked -> ingested -> editing -> delivered -> archived
  */
 
 import { getDatabase } from '../main/database';
@@ -12,7 +12,6 @@ import path from 'path';
 // Status date field mapping
 const STATUS_DATE_FIELDS: Record<CoupleStatus, string | null> = {
   booked: null, // No date field for booked (use created_at)
-  shot: 'date_shot',
   ingested: 'date_ingested',
   editing: 'date_editing_started',
   delivered: 'date_delivered',
@@ -33,8 +32,28 @@ export interface DashboardStats {
   }>;
 }
 
+export interface WhatsNextItem {
+  coupleId: number;
+  date: string;
+  coupleName: string;
+  venue: string;
+  daysUntil: number;
+  isUrgent: boolean;
+}
+
+export interface WhatsNextSection {
+  label: string;
+  key: string;
+  items: WhatsNextItem[];
+  emptyMessage: string;
+}
+
+export interface WhatsNextData {
+  sections: WhatsNextSection[];
+}
+
 export interface MonthlyStats {
-  weddingsShot: number;
+  weddingsOccurred: number;
   weddingsDelivered: number;
   inProgress: number;
   filesImported: number;
@@ -345,7 +364,6 @@ export class CouplesRepository {
 
     const byStatus: Record<CoupleStatus, number> = {
       booked: 0,
-      shot: 0,
       ingested: 0,
       editing: 0,
       delivered: 0,
@@ -410,14 +428,167 @@ export class CouplesRepository {
   }
 
   /**
+   * Get "What's Next" actionable items for dashboard
+   * Returns 4 sections: emails, upcoming weddings, next to edit, pending inquiries
+   */
+  getWhatsNextData(): WhatsNextData {
+    const db = getDatabase();
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    const sevenDaysLater = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+    const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    // Helper to format venue string
+    const formatVenue = (couple: Couple): string => {
+      if (couple.venue_name && couple.venue_city) {
+        return `${couple.venue_name}, ${couple.venue_city}`;
+      }
+      if (couple.venue_name) return couple.venue_name;
+      if (couple.venue_city) return couple.venue_city;
+      return 'No venue';
+    };
+
+    // Helper to calculate days until a date
+    const daysUntil = (dateStr: string): number => {
+      const target = new Date(dateStr);
+      return Math.ceil((target.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+    };
+
+    // 1. Emails Required This Week
+    // Couples in editing status with due_date within 7 days (need preview/delivery email)
+    const emailCouples = db
+      .prepare(
+        `SELECT * FROM couples
+         WHERE status IN ('ingested', 'editing')
+         AND due_date IS NOT NULL
+         AND due_date <= ?
+         ORDER BY due_date ASC`
+      )
+      .all(sevenDaysLater) as Couple[];
+
+    const emailItems: WhatsNextItem[] = emailCouples.map((couple) => ({
+      coupleId: couple.id,
+      date: couple.due_date!,
+      coupleName: couple.name,
+      venue: formatVenue(couple),
+      daysUntil: daysUntil(couple.due_date!),
+      isUrgent: daysUntil(couple.due_date!) <= 2,
+    }));
+
+    // 2. Weddings Within 30 Days
+    const upcomingCouples = db
+      .prepare(
+        `SELECT * FROM couples
+         WHERE wedding_date >= ? AND wedding_date <= ?
+         AND status = 'booked'
+         ORDER BY wedding_date ASC`
+      )
+      .all(today, thirtyDaysLater) as Couple[];
+
+    const weddingItems: WhatsNextItem[] = upcomingCouples.map((couple) => ({
+      coupleId: couple.id,
+      date: couple.wedding_date!,
+      coupleName: couple.name,
+      venue: formatVenue(couple),
+      daysUntil: daysUntil(couple.wedding_date!),
+      isUrgent: daysUntil(couple.wedding_date!) <= 2,
+    }));
+
+    // 3. Next Wedding To Start Editing
+    // First ingested couple by due_date, or any with due_date within 30 days
+    const nextToEditCouples = db
+      .prepare(
+        `SELECT * FROM couples
+         WHERE status = 'ingested'
+         AND (due_date IS NULL OR due_date <= ?)
+         ORDER BY
+           CASE WHEN due_date IS NOT NULL THEN 0 ELSE 1 END,
+           due_date ASC,
+           wedding_date ASC
+         LIMIT 3`
+      )
+      .all(thirtyDaysLater) as Couple[];
+
+    const editItems: WhatsNextItem[] = nextToEditCouples.map((couple) => ({
+      coupleId: couple.id,
+      date: couple.due_date || couple.wedding_date || couple.created_at,
+      coupleName: couple.name,
+      venue: formatVenue(couple),
+      daysUntil: couple.due_date ? daysUntil(couple.due_date) : 999,
+      isUrgent: couple.due_date ? daysUntil(couple.due_date) <= 2 : false,
+    }));
+
+    // 4. Pending Inquiries (booked but no date_ingested, older than 3 days)
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0];
+
+    const pendingCouples = db
+      .prepare(
+        `SELECT * FROM couples
+         WHERE status = 'booked'
+         AND date_ingested IS NULL
+         AND created_at <= ?
+         ORDER BY created_at ASC`
+      )
+      .all(threeDaysAgo) as Couple[];
+
+    const inquiryItems: WhatsNextItem[] = pendingCouples.map((couple) => {
+      const createdDate = couple.created_at.split('T')[0];
+      const daysSinceCreated = Math.abs(daysUntil(createdDate));
+      return {
+        coupleId: couple.id,
+        date: couple.wedding_date || createdDate,
+        coupleName: couple.name,
+        venue: formatVenue(couple),
+        daysUntil: daysSinceCreated,
+        isUrgent: daysSinceCreated >= 7,
+      };
+    });
+
+    return {
+      sections: [
+        {
+          label: 'Emails Required',
+          key: 'emails',
+          items: emailItems,
+          emptyMessage: 'No emails due this week',
+        },
+        {
+          label: 'Upcoming Weddings',
+          key: 'weddings',
+          items: weddingItems,
+          emptyMessage: 'No weddings in the next 30 days',
+        },
+        {
+          label: 'Next To Edit',
+          key: 'editing',
+          items: editItems,
+          emptyMessage: 'No projects ready for editing',
+        },
+        {
+          label: 'Pending Follow-ups',
+          key: 'inquiries',
+          items: inquiryItems,
+          emptyMessage: 'No pending follow-ups',
+        },
+      ],
+    };
+  }
+
+  /**
    * Get monthly statistics
    */
   getMonthlyStats(year: number, month: number): MonthlyStats {
     const db = getDatabase();
     const monthStr = `${year}-${String(month).padStart(2, '0')}`;
 
-    // Weddings shot this month (by wedding_date)
-    const shotCount = db
+    // Weddings that occurred this month (by wedding_date)
+    const occurredCount = db
       .prepare(
         `SELECT COUNT(*) as count FROM couples WHERE wedding_date LIKE ?`
       )
@@ -446,7 +617,7 @@ export class CouplesRepository {
       .get(`${monthStr}%`) as { count: number };
 
     return {
-      weddingsShot: shotCount.count,
+      weddingsOccurred: occurredCount.count,
       weddingsDelivered: deliveredCount.count,
       inProgress: inProgressCount.count,
       filesImported: filesCount.count,
