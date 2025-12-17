@@ -173,6 +173,40 @@ export class FilesRepository {
   }
 
   /**
+   * Find file by path (original_path or managed_path)
+   */
+  findByPath(filePath: string): File | null {
+    const db = getDatabase();
+    const row = db
+      .prepare('SELECT * FROM files WHERE original_path = ? OR managed_path = ? LIMIT 1')
+      .get(filePath, filePath) as File | undefined;
+    return row ?? null;
+  }
+
+  /**
+   * Find file with camera info by path
+   */
+  findByPathWithCamera(filePath: string): FileWithCamera | null {
+    const db = getDatabase();
+    const row = db
+      .prepare(`
+        SELECT f.*,
+               c.name AS camera_name,
+               c.medium AS camera_medium,
+               c.lut_path AS camera_lut_path,
+               cp.name AS couple_name,
+               cp.wedding_date AS couple_wedding_date
+        FROM files f
+        LEFT JOIN cameras c ON f.camera_id = c.id
+        LEFT JOIN couples cp ON f.couple_id = cp.id
+        WHERE f.original_path = ? OR f.managed_path = ?
+        LIMIT 1
+      `)
+      .get(filePath, filePath) as FileWithCamera | undefined;
+    return row ?? null;
+  }
+
+  /**
    * Find files by couple
    */
   findByCouple(coupleId: number): File[] {

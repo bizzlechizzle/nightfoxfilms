@@ -58,6 +58,7 @@ import { generateAllThumbnails } from './thumbnail-service';
 import { generateCameraProxy } from './proxy-service';
 import { isXmlSidecar, parseXmlSidecars, type XmlSidecarData } from './xml-sidecar-service';
 import { settingsRepository } from '../repositories/settings-repository';
+import { JobWorker } from './job-worker';
 
 /**
  * Determine footage type based on recording date vs couple's key dates
@@ -902,6 +903,34 @@ export class ImportController {
         } catch (dateError) {
           console.warn(`[ImportController] Failed to update date_night_date (non-fatal):`, dateError);
         }
+      }
+
+      // Queue background jobs for video files
+      let jobsQueued = 0;
+      for (const validatedFile of validationResult.files) {
+        if (!validatedFile.isValid || validatedFile.isDuplicate) continue;
+        if (validatedFile.fileType !== 'video') continue;
+
+        // Find the file we just inserted
+        const dbFile = filesRepository.findByHash(validatedFile.hash || '');
+        if (!dbFile) continue;
+
+        // Queue screenshot extraction job (ML pipeline)
+        try {
+          const job = JobWorker.createJob(
+            'screenshot_extract',
+            { file_path: dbFile.managed_path || validatedFile.originalPath },
+            { file_id: dbFile.id, couple_id: coupleId }
+          );
+          jobsQueued++;
+          console.log(`[ImportController] Queued screenshot_extract job ${job.id} for ${validatedFile.filename}`);
+        } catch (jobError) {
+          console.warn(`[ImportController] Failed to queue job for ${validatedFile.filename}:`, jobError);
+        }
+      }
+
+      if (jobsQueued > 0) {
+        console.log(`[ImportController] Queued ${jobsQueued} screenshot extraction jobs`);
       }
 
       // Complete session

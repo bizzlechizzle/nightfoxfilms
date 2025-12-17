@@ -25,6 +25,13 @@ export type {
   ImportProgress,
   ImportBatchResult,
   ImportResult,
+  // Screenshot and job types
+  Screenshot,
+  ScreenshotInput,
+  ExportPreset,
+  Job,
+  JobType,
+  JobProgress,
   // Equipment & inventory types
   Equipment,
   EquipmentInput,

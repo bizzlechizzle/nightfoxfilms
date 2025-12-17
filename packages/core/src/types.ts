@@ -97,6 +97,8 @@ export type MarkerType = 'select' | 'reject' | 'favorite' | 'maybe' | 'flag';
 
 export type MarkerCategory = 'ceremony' | 'reception' | 'getting_ready' | 'first_look' | 'portraits' | 'details' | 'dancing' | 'speeches' | 'cake' | 'exit' | 'other';
 
+export type FrameCategory = 'people_face' | 'people_roll' | 'broll' | 'detail';
+
 export type ReviewPlatform = 'google' | 'wedding_wire' | 'the_knot' | 'yelp' | 'facebook' | 'instagram' | 'internal' | 'other';
 
 export type ContactRole = 'planner' | 'coordinator' | 'photographer' | 'dj' | 'florist' | 'caterer' | 'officiant' | 'venue_manager' | 'assistant' | 'family' | 'friend' | 'other';
@@ -394,6 +396,79 @@ export interface Job {
   processing_time_ms: number | null;
   created_at: string;
   updated_at: string;
+}
+
+// Job types for background processing
+export type JobType =
+  | 'blake3'
+  | 'thumbnail'
+  | 'proxy'
+  | 'screenshot_extract'
+  | 'thumbnail_update'
+  | 'ai_caption';
+
+// =============================================================================
+// SCREENSHOTS (ML-extracted frame candidates)
+// =============================================================================
+
+export interface Screenshot {
+  id: number;
+  file_id: number;
+  couple_id: number | null;
+  frame_number: number;
+  timestamp_seconds: number;
+  scene_index: number;
+  preview_path: string;
+  raw_path: string | null;
+  sharpness_score: number;
+  face_count: number;
+  max_smile_score: number;
+  is_broll: number;
+  is_audio_peak: number;
+  audio_type: string | null;
+  frame_category: FrameCategory;
+  is_selected: number;
+  is_thumbnail: number;
+  faces_json: string | null;
+  crops_json: string | null;
+  tags_json: string | null;
+  ai_caption: string | null;
+  ai_hashtags: string | null;
+  ai_moment_type: string | null;
+  created_at: string;
+}
+
+export interface ScreenshotInput {
+  file_id: number;
+  couple_id?: number | null;
+  frame_number: number;
+  timestamp_seconds: number;
+  scene_index?: number;
+  preview_path: string;
+  raw_path?: string | null;
+  sharpness_score?: number;
+  face_count?: number;
+  max_smile_score?: number;
+  is_broll?: number;
+  is_audio_peak?: number;
+  audio_type?: string | null;
+  frame_category?: FrameCategory;
+  faces_json?: string | null;
+  crops_json?: string | null;
+  tags_json?: string | null;
+}
+
+export interface ExportPreset {
+  id: number;
+  name: string;
+  aspect_ratio: string;
+  max_width: number | null;
+  max_height: number | null;
+  quality: number;
+  include_watermark: number;
+  watermark_path: string | null;
+  is_default: number;
+  created_at: string;
 }
 
 // =============================================================================

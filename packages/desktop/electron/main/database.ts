@@ -278,6 +278,84 @@ CREATE INDEX IF NOT EXISTS idx_jobs_priority ON jobs(priority DESC);
 CREATE INDEX IF NOT EXISTS idx_jobs_file_id ON jobs(file_id);
 
 -- =============================================================================
+-- SCREENSHOTS TABLE
+-- Extracted frame candidates from video analysis (ML pipeline)
+-- No limit per video - captures all quality frames with variety
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS screenshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+    couple_id INTEGER REFERENCES couples(id) ON DELETE CASCADE,
+
+    -- Frame identification
+    frame_number INTEGER NOT NULL,
+    timestamp_seconds REAL NOT NULL,
+    scene_index INTEGER DEFAULT 0,
+
+    -- File paths
+    preview_path TEXT NOT NULL,          -- LUT-graded for display
+    raw_path TEXT,                        -- Original LOG for export
+
+    -- Quality metrics
+    sharpness_score REAL DEFAULT 0,
+    face_count INTEGER DEFAULT 0,
+    max_smile_score REAL DEFAULT 0,       -- Highest smile from all faces
+    is_broll INTEGER DEFAULT 0,           -- No faces = scenic shot
+
+    -- Audio sync (if available)
+    is_audio_peak INTEGER DEFAULT 0,      -- Near applause/speech moment
+    audio_type TEXT,                      -- 'speech', 'music', 'applause'
+
+    -- Selection state
+    is_selected INTEGER DEFAULT 0,        -- User marked as favorite
+    is_thumbnail INTEGER DEFAULT 0,       -- Currently used as video thumbnail
+
+    -- ML analysis data (JSON)
+    faces_json TEXT,                      -- Face detection results
+    crops_json TEXT,                      -- Smart crop coordinates for each aspect ratio
+    tags_json TEXT,                       -- RAM++ tags if available
+
+    -- AI-generated content (via LiteLLM)
+    ai_caption TEXT,                      -- Generated caption for social media
+    ai_hashtags TEXT,                     -- Suggested hashtags (JSON array)
+    ai_moment_type TEXT,                  -- 'ceremony', 'reception', 'prep', etc
+
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_screenshots_file_id ON screenshots(file_id);
+CREATE INDEX IF NOT EXISTS idx_screenshots_couple_id ON screenshots(couple_id);
+CREATE INDEX IF NOT EXISTS idx_screenshots_smile ON screenshots(max_smile_score DESC);
+CREATE INDEX IF NOT EXISTS idx_screenshots_selected ON screenshots(is_selected);
+CREATE INDEX IF NOT EXISTS idx_screenshots_thumbnail ON screenshots(is_thumbnail);
+CREATE INDEX IF NOT EXISTS idx_screenshots_scene ON screenshots(file_id, scene_index);
+
+-- =============================================================================
+-- EXPORT_PRESETS TABLE
+-- Social media export configurations
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS export_presets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    aspect_ratio TEXT NOT NULL,           -- '9:16', '1:1', '4:5', '16:9', 'original'
+    max_width INTEGER,
+    max_height INTEGER,
+    quality INTEGER DEFAULT 90,
+    include_watermark INTEGER DEFAULT 0,
+    watermark_path TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Default export presets
+INSERT OR IGNORE INTO export_presets (id, name, aspect_ratio, max_width, max_height, is_default) VALUES
+    (1, 'Instagram Story', '9:16', 1080, 1920, 0),
+    (2, 'Instagram Feed Square', '1:1', 1080, 1080, 1),
+    (3, 'Instagram Feed Portrait', '4:5', 1080, 1350, 0),
+    (4, 'Facebook/YouTube', '16:9', 1920, 1080, 0),
+    (5, 'Full Resolution', 'original', NULL, NULL, 0);
+
+-- =============================================================================
 -- VIEWS
 -- =============================================================================
 
@@ -1967,6 +2045,20 @@ function runMigrations(database: SqliteDatabase): void {
           (make = 'Apple' AND model = 'iPhone 15 Pro Max') OR
           (make = 'JVC' AND model IN ('Everio HD', 'Everio')) OR
           (make IS NULL AND model IS NULL AND medium = 'super8');
+      `,
+    },
+    // Migration 47: Add frame_category for 4-way screenshot classification
+    {
+      id: 47,
+      name: 'add_frame_category',
+      sql: `
+        -- Frame category: people_face, people_roll, broll, detail
+        -- people_face: Clear visible faces
+        -- people_roll: People without visible faces (back, hands, silhouette)
+        -- broll: Scenic shots, no people
+        -- detail: Close-up objects (rings, flowers, cake, dress)
+        ALTER TABLE screenshots ADD COLUMN frame_category TEXT DEFAULT 'broll' CHECK (frame_category IN ('people_face', 'people_roll', 'broll', 'detail'));
+        CREATE INDEX IF NOT EXISTS idx_screenshots_category ON screenshots(frame_category);
       `,
     },
   ];

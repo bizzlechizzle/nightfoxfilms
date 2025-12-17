@@ -50,6 +50,35 @@
   let thumbnails = $state<Map<number, string>>(new Map());
   let loadingThumbnails = $state(false);
 
+  // Screenshots state
+  interface ScreenshotData {
+    id: number;
+    file_id: number;
+    frame_number: number;
+    timestamp_seconds: number;
+    preview_path: string;
+    sharpness_score: number;
+    face_count: number;
+    max_smile_score: number;
+    is_broll: number;
+    is_audio_peak: number;
+    audio_type: string | null;
+    is_selected: number;
+    selection_reasons?: string[];
+  }
+  let screenshots = $state<ScreenshotData[]>([]);
+  let loadingScreenshots = $state(false);
+  let showScreenshotsTab = $state(false);
+  let screenshotFilter = $state<'all' | 'selected' | 'faces' | 'broll'>('all');
+  let selectedForExport = $state<Set<number>>(new Set());
+
+  // Screenshot images cache: screenshotId -> data URL
+  let screenshotImages = $state<Map<number, string>>(new Map());
+  let loadingScreenshotImages = $state(false);
+
+  // Derived: video files from couple's files
+  const videoFiles = $derived(couple?.files?.filter(f => f.file_type === 'video') ?? []);
+
   // Video lightbox state - includes full file data for media info display
   let lightboxFile = $state<{
     id: number;
@@ -68,6 +97,9 @@
     recorded_at: string | null;
   } | null>(null);
   let lightboxVideoUrl = $state<string | null>(null);
+
+  // Screenshot lightbox state
+  let screenshotLightbox = $state<ScreenshotData | null>(null);
 
   // Camera loan state
   let loans = $state<CameraLoanWithDetails[]>([]);
@@ -360,11 +392,148 @@
       if (couple?.files.length) {
         loadThumbnails(couple.files);
       }
+      // Load screenshots
+      await loadScreenshots();
     } catch (e) {
       console.error('Failed to load couple:', e);
     } finally {
       loading = false;
     }
+  }
+
+  async function loadScreenshots() {
+    loadingScreenshots = true;
+    try {
+      screenshots = await window.electronAPI.screenshots.findByCouple(coupleId);
+      // Load screenshot images after fetching metadata
+      if (screenshots.length > 0) {
+        loadScreenshotImages(screenshots);
+      }
+    } catch (e) {
+      console.error('Failed to load screenshots:', e);
+      screenshots = [];
+    } finally {
+      loadingScreenshots = false;
+    }
+  }
+
+  async function loadScreenshotImages(screenshotList: ScreenshotData[]) {
+    loadingScreenshotImages = true;
+    const batchSize = 8; // Load 8 at a time
+    const newImages = new Map(screenshotImages);
+
+    for (let i = 0; i < screenshotList.length; i += batchSize) {
+      const batch = screenshotList.slice(i, i + batchSize);
+      const results = await Promise.all(
+        batch.map(async (screenshot) => {
+          // Skip if already cached
+          if (newImages.has(screenshot.id)) {
+            return { id: screenshot.id, image: newImages.get(screenshot.id) || null };
+          }
+          try {
+            const image = await window.electronAPI.screenshots.getImage(screenshot.id);
+            return { id: screenshot.id, image };
+          } catch {
+            return { id: screenshot.id, image: null };
+          }
+        })
+      );
+
+      for (const { id, image } of results) {
+        if (image) {
+          newImages.set(id, image);
+        }
+      }
+      // Update state after each batch for progressive loading
+      screenshotImages = new Map(newImages);
+    }
+
+    loadingScreenshotImages = false;
+  }
+
+  // Filtered screenshots based on current filter
+  const filteredScreenshots = $derived.by(() => {
+    switch (screenshotFilter) {
+      case 'selected':
+        return screenshots.filter(s => s.is_selected === 1);
+      case 'faces':
+        return screenshots.filter(s => s.face_count > 0);
+      case 'broll':
+        return screenshots.filter(s => s.is_broll === 1);
+      default:
+        return screenshots;
+    }
+  });
+
+  // Screenshot stats
+  const screenshotStats = $derived.by(() => {
+    return {
+      total: screenshots.length,
+      selected: screenshots.filter(s => s.is_selected === 1).length,
+      withFaces: screenshots.filter(s => s.face_count > 0).length,
+      broll: screenshots.filter(s => s.is_broll === 1).length,
+    };
+  });
+
+  async function toggleScreenshotSelection(id: number) {
+    const screenshot = screenshots.find(s => s.id === id);
+    if (!screenshot) return;
+
+    const newSelected = screenshot.is_selected === 0;
+    await window.electronAPI.screenshots.setSelected(id, newSelected);
+
+    // Update local state
+    screenshots = screenshots.map(s =>
+      s.id === id ? { ...s, is_selected: newSelected ? 1 : 0 } : s
+    );
+  }
+
+  function toggleExportSelection(id: number) {
+    const newSet = new Set(selectedForExport);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    selectedForExport = newSet;
+  }
+
+  function selectAllForExport() {
+    selectedForExport = new Set(filteredScreenshots.map(s => s.id));
+  }
+
+  function clearExportSelection() {
+    selectedForExport = new Set();
+  }
+
+  let extractingScreenshots = $state(false);
+
+  async function queueScreenshotExtraction(fileId: number) {
+    try {
+      const result = await window.electronAPI.jobs.queueScreenshots(fileId);
+      if (result.success) {
+        console.log('Queued screenshot extraction job:', result.jobId);
+      }
+      return result.success;
+    } catch (e) {
+      console.error('Failed to queue screenshot extraction:', e);
+      return false;
+    }
+  }
+
+  async function extractAllScreenshots() {
+    if (extractingScreenshots || videoFiles.length === 0) return;
+
+    extractingScreenshots = true;
+    let queued = 0;
+
+    for (const file of videoFiles) {
+      const success = await queueScreenshotExtraction(file.id);
+      if (success) queued++;
+    }
+
+    extractingScreenshots = false;
+    console.log(`Queued screenshot extraction for ${queued}/${videoFiles.length} files`);
   }
 
   async function loadThumbnails(files: { id: number; blake3: string }[]) {
@@ -474,6 +643,49 @@
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       navigateLightbox('next');
+    }
+  }
+
+  // Screenshot lightbox functions
+  function openScreenshotLightbox(screenshot: ScreenshotData) {
+    screenshotLightbox = screenshot;
+  }
+
+  function closeScreenshotLightbox() {
+    screenshotLightbox = null;
+  }
+
+  function getScreenshotLightboxIndex(): number {
+    if (!screenshotLightbox) return -1;
+    return filteredScreenshots.findIndex(s => s.id === screenshotLightbox!.id);
+  }
+
+  function navigateScreenshotLightbox(direction: 'prev' | 'next') {
+    const currentIndex = getScreenshotLightboxIndex();
+    if (currentIndex === -1 || filteredScreenshots.length === 0) return;
+
+    let newIndex: number;
+    if (direction === 'prev') {
+      newIndex = currentIndex > 0 ? currentIndex - 1 : filteredScreenshots.length - 1;
+    } else {
+      newIndex = currentIndex < filteredScreenshots.length - 1 ? currentIndex + 1 : 0;
+    }
+
+    const newScreenshot = filteredScreenshots[newIndex];
+    if (newScreenshot) {
+      screenshotLightbox = newScreenshot;
+    }
+  }
+
+  function handleScreenshotLightboxKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      closeScreenshotLightbox();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      navigateScreenshotLightbox('prev');
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      navigateScreenshotLightbox('next');
     }
   }
 
@@ -1109,6 +1321,120 @@
       {/each}
     {/if}
 
+    <!-- Screenshots Section -->
+    {#if screenshots.length > 0 || showScreenshotsTab}
+      <section class="card screenshots-card">
+        <div class="card-header-row">
+          <h2 class="card-label">Screenshots ({screenshotStats.total})</h2>
+          <button
+            class="btn btn-small"
+            onclick={extractAllScreenshots}
+            disabled={extractingScreenshots || videoFiles.length === 0}
+          >
+            {extractingScreenshots ? 'Queuing...' : 'Extract All'}
+          </button>
+          <div class="screenshot-filters">
+            <button
+              class="filter-btn"
+              class:active={screenshotFilter === 'all'}
+              onclick={() => screenshotFilter = 'all'}
+            >
+              All ({screenshotStats.total})
+            </button>
+            <button
+              class="filter-btn"
+              class:active={screenshotFilter === 'selected'}
+              onclick={() => screenshotFilter = 'selected'}
+            >
+              Selected ({screenshotStats.selected})
+            </button>
+            <button
+              class="filter-btn"
+              class:active={screenshotFilter === 'faces'}
+              onclick={() => screenshotFilter = 'faces'}
+            >
+              Faces ({screenshotStats.withFaces})
+            </button>
+            <button
+              class="filter-btn"
+              class:active={screenshotFilter === 'broll'}
+              onclick={() => screenshotFilter = 'broll'}
+            >
+              B-Roll ({screenshotStats.broll})
+            </button>
+          </div>
+        </div>
+
+        {#if loadingScreenshots}
+          <p class="loading-text">Loading screenshots...</p>
+        {:else if filteredScreenshots.length === 0}
+          <p class="empty-text">No screenshots match the current filter</p>
+        {:else}
+          <div class="screenshots-grid">
+            {#each filteredScreenshots as screenshot (screenshot.id)}
+              <button
+                class="screenshot-item"
+                class:selected={screenshot.is_selected === 1}
+                onclick={() => openScreenshotLightbox(screenshot)}
+              >
+                <div class="screenshot-thumb">
+                  {#if screenshotImages.get(screenshot.id)}
+                    <img
+                      src={screenshotImages.get(screenshot.id)}
+                      alt="Frame {screenshot.frame_number}"
+                    />
+                  {:else}
+                    <div class="screenshot-placeholder">Loading...</div>
+                  {/if}
+                  {#if screenshot.face_count > 0}
+                    <span class="screenshot-badge faces">{screenshot.face_count} face{screenshot.face_count > 1 ? 's' : ''}</span>
+                  {/if}
+                  {#if screenshot.is_broll === 1}
+                    <span class="screenshot-badge broll">B-Roll</span>
+                  {/if}
+                  {#if screenshot.is_audio_peak === 1}
+                    <span class="screenshot-badge audio">{screenshot.audio_type || 'Peak'}</span>
+                  {/if}
+                  {#if screenshot.is_selected === 1}
+                    <span class="screenshot-selected-icon">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                      </svg>
+                    </span>
+                  {/if}
+                </div>
+                <div class="screenshot-info">
+                  <span class="screenshot-time">{formatDuration(screenshot.timestamp_seconds)}</span>
+                  {#if screenshot.max_smile_score > 0.5}
+                    <span class="screenshot-smile" title="High smile score">:)</span>
+                  {/if}
+                </div>
+              </button>
+            {/each}
+          </div>
+        {/if}
+
+        {#if screenshotStats.selected > 0}
+          <div class="screenshot-actions">
+            <span class="action-label">{screenshotStats.selected} selected</span>
+            <button class="btn btn-small">Export Selected</button>
+          </div>
+        {/if}
+      </section>
+    {:else if videoFiles.length > 0}
+      <section class="card screenshots-empty-card">
+        <h2 class="card-label">Screenshots</h2>
+        <p class="empty-text">No screenshots extracted yet. Click below to extract frames from all video files.</p>
+        <button
+          class="btn btn-small"
+          onclick={extractAllScreenshots}
+          disabled={extractingScreenshots}
+        >
+          {extractingScreenshots ? 'Queuing...' : 'Extract Screenshots'}
+        </button>
+      </section>
+    {/if}
+
     <!-- Contact Section: Partner 1 | Partner 2 -->
     {#if couple.partner_1_name || couple.phone || couple.partner_2_name || couple.phone_2}
       <div class="card-row contact-row">
@@ -1539,6 +1865,130 @@
         class="lightbox-nav lightbox-nav-next"
         onclick={(e) => { e.stopPropagation(); navigateLightbox('next'); }}
         aria-label="Next video"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    {/if}
+  </div>
+{/if}
+
+<!-- Screenshot Lightbox -->
+{#if screenshotLightbox}
+  {@const currentIndex = getScreenshotLightboxIndex()}
+  <div
+    class="lightbox-overlay"
+    onclick={closeScreenshotLightbox}
+    onkeydown={handleScreenshotLightboxKeydown}
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+  >
+    <!-- Navigation: Previous -->
+    {#if filteredScreenshots.length > 1}
+      <button
+        class="lightbox-nav lightbox-nav-prev"
+        onclick={(e) => { e.stopPropagation(); navigateScreenshotLightbox('prev'); }}
+        aria-label="Previous screenshot"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+      </button>
+    {/if}
+
+    <div class="lightbox-content screenshot-lightbox-content" onclick={(e) => e.stopPropagation()}>
+      <header class="lightbox-header">
+        <span class="lightbox-title">
+          Frame {screenshotLightbox.frame_number}
+          {#if filteredScreenshots.length > 1}
+            <span class="lightbox-counter">{currentIndex + 1} / {filteredScreenshots.length}</span>
+          {/if}
+        </span>
+        <button class="lightbox-close" onclick={closeScreenshotLightbox} aria-label="Close screenshot">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+
+      <div class="lightbox-body screenshot-lightbox-body">
+        <div class="screenshot-lightbox-image">
+          {#if screenshotImages.get(screenshotLightbox.id)}
+            <img
+              src={screenshotImages.get(screenshotLightbox.id)}
+              alt="Frame {screenshotLightbox.frame_number}"
+            />
+          {:else}
+            <div class="lightbox-loading">
+              <span>Loading...</span>
+            </div>
+          {/if}
+        </div>
+
+        <aside class="lightbox-info">
+          <div class="screenshot-lightbox-actions">
+            <button
+              class="btn"
+              class:btn-selected={screenshotLightbox.is_selected === 1}
+              onclick={() => toggleScreenshotSelection(screenshotLightbox!.id)}
+            >
+              {screenshotLightbox.is_selected === 1 ? 'Selected' : 'Select'}
+            </button>
+          </div>
+
+          <dl class="info-grid">
+            <div class="info-row">
+              <dt>Timestamp</dt>
+              <dd>{formatDuration(screenshotLightbox.timestamp_seconds)}</dd>
+            </div>
+            <div class="info-row">
+              <dt>Frame</dt>
+              <dd>{screenshotLightbox.frame_number}</dd>
+            </div>
+            {#if screenshotLightbox.sharpness_score > 0}
+              <div class="info-row">
+                <dt>Sharpness</dt>
+                <dd>{screenshotLightbox.sharpness_score.toFixed(1)}</dd>
+              </div>
+            {/if}
+            {#if screenshotLightbox.face_count > 0}
+              <div class="info-row">
+                <dt>Faces</dt>
+                <dd>{screenshotLightbox.face_count}</dd>
+              </div>
+            {/if}
+            {#if screenshotLightbox.max_smile_score > 0}
+              <div class="info-row">
+                <dt>Smile Score</dt>
+                <dd>{(screenshotLightbox.max_smile_score * 100).toFixed(0)}%</dd>
+              </div>
+            {/if}
+            {#if screenshotLightbox.is_broll === 1}
+              <div class="info-row">
+                <dt>Type</dt>
+                <dd>B-Roll</dd>
+              </div>
+            {/if}
+            {#if screenshotLightbox.is_audio_peak === 1}
+              <div class="info-row">
+                <dt>Audio</dt>
+                <dd>{screenshotLightbox.audio_type || 'Peak'}</dd>
+              </div>
+            {/if}
+          </dl>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Navigation: Next -->
+    {#if filteredScreenshots.length > 1}
+      <button
+        class="lightbox-nav lightbox-nav-next"
+        onclick={(e) => { e.stopPropagation(); navigateScreenshotLightbox('next'); }}
+        aria-label="Next screenshot"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"></polyline>
@@ -2487,6 +2937,73 @@
     }
   }
 
+  /* Screenshot Lightbox */
+  .screenshot-lightbox-content {
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+
+  .screenshot-lightbox-body {
+    display: flex;
+    gap: 0;
+    height: calc(90vh - 60px);
+  }
+
+  .screenshot-lightbox-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    min-width: 0;
+  }
+
+  .screenshot-lightbox-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  .screenshot-lightbox-actions {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+  }
+
+  .screenshot-lightbox-actions .btn {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: #333;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  .screenshot-lightbox-actions .btn:hover {
+    background: #444;
+  }
+
+  .screenshot-lightbox-actions .btn-selected {
+    background: var(--color-accent, #2563eb);
+  }
+
+  .screenshot-lightbox-actions .btn-selected:hover {
+    background: var(--color-accent-hover, #1d4ed8);
+  }
+
+  @media (max-width: 768px) {
+    .screenshot-lightbox-body {
+      flex-direction: column;
+      height: auto;
+    }
+
+    .screenshot-lightbox-image {
+      height: 50vh;
+    }
+  }
+
   /* Footage item as button */
   button.footage-item {
     all: unset;
@@ -2507,6 +3024,169 @@
     border-radius: 4px;
   }
 
+  /* Screenshots Section */
+  .screenshots-card,
+  .screenshots-empty-card {
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+
+  .screenshot-filters {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .filter-btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover {
+    border-color: var(--color-text-muted);
+  }
+
+  .filter-btn.active {
+    background: var(--color-text);
+    color: var(--color-surface);
+    border-color: var(--color-text);
+  }
+
+  .screenshots-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .screenshot-item {
+    all: unset;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    border-radius: 4px;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 2px solid transparent;
+  }
+
+  .screenshot-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .screenshot-item.selected {
+    border-color: #047857;
+  }
+
+  .screenshot-thumb {
+    position: relative;
+    aspect-ratio: 16/9;
+    background: var(--color-bg-alt, #f0f0f0);
+  }
+
+  .screenshot-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .screenshot-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted, #999);
+    font-size: 0.75rem;
+  }
+
+  .screenshot-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    padding: 2px 6px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    border-radius: 2px;
+  }
+
+  .screenshot-badge.faces {
+    background: rgba(79, 70, 229, 0.9);
+    color: white;
+  }
+
+  .screenshot-badge.broll {
+    background: rgba(217, 119, 6, 0.9);
+    color: white;
+    left: auto;
+    right: 4px;
+  }
+
+  .screenshot-badge.audio {
+    background: rgba(16, 185, 129, 0.9);
+    color: white;
+    top: auto;
+    bottom: 4px;
+  }
+
+  .screenshot-selected-icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: #047857;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .screenshot-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.375rem 0.5rem;
+    background: var(--color-surface);
+  }
+
+  .screenshot-time {
+    font-size: 0.6875rem;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .screenshot-smile {
+    font-size: 0.75rem;
+  }
+
+  .screenshot-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .action-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .loading-text {
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: 2rem 0;
+  }
+
   /* Responsive */
   @media (max-width: 900px) {
     .top-row, .middle-row, .contact-row {
@@ -2524,6 +3204,14 @@
     .lightbox-content {
       width: 95%;
       max-height: 80vh;
+    }
+
+    .screenshot-filters {
+      flex-wrap: wrap;
+    }
+
+    .screenshots-grid {
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
   }
 </style>

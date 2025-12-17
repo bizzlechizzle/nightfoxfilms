@@ -240,12 +240,27 @@ const api = {
   // Jobs queue
   jobs: {
     status: () => invoke("jobs:status")(),
+    getStats: () => invoke("jobs:getStats")(),
+    findPending: (limit) => invoke("jobs:findPending")(limit),
+    findByFile: (fileId) => invoke("jobs:findByFile")(fileId),
+    findDead: () => invoke("jobs:findDead")(),
+    retry: (id) => invoke("jobs:retry")(id),
     cancel: (jobId) => invoke("jobs:cancel")(jobId),
+    queueScreenshots: (fileId) => invoke("jobs:queueScreenshots")(fileId),
     onProgress: (callback) => {
       const listener = (_event, progress) => callback(progress);
       ipcRenderer.on("jobs:progress", listener);
       return () => ipcRenderer.removeListener("jobs:progress", listener);
     },
+  },
+
+  // Screenshots (extracted frames from videos)
+  screenshots: {
+    findByFile: (fileId) => invoke("screenshots:findByFile")(fileId),
+    findByCouple: (coupleId) => invoke("screenshots:findByCouple")(coupleId),
+    setSelected: (id, selected) => invoke("screenshots:setSelected")(id, selected),
+    setAsThumbnail: (fileId, screenshotId) => invoke("screenshots:setAsThumbnail")(fileId, screenshotId),
+    getImage: (screenshotId) => invoke("screenshots:getImage")(screenshotId),
   },
 
   // Camera Signatures Database
@@ -387,6 +402,26 @@ const api = {
     getTotalCartridgesByCouple: (coupleId) => invoke("filmUsage:getTotalCartridgesByCouple")(coupleId),
     getTotalCostByCouple: (coupleId) => invoke("filmUsage:getTotalCostByCouple")(coupleId),
     getUsageByFilmStock: () => invoke("filmUsage:getUsageByFilmStock")(),
+  },
+
+  // Screenshot Tool (ML Pipeline for video screenshot extraction)
+  screenshotTool: {
+    start: () => invokeLong("screenshotTool:start")(),
+    stop: () => invoke("screenshotTool:stop")(),
+    health: () => invoke("screenshotTool:health")(),
+    progress: () => invoke("screenshotTool:progress")(),
+    analyze: (input) => invokeLong("screenshotTool:analyze")(input),
+    detectScenes: (input) => invokeLong("screenshotTool:detectScenes")(input),
+    detectFaces: (input) => invoke("screenshotTool:detectFaces")(input),
+    tagImage: (input) => invoke("screenshotTool:tagImage")(input),
+    generateCrops: (input) => invoke("screenshotTool:generateCrops")(input),
+    qualityScore: (input) => invoke("screenshotTool:qualityScore")(input),
+    clusterFaces: (input) => invoke("screenshotTool:clusterFaces")(input),
+    onAnalysisComplete: (callback) => {
+      const listener = (_event, result) => callback(result);
+      ipcRenderer.on("screenshotTool:analysisComplete", listener);
+      return () => ipcRenderer.removeListener("screenshotTool:analysisComplete", listener);
+    },
   },
 };
 

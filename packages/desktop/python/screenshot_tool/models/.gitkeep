@@ -1,0 +1,8 @@
+# This directory contains ML model weights.
+# Models are downloaded on first use or can be placed here manually.
+#
+# Required models:
+# - ram_plus_swin_large_14m.pth (RAM++ tagging model)
+#
+# Download from:
+# https://huggingface.co/xinyu1205/recognize-anything-plus-model/resolve/main/ram_plus_swin_large_14m.pth

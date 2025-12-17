@@ -56,7 +56,36 @@ import type {
   // Film usage types
   FilmUsage,
   FilmUsageInput,
+  // Screenshot types
+  Screenshot,
+  ExportPreset,
+  Job,
+  JobProgress,
 } from './types';
+
+// Screenshot filter interface
+export interface ScreenshotFilters {
+  file_id?: number;
+  couple_id?: number;
+  is_selected?: boolean;
+  is_broll?: boolean;
+  is_audio_peak?: boolean;
+  min_face_count?: number;
+  min_smile_score?: number;
+  scene_index?: number;
+  limit?: number;
+  offset?: number;
+}
+
+// Screenshot stats interface
+export interface ScreenshotStats {
+  total: number;
+  selected: number;
+  withFaces: number;
+  broll: number;
+  audioPeaks: number;
+  byScene: Record<number, number>;
+}
 
 // Get the Electron API from the window object
 declare global {
@@ -133,6 +162,33 @@ interface ElectronAPI {
     getProxyByHash: (hash: string, coupleId: number) => Promise<string | null>;
     regenerateThumbnails: (coupleId: number) => Promise<{ success: boolean; regenerated: number; total?: number; error?: string; errors?: string[] }>;
   };
+  screenshots: {
+    findByFile: (fileId: number) => Promise<Screenshot[]>;
+    findByCouple: (coupleId: number) => Promise<Screenshot[]>;
+    findSelected: (coupleId: number) => Promise<Screenshot[]>;
+    findAll: (filters?: ScreenshotFilters) => Promise<Screenshot[]>;
+    getStats: (coupleId: number) => Promise<ScreenshotStats>;
+    setSelected: (id: number, selected: boolean) => Promise<boolean>;
+    setAsThumbnail: (fileId: number, screenshotId: number) => Promise<boolean>;
+    autoSetThumbnail: (fileId: number) => Promise<Screenshot | null>;
+    delete: (id: number) => Promise<boolean>;
+    export: (screenshotId: number, presetId: number, outputPath: string) => Promise<{ success: boolean; outputPath?: string; error?: string }>;
+    getImage: (screenshotId: number) => Promise<string | null>;
+  };
+  jobs: {
+    getStats: () => Promise<JobStats>;
+    findPending: (limit?: number) => Promise<Job[]>;
+    findByFile: (fileId: number) => Promise<Job[]>;
+    findDead: () => Promise<Job[]>;
+    retry: (id: number) => Promise<Job | null>;
+    cancel: (id: number) => Promise<boolean>;
+    queueScreenshots: (fileId: number) => Promise<{ success: boolean; jobId?: number; error?: string }>;
+    onProgress: (callback: (progress: JobProgress) => void) => () => void;
+  };
+  exportPresets: {
+    findAll: () => Promise<ExportPreset[]>;
+    findById: (id: number) => Promise<ExportPreset | null>;
+  };
   import: {
     files: (filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string; footageTypeOverride?: 'wedding' | 'date_night' | 'rehearsal' | 'other' }) => Promise<ImportBatchResult>;
     directory: (dirPath: string, options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string; footageTypeOverride?: 'wedding' | 'date_night' | 'rehearsal' | 'other' }) => Promise<ImportBatchResult>;
@@ -171,11 +227,6 @@ interface ElectronAPI {
     captionAllScenes: (input: { fileId: number; model?: string }) => Promise<{ success: boolean; results?: AISceneCaptionResult[]; error?: string }>;
     detectMoment: (input: { fileId: number; timeSeconds: number; model?: string }) => Promise<WeddingMomentResult>;
     onCaptionProgress: (callback: (progress: AICaptionProgress) => void) => () => void;
-  };
-  jobs: {
-    status: () => Promise<JobStats>;
-    cancel: (jobId: number) => Promise<boolean>;
-    onProgress: (callback: (progress: unknown) => void) => () => void;
   };
   shell: {
     openExternal: (url: string) => Promise<void>;
@@ -335,6 +386,20 @@ interface ElectronAPI {
     getTotalCostByCouple: (coupleId: number) => Promise<number>;
     getUsageByFilmStock: () => Promise<Array<{ film_stock_id: number; film_stock_name: string; total_cartridges: number; total_cost: number }>>;
   };
+  screenshotTool: {
+    start: () => Promise<ScreenshotToolResult>;
+    stop: () => Promise<ScreenshotToolResult>;
+    health: () => Promise<ScreenshotToolHealthResult>;
+    progress: () => Promise<ScreenshotToolProgress>;
+    analyze: (input: ScreenshotToolAnalyzeInput) => Promise<ScreenshotToolAnalyzeResponse>;
+    detectScenes: (input: { videoPath: string; threshold?: number }) => Promise<ScreenshotToolScenesResponse>;
+    detectFaces: (input: { imagePath: string }) => Promise<ScreenshotToolFacesResponse>;
+    tagImage: (input: { imagePath: string }) => Promise<ScreenshotToolTagsResponse>;
+    generateCrops: (input: { imagePath: string; faces?: FaceData[] }) => Promise<ScreenshotToolCropsResponse>;
+    qualityScore: (input: { imagePath: string }) => Promise<ScreenshotToolQualityResponse>;
+    clusterFaces: (input: { embeddings: number[][]; eps?: number; minSamples?: number }) => Promise<ScreenshotToolClusterResponse>;
+    onAnalysisComplete: (callback: (result: ScreenshotToolAnalyzeResult) => void) => () => void;
+  };
 }
 
 // USB Device types
@@ -398,6 +463,131 @@ export interface FilmUsageWithDetails extends FilmUsage {
   couple_name: string | null;
   lab_name: string | null;
   equipment_name: string | null;
+}
+
+// Screenshot Tool types (ML Pipeline)
+export interface ScreenshotToolResult {
+  success: boolean;
+  error?: string;
+}
+
+export interface ScreenshotToolHealthResult {
+  healthy: boolean;
+  status?: string;
+  models_loaded?: boolean;
+  device?: string;
+  current_job?: string | null;
+  job_progress?: number;
+  job_message?: string;
+  error?: string;
+}
+
+export interface ScreenshotToolProgress {
+  job_id: string | null;
+  progress: number;
+  message: string;
+  complete: boolean;
+  error?: string;
+}
+
+export interface ScreenshotToolAnalyzeInput {
+  videoPath: string;
+  outputDir: string;
+  options?: {
+    sharpness_threshold?: number;
+    cluster_eps?: number;
+    cluster_min_samples?: number;
+    ram_model_path?: string;
+  };
+}
+
+export interface CropCoordinates {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  width: number;
+  height: number;
+}
+
+export interface FaceData {
+  bbox: number[];
+  confidence: number;
+  landmarks?: number[][];
+  embedding?: number[];
+  age?: number;
+  gender?: string;
+  pose?: number[];
+  smile_score?: number;
+}
+
+export interface FrameCandidate {
+  frame_number: number;
+  timestamp: number;
+  image_path: string;
+  sharpness_score: number;
+  nima_score: number;
+  faces: FaceData[];
+  tags: string[];
+  caption?: string;
+  crops: Record<string, CropCoordinates>;
+  aesthetic_score: number;
+  is_broll: boolean;
+  scene_index: number;
+  cluster_labels: Record<string, number>;
+}
+
+export interface ScreenshotToolAnalyzeResult {
+  success: boolean;
+  job_id?: string;
+  candidates: FrameCandidate[];
+  errors: string[];
+  total_scenes: number;
+  total_candidates: number;
+}
+
+export interface ScreenshotToolAnalyzeResponse {
+  success: boolean;
+  result?: ScreenshotToolAnalyzeResult;
+  error?: string;
+}
+
+export interface ScreenshotToolScenesResponse {
+  success: boolean;
+  scenes?: Array<{ start: number; end: number }>;
+  error?: string;
+}
+
+export interface ScreenshotToolFacesResponse {
+  success: boolean;
+  faces?: FaceData[];
+  error?: string;
+}
+
+export interface ScreenshotToolTagsResponse {
+  success: boolean;
+  tags?: string[];
+  error?: string;
+}
+
+export interface ScreenshotToolCropsResponse {
+  success: boolean;
+  crops?: Record<string, CropCoordinates>;
+  error?: string;
+}
+
+export interface ScreenshotToolQualityResponse {
+  success: boolean;
+  sharpness?: number;
+  is_sharp?: boolean;
+  error?: string;
+}
+
+export interface ScreenshotToolClusterResponse {
+  success: boolean;
+  labels?: number[];
+  cluster_info?: Record<string, { count: number; indices: number[] }>;
+  error?: string;
 }
 
 /**

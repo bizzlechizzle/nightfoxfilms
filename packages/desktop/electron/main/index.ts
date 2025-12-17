@@ -69,6 +69,8 @@ import {
   syncCoupleDocuments,
   // Thumbnails
   generateAllThumbnails,
+  // Screenshot Tool (ML Pipeline)
+  screenshotToolService,
   type LiteLLMSettings,
 } from '../services';
 
@@ -992,6 +994,200 @@ ipcMain.handle('files:regenerateThumbnails', async (_, coupleId: number) => {
 });
 
 // =============================================================================
+// IPC HANDLERS - Screenshots
+// =============================================================================
+
+import { screenshotsRepository } from '../repositories/screenshots-repository';
+import type { ScreenshotFilters } from '../repositories/screenshots-repository';
+
+ipcMain.handle('screenshots:findByFile', async (_, fileId: number) => {
+  return screenshotsRepository.findByFile(fileId);
+});
+
+ipcMain.handle('screenshots:findByCouple', async (_, coupleId: number) => {
+  return screenshotsRepository.findByCouple(coupleId);
+});
+
+ipcMain.handle('screenshots:findSelected', async (_, coupleId: number) => {
+  return screenshotsRepository.findSelected(coupleId);
+});
+
+ipcMain.handle('screenshots:findAll', async (_, filters?: ScreenshotFilters) => {
+  return screenshotsRepository.findAll(filters);
+});
+
+ipcMain.handle('screenshots:getStats', async (_, coupleId: number) => {
+  return screenshotsRepository.getStats(coupleId);
+});
+
+ipcMain.handle('screenshots:setSelected', async (_, id: number, selected: boolean) => {
+  return screenshotsRepository.setSelected(id, selected);
+});
+
+ipcMain.handle('screenshots:setAsThumbnail', async (_, fileId: number, screenshotId: number) => {
+  return screenshotsRepository.setAsThumbnail(fileId, screenshotId);
+});
+
+ipcMain.handle('screenshots:autoSetThumbnail', async (_, fileId: number) => {
+  return screenshotsRepository.autoSetThumbnail(fileId);
+});
+
+ipcMain.handle('screenshots:delete', async (_, id: number) => {
+  return screenshotsRepository.delete(id);
+});
+
+ipcMain.handle('screenshots:getImage', async (_, screenshotId: number) => {
+  try {
+    const screenshot = screenshotsRepository.findById(screenshotId);
+    if (!screenshot || !screenshot.preview_path) {
+      return null;
+    }
+
+    // Check if file exists
+    if (!fs.existsSync(screenshot.preview_path)) {
+      console.log('[screenshots:getImage] File not found:', screenshot.preview_path);
+      return null;
+    }
+
+    // Read and return as base64 data URL
+    const buffer = fs.readFileSync(screenshot.preview_path);
+    const base64 = buffer.toString('base64');
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    console.error('[screenshots:getImage] Error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('screenshots:export', async (_, screenshotId: number, presetId: number, outputPath: string) => {
+  try {
+    const screenshot = screenshotsRepository.findById(screenshotId);
+    if (!screenshot) {
+      return { success: false, error: 'Screenshot not found' };
+    }
+
+    // Use raw_path for export if available, otherwise preview_path
+    const sourcePath = screenshot.raw_path || screenshot.preview_path;
+    if (!fs.existsSync(sourcePath)) {
+      return { success: false, error: 'Source image not found' };
+    }
+
+    // Get export preset from database
+    const db = require('./database').getDatabase();
+    const preset = db.prepare('SELECT * FROM export_presets WHERE id = ?').get(presetId);
+    if (!preset) {
+      return { success: false, error: 'Export preset not found' };
+    }
+
+    // Get crop coordinates if preset needs cropping
+    const crops = screenshot.crops_json ? JSON.parse(screenshot.crops_json) : {};
+    const aspectKey = preset.aspect_ratio.replace(':', ':'); // e.g., '9:16', '1:1', '16:9'
+    const crop = crops[aspectKey];
+
+    // Build ffmpeg command for export
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+
+    let filterChain = '';
+
+    // Apply crop if needed and preset isn't original
+    if (crop && preset.aspect_ratio !== 'original') {
+      filterChain = `crop=${crop.width}:${crop.height}:${crop.x1}:${crop.y1}`;
+    }
+
+    // Apply scale if max dimensions specified
+    if (preset.max_width || preset.max_height) {
+      const scaleFilter = preset.max_width && preset.max_height
+        ? `scale='min(${preset.max_width},iw)':'min(${preset.max_height},ih)':force_original_aspect_ratio=decrease`
+        : preset.max_width
+          ? `scale='min(${preset.max_width},iw)':-1`
+          : `scale=-1:'min(${preset.max_height},ih)'`;
+
+      filterChain = filterChain ? `${filterChain},${scaleFilter}` : scaleFilter;
+    }
+
+    // Build ffmpeg command
+    const quality = preset.quality || 90;
+    let cmd = `ffmpeg -y -i "${sourcePath}"`;
+    if (filterChain) {
+      cmd += ` -vf "${filterChain}"`;
+    }
+    cmd += ` -q:v ${Math.floor((100 - quality) / 5 + 1)} "${outputPath}"`;
+
+    await execAsync(cmd);
+
+    return {
+      success: true,
+      outputPath,
+      width: crop?.width || preset.max_width,
+      height: crop?.height || preset.max_height,
+    };
+  } catch (error) {
+    console.error('[screenshots:export] Error:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+// =============================================================================
+// IPC HANDLERS - Jobs
+// =============================================================================
+
+ipcMain.handle('jobs:getStats', async () => {
+  return jobsRepository.getStats();
+});
+
+ipcMain.handle('jobs:findPending', async (_, limit?: number) => {
+  return jobsRepository.findPending(limit);
+});
+
+ipcMain.handle('jobs:findByFile', async (_, fileId: number) => {
+  return jobsRepository.findByFile(fileId);
+});
+
+ipcMain.handle('jobs:findDead', async () => {
+  return jobsRepository.findDead();
+});
+
+ipcMain.handle('jobs:retry', async (_, id: number) => {
+  return jobsRepository.retry(id);
+});
+
+ipcMain.handle('jobs:cancel', async (_, id: number) => {
+  return jobsRepository.cancel(id);
+});
+
+ipcMain.handle('jobs:queueScreenshots', async (_, fileId: number) => {
+  const file = filesRepository.findById(fileId);
+  if (!file) {
+    return { success: false, error: 'File not found' };
+  }
+
+  const { JobWorker } = await import('../services/job-worker');
+  const job = JobWorker.createJob(
+    'screenshot_extract',
+    { file_path: file.managed_path || file.original_path },
+    { file_id: file.id, couple_id: file.couple_id }
+  );
+
+  return { success: true, jobId: job.id };
+});
+
+// =============================================================================
+// IPC HANDLERS - Export Presets
+// =============================================================================
+
+ipcMain.handle('exportPresets:findAll', async () => {
+  const db = require('./database').getDatabase();
+  return db.prepare('SELECT * FROM export_presets ORDER BY id').all();
+});
+
+ipcMain.handle('exportPresets:findById', async (_, id: number) => {
+  const db = require('./database').getDatabase();
+  return db.prepare('SELECT * FROM export_presets WHERE id = ?').get(id);
+});
+
+// =============================================================================
 // IPC HANDLERS - Scenes
 // =============================================================================
 
@@ -1485,10 +1681,6 @@ ipcMain.handle('jobs:status', async () => {
   return jobsRepository.getStats();
 });
 
-ipcMain.handle('jobs:cancel', async (_, jobId: number) => {
-  return jobsRepository.cancel(jobId);
-});
-
 // =============================================================================
 // IPC HANDLERS - Camera Signatures Database
 // =============================================================================
@@ -1767,6 +1959,219 @@ ipcMain.handle('cameraRegistry:findForMountPoint', async (_, mountPoint: string)
 });
 
 // =============================================================================
+// IPC HANDLERS - Screenshot Tool (ML Pipeline)
+// =============================================================================
+
+ipcMain.handle('screenshotTool:start', async () => {
+  try {
+    await screenshotToolService.start();
+    return { success: true };
+  } catch (error) {
+    console.error('[ScreenshotTool] Failed to start:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:stop', async () => {
+  try {
+    screenshotToolService.stop();
+    return { success: true };
+  } catch (error) {
+    console.error('[ScreenshotTool] Failed to stop:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:health', async () => {
+  try {
+    const health = await screenshotToolService.healthCheck();
+    return { healthy: !!health, ...health };
+  } catch (error) {
+    return { healthy: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:progress', async () => {
+  try {
+    return await screenshotToolService.getProgress();
+  } catch (error) {
+    return { progress: 0, message: '', complete: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:analyze', async (_, input: {
+  videoPath: string;
+  outputDir: string;
+  options?: {
+    sharpness_threshold?: number;
+    cluster_eps?: number;
+    cluster_min_samples?: number;
+    ram_model_path?: string;
+    lut_path?: string;
+  };
+}) => {
+  try {
+    // Validate paths
+    if (!fs.existsSync(input.videoPath)) {
+      return { success: false, error: `Video file not found: ${input.videoPath}` };
+    }
+
+    // Create output directory if needed
+    if (!fs.existsSync(input.outputDir)) {
+      fs.mkdirSync(input.outputDir, { recursive: true });
+    }
+
+    // Build options with LUT from camera (via database lookup)
+    const options = { ...input.options };
+
+    // Get camera's LUT from database (file -> camera -> lut_path)
+    if (!options.lut_path) {
+      const fileWithCamera = filesRepository.findByPathWithCamera(input.videoPath);
+
+      if (fileWithCamera) {
+        if (fileWithCamera.camera_lut_path) {
+          options.lut_path = fileWithCamera.camera_lut_path;
+          console.log(`[ScreenshotTool] Using LUT from camera "${fileWithCamera.camera_name}": ${fileWithCamera.camera_lut_path}`);
+        } else if (fileWithCamera.camera_name) {
+          console.log(`[ScreenshotTool] Camera "${fileWithCamera.camera_name}" has no LUT configured`);
+        } else {
+          console.log(`[ScreenshotTool] File found but no camera assigned: ${fileWithCamera.original_filename}`);
+        }
+      } else {
+        console.log(`[ScreenshotTool] File not found in database: ${path.basename(input.videoPath)}`);
+      }
+    }
+
+    const result = await screenshotToolService.analyzeVideo(
+      input.videoPath,
+      input.outputDir,
+      options
+    );
+
+    // Send progress updates to renderer
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('screenshotTool:analysisComplete', result);
+    }
+
+    return { success: true, result };
+  } catch (error) {
+    console.error('[ScreenshotTool] Analysis failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:detectScenes', async (_, input: {
+  videoPath: string;
+  threshold?: number;
+}) => {
+  try {
+    if (!fs.existsSync(input.videoPath)) {
+      return { success: false, error: `Video file not found: ${input.videoPath}` };
+    }
+
+    const scenes = await screenshotToolService.detectScenes(
+      input.videoPath,
+      input.threshold || 0.5
+    );
+
+    return { success: true, scenes };
+  } catch (error) {
+    console.error('[ScreenshotTool] Scene detection failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:detectFaces', async (_, input: {
+  imagePath: string;
+}) => {
+  try {
+    if (!fs.existsSync(input.imagePath)) {
+      return { success: false, error: `Image not found: ${input.imagePath}` };
+    }
+
+    const faces = await screenshotToolService.detectFaces(input.imagePath);
+    return { success: true, faces };
+  } catch (error) {
+    console.error('[ScreenshotTool] Face detection failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:tagImage', async (_, input: {
+  imagePath: string;
+}) => {
+  try {
+    if (!fs.existsSync(input.imagePath)) {
+      return { success: false, error: `Image not found: ${input.imagePath}` };
+    }
+
+    const tags = await screenshotToolService.tagImage(input.imagePath);
+    return { success: true, tags };
+  } catch (error) {
+    console.error('[ScreenshotTool] Tagging failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:generateCrops', async (_, input: {
+  imagePath: string;
+  faces?: unknown[];
+}) => {
+  try {
+    if (!fs.existsSync(input.imagePath)) {
+      return { success: false, error: `Image not found: ${input.imagePath}` };
+    }
+
+    const crops = await screenshotToolService.generateCrops(
+      input.imagePath,
+      input.faces as any
+    );
+    return { success: true, crops };
+  } catch (error) {
+    console.error('[ScreenshotTool] Crop generation failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:qualityScore', async (_, input: {
+  imagePath: string;
+}) => {
+  try {
+    if (!fs.existsSync(input.imagePath)) {
+      return { success: false, error: `Image not found: ${input.imagePath}` };
+    }
+
+    const result = await screenshotToolService.getQualityScore(input.imagePath);
+    return { success: true, ...result };
+  } catch (error) {
+    console.error('[ScreenshotTool] Quality scoring failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+ipcMain.handle('screenshotTool:clusterFaces', async (_, input: {
+  embeddings: number[][];
+  eps?: number;
+  minSamples?: number;
+}) => {
+  try {
+    if (!input.embeddings || input.embeddings.length === 0) {
+      return { success: false, error: 'No embeddings provided' };
+    }
+
+    const result = await screenshotToolService.clusterFaces(
+      input.embeddings,
+      input.eps || 0.5,
+      input.minSamples || 2
+    );
+    return { success: true, ...result };
+  } catch (error) {
+    console.error('[ScreenshotTool] Clustering failed:', error);
+    return { success: false, error: String(error) };
+  }
+});
+
+// =============================================================================
 // APP LIFECYCLE
 // =============================================================================
 
@@ -1830,6 +2235,33 @@ if (!gotTheLock) {
     initializeDatabase();
     console.log('[Main] Database initialized');
 
+    // Start background job worker
+    console.log('[Main] Starting job worker...');
+    (async () => {
+      try {
+        const { getJobWorker } = await import('../services/job-worker');
+        const { registerJobHandlers } = await import('../services/job-handlers');
+        const worker = getJobWorker();
+        registerJobHandlers(worker);
+        worker.start();
+        console.log('[Main] Job worker started successfully');
+
+        // Emit job progress to renderer
+        worker.on('progress', (progress) => {
+          console.log('[Main] Job progress:', progress.job_type, progress.progress_percent + '%');
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('job:progress', progress);
+          }
+        });
+
+        worker.on('error', (error) => {
+          console.error('[Main] Job worker error:', error);
+        });
+      } catch (error) {
+        console.error('[Main] Failed to start job worker:', error);
+      }
+    })();
+
     createWindow();
 
     // macOS: Re-create window when dock icon clicked
@@ -1848,9 +2280,14 @@ if (!gotTheLock) {
   });
 
   // Clean up before quit
-  app.on('before-quit', () => {
+  app.on('before-quit', async () => {
+    console.log('[Main] Stopping job worker...');
+    const { stopJobWorker } = await import('../services/job-worker');
+    await stopJobWorker();
     console.log('[Main] Stopping AI services...');
     litellmService.stop();
+    console.log('[Main] Stopping Screenshot Tool service...');
+    screenshotToolService.stop();
     console.log('[Main] Closing database...');
     closeDatabase();
   });

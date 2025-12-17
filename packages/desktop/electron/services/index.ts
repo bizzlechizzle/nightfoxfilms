@@ -233,3 +233,15 @@ export {
   getXmlSidecarForVideo,
   type XmlSidecarData,
 } from './xml-sidecar-service';
+
+// Screenshot tool service (Python ML pipeline)
+export {
+  screenshotToolService,
+  type HealthResponse as ScreenshotToolHealthResponse,
+  type AnalyzeOptions as ScreenshotToolAnalyzeOptions,
+  type CropCoordinates,
+  type FaceData,
+  type FrameCandidate,
+  type AnalyzeResult as ScreenshotToolAnalyzeResult,
+  type ProgressInfo as ScreenshotToolProgressInfo,
+} from './screenshot-tool-service';

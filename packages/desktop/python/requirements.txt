@@ -1,0 +1,50 @@
+# Screenshot Tool ML Pipeline Dependencies
+# Nightfox Films CMS
+# Supports: macOS (M2 Ultra), Windows/Linux (CUDA)
+
+# Core ML Frameworks
+torch>=2.0.0
+torchvision>=0.15.0
+
+# ONNX Runtime - Use appropriate version for your platform
+# For CUDA (Windows/Linux): pip install onnxruntime-gpu
+# For macOS: pip install onnxruntime
+onnxruntime>=1.16.0
+
+# Scene Detection
+transnetv2-pytorch>=1.0.0
+
+# Face Detection
+insightface>=0.7.3
+
+# Note: RAM++ must be installed from git:
+# pip install git+https://github.com/xinyu1205/recognize-anything.git
+
+# Captioning (Florence-2 via HuggingFace)
+transformers>=4.35.0
+accelerate>=0.24.0
+
+# Smart Cropping (U2-Net via rembg)
+# For GPU: pip install "rembg[gpu]"
+# For CPU: pip install rembg
+rembg>=2.0.50
+
+# Image Processing
+opencv-python-headless>=4.8.0
+Pillow>=10.0.0
+numpy>=1.24.0
+
+# LUT Processing
+colour-science>=0.4.4
+
+# Clustering
+scikit-learn>=1.3.0
+
+# API Server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+
+# Utilities
+tqdm>=4.66.0
