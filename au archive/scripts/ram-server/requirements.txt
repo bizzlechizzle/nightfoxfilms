@@ -1,0 +1,20 @@
+# RAM++ Local Inference Requirements
+# For Mac with MPS (Metal Performance Shaders) acceleration
+
+# Core PyTorch (MPS support included by default on Apple Silicon)
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Image processing
+Pillow>=9.0.0
+
+# RAM++ (Recognize Anything Model) - optional, can use HuggingFace fallback
+# pip install git+https://github.com/xinyu1205/recognize-anything.git
+
+# HuggingFace transformers fallback (if RAM++ not available)
+transformers>=4.30.0
+accelerate>=0.20.0
+
+# Note: On Mac, install PyTorch with:
+# pip3 install torch torchvision
+# MPS acceleration is automatic on Apple Silicon

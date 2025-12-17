@@ -91,7 +91,7 @@
     try {
       const input: EquipmentInput = {
         name: formName,
-        type: formType,
+        equipment_type: formType,
         medium: formMedium || null,
         make: formMake || null,
         model: formModel || null,
@@ -99,7 +99,7 @@
         purchase_date: formPurchaseDate || null,
         purchase_price: formPurchasePrice ? parseFloat(formPurchasePrice) : null,
         status: formStatus,
-        is_loaner: formIsLoaner,
+        loaner_eligible: formIsLoaner,
         notes: formNotes || null,
       };
 
@@ -149,15 +149,15 @@
     event.stopPropagation();
     editingEquipment = item;
     formName = item.name;
-    formType = item.type as EquipmentType;
+    formType = item.equipment_type;
     formMedium = (item.medium as Medium) || '';
     formMake = item.make || '';
     formModel = item.model || '';
     formSerial = item.serial_number || '';
     formPurchaseDate = item.purchase_date || '';
     formPurchasePrice = item.purchase_price?.toString() || '';
-    formStatus = item.status as EquipmentStatus;
-    formIsLoaner = item.is_loaner === 1;
+    formStatus = item.status;
+    formIsLoaner = item.loaner_eligible === 1;
     formNotes = item.notes || '';
     showCreateModal = true;
   }
@@ -212,16 +212,16 @@
   }
 
   // Get counts by type
-  const typeCounts = $derived(() => {
+  const typeCounts = $derived.by(() => {
     const counts: Record<string, number> = { all: equipment.length };
     for (const type of typeOrder) {
-      counts[type] = equipment.filter(e => e.type === type).length;
+      counts[type] = equipment.filter(e => e.equipment_type === type).length;
     }
     return counts;
   });
 
   // Equipment grouped by type for display
-  const groupedEquipment = $derived(() => {
+  const groupedEquipment = $derived.by(() => {
     const groups: Record<EquipmentType, Equipment[]> = {
       camera: [],
       lens: [],
@@ -232,16 +232,16 @@
       media: [],
     };
     for (const item of equipment) {
-      if (groups[item.type as EquipmentType]) {
-        groups[item.type as EquipmentType].push(item);
+      if (groups[item.equipment_type]) {
+        groups[item.equipment_type].push(item);
       }
     }
     return groups;
   });
 
   // Loaner gear ready for assignment
-  const availableLoaners = $derived(() => {
-    return equipment.filter(e => e.is_loaner && e.status === 'available');
+  const availableLoaners = $derived.by(() => {
+    return equipment.filter(e => e.loaner_eligible && e.status === 'available');
   });
 </script>
 
@@ -271,16 +271,16 @@
         class:active={typeFilter === 'all'}
         onclick={() => handleTypeFilter('all')}
       >
-        All ({typeCounts().all})
+        All ({typeCounts.all})
       </button>
       {#each typeOrder as type}
-        {#if typeCounts()[type] > 0}
+        {#if typeCounts[type] > 0}
           <button
             class="filter-btn"
             class:active={typeFilter === type}
             onclick={() => handleTypeFilter(type)}
           >
-            {typeLabels[type]} ({typeCounts()[type]})
+            {typeLabels[type]} ({typeCounts[type]})
           </button>
         {/if}
       {/each}
@@ -337,13 +337,13 @@
     </div>
   {:else}
     <!-- Loaner summary if any available -->
-    {#if availableLoaners().length > 0}
+    {#if availableLoaners.length > 0}
       <div class="loaner-summary">
-        <span class="loaner-badge">{availableLoaners().length} Loaner{availableLoaners().length !== 1 ? 's' : ''} Available</span>
+        <span class="loaner-badge">{availableLoaners.length} Loaner{availableLoaners.length !== 1 ? 's' : ''} Available</span>
         <span class="loaner-list">
-          {availableLoaners().slice(0, 3).map(e => e.name).join(', ')}
-          {#if availableLoaners().length > 3}
-            +{availableLoaners().length - 3} more
+          {availableLoaners.slice(0, 3).map((e: Equipment) => e.name).join(', ')}
+          {#if availableLoaners.length > 3}
+            +{availableLoaners.length - 3} more
           {/if}
         </span>
       </div>
@@ -359,16 +359,16 @@
                 <span class="medium-dot {getMediumColor(item.medium)}"></span>
               {/if}
               <span>{item.name}</span>
-              {#if item.is_loaner}
+              {#if item.loaner_eligible}
                 <span class="loaner-tag">Loaner</span>
               {/if}
             </div>
-            <span class="equipment-card__status {getStatusColor(item.status as EquipmentStatus)}">
-              {statusLabels[item.status as EquipmentStatus]}
+            <span class="equipment-card__status {getStatusColor(item.status)}">
+              {statusLabels[item.status]}
             </span>
           </div>
           <div class="equipment-card__body">
-            <div class="equipment-card__type">{typeLabels[item.type as EquipmentType]}</div>
+            <div class="equipment-card__type">{typeLabels[item.equipment_type]}</div>
             {#if item.make || item.model}
               <div class="equipment-card__make-model">
                 {item.make}{item.make && item.model ? ' ' : ''}{item.model}

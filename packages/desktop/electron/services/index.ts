@@ -196,3 +196,40 @@ export {
   type RegisteredCamera,
   type CameraRegistry,
 } from './usb-device-service';
+
+// Document sync service
+export {
+  syncCoupleDocuments,
+  updateManifestAfterImport,
+  generateManifest,
+  generateCoupleDocument,
+  generateCamerasDocument,
+  generateImportLog,
+  generateReadme,
+  type SyncDocumentsResult,
+} from './document-sync-service';
+
+// Thumbnail service
+export {
+  generateFileThumbnail,
+  generateFileGallery,
+  generateAllThumbnails,
+  thumbnailExists,
+  getThumbnailPath,
+  getGalleryPaths,
+  batchGenerateThumbnails,
+  type ThumbnailOptions,
+  type GalleryOptions,
+  type ThumbnailResult,
+  type GalleryResult,
+} from './thumbnail-service';
+
+// XML sidecar service
+export {
+  isXmlSidecar,
+  findLinkedVideoFile,
+  parseXmlSidecar,
+  parseXmlSidecars,
+  getXmlSidecarForVideo,
+  type XmlSidecarData,
+} from './xml-sidecar-service';

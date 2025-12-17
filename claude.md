@@ -1,6 +1,6 @@
 # Claude Development Principles & Process
 
-**Last Updated:** 2025-11-18
+**Last Updated:** 2025-12-16
 **Purpose:** Core principles and standard operating procedures for AI-assisted development on Nightfox Films repository
 
 ---
@@ -156,6 +156,34 @@ For each script, document in lilbits.md:
 - Dependencies
 - Example usage
 - Error codes
+
+---
+
+### VBNE = Verify Boot No Errors
+- After ANY code change, verify the app builds and boots without errors
+- Run `pnpm run build` and check for TypeScript/compilation errors
+- Start the dev server and confirm no runtime errors in console
+- Do NOT consider a task complete until the app boots cleanly
+- If errors occur, fix them before moving on
+
+**Required Steps After Code Changes:**
+1. Run build: `pnpm run build`
+2. Check for TypeScript errors (fix any that appear)
+3. Start dev server: `pnpm run dev`
+4. Verify no errors in terminal output
+5. Verify app window opens without crash
+
+**Common Issues to Watch:**
+- Missing imports after refactoring
+- Removed exports still being imported elsewhere
+- Type mismatches after interface changes
+- Protocol/IPC handler mismatches between main and renderer
+
+**If Build Fails:**
+- Read the error message carefully
+- Fix the root cause (don't just suppress the error)
+- Rebuild and verify fix worked
+- Never leave the codebase in a broken state
 
 ---
 

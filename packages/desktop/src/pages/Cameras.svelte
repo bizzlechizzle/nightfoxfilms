@@ -49,7 +49,7 @@
   interface TrainingFile {
     path: string;
     filename: string;
-    metadata: { make: string | null; model: string | null } | null;
+    metadata: unknown;
     error: string | null;
   }
   interface TrainingSession {
@@ -80,14 +80,16 @@
   }
   interface TrainingResult {
     success: boolean;
-    identity: CameraIdentity | null;
-    specs: TechnicalSpecs | null;
-    supplementary: SupplementaryInfo | null;
+    fingerprint: any;
     suggestedName: string;
     suggestedMedium: Medium;
     signature: any;
     filesAnalyzed: number;
     errors: string[];
+    // Optional fields for UI display (may come from fingerprint)
+    identity?: { make?: string; model?: string; confidence?: string; source?: string } | null;
+    supplementary?: { serial?: string; lens?: string; gamma?: string } | null;
+    specs?: { codec?: string; width?: number; height?: number; frameRate?: number } | null;
   }
 
   let trainingSession = $state<TrainingSession | null>(null);
@@ -275,9 +277,9 @@
 
   async function selectLutFile() {
     try {
-      const paths = await api.dialog.selectFiles();
-      if (paths.length > 0) {
-        editLutPath = paths[0];
+      const path = await api.dialog.selectLutFile();
+      if (path) {
+        editLutPath = path;
       }
     } catch (error) {
       console.error('Failed to select LUT file:', error);
@@ -912,10 +914,10 @@
             <h4>Detected Camera</h4>
             <div class="result-stats">
               <span>Analyzed {trainingResult.filesAnalyzed} files</span>
-              <span class="confidence confidence-{trainingResult.identity?.confidence || 'none'}">
-                Confidence: {trainingResult.identity?.confidence || 'none'}
+              <span class="confidence confidence-{trainingResult.fingerprint?.confidence || 'none'}">
+                Confidence: {trainingResult.fingerprint?.confidence || 'none'}
               </span>
-              <span class="source">Source: {trainingResult.identity?.source || 'unknown'}</span>
+              <span class="source">Source: {trainingResult.fingerprint?.source || 'unknown'}</span>
             </div>
           </div>
 

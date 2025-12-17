@@ -19,7 +19,7 @@
   let showFutureBookings = $state(false);
 
   // Filter out future booked weddings (next year+) unless explicitly shown
-  const displayedCouples = $derived(() => {
+  const displayedCouples = $derived.by(() => {
     if (showFutureBookings || statusFilter === 'booked') {
       return couples;
     }
@@ -45,14 +45,15 @@
   let formVenueState = $state('');
   let formPackageName = $state('');
 
-  const statusLabels: Record<CoupleStatus, string> = {
+  const statusLabels: Record<string, string> = {
     booked: 'Booked',
+    ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',
   };
 
-  const statusOrder: CoupleStatus[] = ['booked', 'editing', 'delivered', 'archived'];
+  const statusOrder: CoupleStatus[] = ['booked', 'ingested', 'editing', 'delivered', 'archived'];
 
   async function loadCouples() {
     loading = true;
@@ -226,17 +227,17 @@
   }
 
   // Get counts by status (use displayedCouples for dashboard view)
-  const statusCounts = $derived(() => {
-    const list = displayedCouples();
+  const statusCounts = $derived.by(() => {
+    const list = displayedCouples;
     const counts: Record<string, number> = { all: list.length };
     for (const status of statusOrder) {
-      counts[status] = list.filter(c => c.status === status).length;
+      counts[status] = list.filter((c: Couple) => c.status === status).length;
     }
     return counts;
   });
 
   // Count of hidden future bookings
-  const hiddenFutureCount = $derived(() => {
+  const hiddenFutureCount = $derived.by(() => {
     if (showFutureBookings) return 0;
     const currentYear = new Date().getFullYear();
     return couples.filter(c => {
@@ -290,13 +291,13 @@
 
   {#if loading}
     <div class="loading">Loading...</div>
-  {:else if displayedCouples().length === 0}
+  {:else if displayedCouples.length === 0}
     <div class="empty-state">
       {#if searchQuery}
         <h3 class="empty-state__title">No results</h3>
         <p class="empty-state__text">No couples found matching "{searchQuery}"</p>
       {:else if statusFilter !== 'all'}
-        <h3 class="empty-state__title">No {statusLabels[statusFilter as CoupleStatus].toLowerCase()} projects</h3>
+        <h3 class="empty-state__title">No {statusLabels[statusFilter].toLowerCase()} projects</h3>
         <p class="empty-state__text">No couples with this status</p>
       {:else}
         <h3 class="empty-state__title">No couples yet</h3>
@@ -305,16 +306,16 @@
     </div>
   {:else}
     <!-- Show hidden future bookings notice -->
-    {#if hiddenFutureCount() > 0 && statusFilter === 'all'}
+    {#if hiddenFutureCount > 0 && statusFilter === 'all'}
       <button
         class="future-bookings-toggle"
         onclick={() => showFutureBookings = !showFutureBookings}
       >
-        {showFutureBookings ? 'Hide' : 'Show'} {hiddenFutureCount()} future booking{hiddenFutureCount() === 1 ? '' : 's'} (2026+)
+        {showFutureBookings ? 'Hide' : 'Show'} {hiddenFutureCount} future booking{hiddenFutureCount === 1 ? '' : 's'} (2026+)
       </button>
     {/if}
     <div class="couples-list">
-      {#each displayedCouples() as couple}
+      {#each displayedCouples as couple}
         {@const dueStatus = getDueDateStatus(couple.wedding_date, couple.status)}
         <div
           class="couple-card"

@@ -18,6 +18,7 @@
 
 import { BrowserWindow } from 'electron';
 import path from 'path';
+import fs from 'fs';
 import type {
   ImportBatchResult,
   ImportProgress,
@@ -49,8 +50,14 @@ import {
 
 import { calculateHash } from './hash-service';
 import { matchFileWithDefault, detectMediumFromMetadata } from './camera-matcher-service';
-import { getVideoInfo, getFFprobeJson } from './ffprobe-service';
+import { getVideoInfo, getFFprobeJson, getVideoMetadata, parseCreationTime } from './ffprobe-service';
 import { getMetadataJson, getMediaInfo } from './exiftool-service';
+import { writeSidecar } from './sidecar-service';
+import { syncCoupleDocuments, updateManifestAfterImport } from './document-sync-service';
+import { generateAllThumbnails } from './thumbnail-service';
+import { generateCameraProxy } from './proxy-service';
+import { isXmlSidecar, parseXmlSidecars, type XmlSidecarData } from './xml-sidecar-service';
+import { settingsRepository } from '../repositories/settings-repository';
 
 /**
  * Determine footage type based on recording date vs couple's key dates
@@ -123,6 +130,8 @@ function generateCameraSlug(cameraName: string | null): string {
  */
 export interface ImportControllerOptions extends Omit<ImportOptions, 'cameras' | 'onProgress'> {
   window?: BrowserWindow;
+  /** Override auto-detected footage type (wedding, date_night, rehearsal, other) */
+  footageTypeOverride?: FootageType;
 }
 
 /**
@@ -200,7 +209,7 @@ export class ImportController {
     filePaths: string[],
     options: ImportControllerOptions = {}
   ): Promise<ImportBatchResult> {
-    const { coupleId, managedStoragePath, window } = options;
+    const { coupleId, managedStoragePath, window, footageTypeOverride } = options;
 
     // Generate session ID
     const sessionId = generateSessionId();
@@ -213,10 +222,11 @@ export class ImportController {
       throw new Error('Couple not found - required for copy import');
     }
 
-    // Determine working path
-    const workingPath = managedStoragePath || couple.working_path;
+    // Determine working path - try in order: explicit option, couple's working_path, global storage_path
+    const globalStoragePath = settingsRepository.getStoragePath();
+    const workingPath = managedStoragePath || couple.working_path || globalStoragePath;
     if (!workingPath) {
-      throw new Error('No working path configured for couple');
+      throw new Error('No storage path configured. Please set storage path in Settings first.');
     }
 
     // Load cameras for matching
@@ -250,11 +260,17 @@ export class ImportController {
     // Progress helper
     const emitProgress = (progress: Partial<ImportProgress>) => {
       if (window && !window.isDestroyed()) {
-        window.webContents.send('import:progress', {
+        const fullProgress = {
           sessionId,
           status: session.status,
+          // Ensure required fields have defaults
+          current: progress.filesProcessed ?? 0,
+          total: progress.filesTotal ?? 0,
+          filename: progress.currentFile ?? '',
           ...progress,
-        });
+        };
+        console.log(`[ImportController] Progress: ${fullProgress.status} - ${fullProgress.filesProcessed ?? fullProgress.current}/${fullProgress.filesTotal ?? fullProgress.total} - ${fullProgress.currentFile ?? fullProgress.filename}`);
+        window.webContents.send('import:progress', fullProgress);
       }
     };
 
@@ -266,7 +282,7 @@ export class ImportController {
       this.saveSession(session);
       emitProgress({ status: 'scanning', step: 1, totalSteps: 5, percent: 5 });
 
-      const scannedFiles: HashedFile[] = [];
+      let scannedFiles: HashedFile[] = [];
       let totalBytes = 0;
 
       for (const filePath of filePaths) {
@@ -296,6 +312,36 @@ export class ImportController {
       session.totalFiles = scannedFiles.length;
       session.lastStep = 1;
       this.saveSession(session);
+
+      // Parse XML sidecars and create lookup map (by video filename)
+      // Check by extension directly - more reliable than fileType
+      const xmlExtensions = ['.xml', '.xmp', '.fcpxml'];
+      const xmlFiles = scannedFiles.filter(f => {
+        const ext = path.extname(f.originalPath).toLowerCase();
+        return xmlExtensions.includes(ext);
+      });
+      let xmlSidecarMap = new Map<string, XmlSidecarData>();
+
+      if (xmlFiles.length > 0) {
+        console.log(`[ImportController] Found ${xmlFiles.length} XML sidecar files - parsing metadata, NOT copying`);
+        try {
+          xmlSidecarMap = await parseXmlSidecars(xmlFiles.map(f => f.originalPath));
+          console.log(`[ImportController] Parsed XML sidecars, linked to ${xmlSidecarMap.size} video files`);
+        } catch (e) {
+          console.warn('[ImportController] XML sidecar parsing failed (non-fatal):', e);
+        }
+      }
+
+      // Remove ALL XML/XMP files from scannedFiles - we've extracted their metadata,
+      // they should NOT be copied or stored. This is a wedding app, not an archive.
+      const xmlFilePaths = new Set(xmlFiles.map(f => f.originalPath));
+      const originalCount = scannedFiles.length;
+      scannedFiles = scannedFiles.filter(f => !xmlFilePaths.has(f.originalPath));
+      if (originalCount !== scannedFiles.length) {
+        console.log(`[ImportController] EXCLUDED ${originalCount - scannedFiles.length} XML files from import (metadata extracted, files NOT copied)`);
+        // Update session totals
+        session.totalFiles = scannedFiles.length;
+      }
 
       // ========================================
       // STEP 2: HASH (skip for network sources)
@@ -351,10 +397,67 @@ export class ImportController {
       this.saveSession(session);
       emitProgress({ status: 'copying', step: 3, totalSteps: 5, percent: 40 });
 
+      // Determine the correct base storage path
+      // The couple's working_path should be the FULL path to the couple folder
+      // e.g., /Volumes/nightfox/weddings/2025/12-31 Julia & Sven
+      // We need to extract the base path (parent of couple folder) for CopyService
+      const folderName = couple.folder_name || 'unknown';
+      let baseStoragePath: string;
+
+      // The couple's working_path contains the FULL path including subdirectories
+      // e.g., /Volumes/nightfox/weddings/2025/12-31 Julia & Sven
+      // We need to strip the folder_name to get the parent directory
+      if (workingPath.endsWith(folderName)) {
+        // working_path ends with folder_name - strip it to get parent
+        baseStoragePath = workingPath.slice(0, -folderName.length);
+        // Remove trailing separator if present
+        if (baseStoragePath.endsWith(path.sep)) {
+          baseStoragePath = baseStoragePath.slice(0, -1);
+        }
+      } else if (workingPath.endsWith(path.sep + folderName)) {
+        // working_path ends with /folder_name - use dirname
+        baseStoragePath = path.dirname(workingPath);
+      } else {
+        // working_path doesn't contain folder_name - use globalStoragePath or working_path as fallback
+        // This handles cases where working_path IS the storage root
+        baseStoragePath = globalStoragePath || workingPath;
+      }
+
       const coupleInfo: CouplePathInfo = {
-        workingPath,
-        folderName: couple.folder_name || 'unknown',
+        workingPath: baseStoragePath,
+        folderName: folderName,
       };
+
+      // Log all path components for debugging
+      console.log(`[ImportController] Copy path setup:`);
+      console.log(`  globalStoragePath: ${globalStoragePath}`);
+      console.log(`  workingPath (from couple): ${workingPath}`);
+      console.log(`  couple.folder_name: ${folderName}`);
+      console.log(`  workingPath.endsWith(folderName): ${workingPath.endsWith(folderName)}`);
+      console.log(`  baseStoragePath (final): ${baseStoragePath}`);
+      console.log(`  Expected dest: ${path.join(baseStoragePath, folderName, 'media')}/...`);
+
+      // Verify storage path is accessible before starting copy
+      try {
+        const baseStats = await fs.promises.stat(baseStoragePath);
+        console.log(`[ImportController] Base storage path exists: ${baseStoragePath}, isDirectory: ${baseStats.isDirectory()}`);
+
+        // Check if couple folder exists, create if not
+        const coupleFolderPath = path.join(baseStoragePath, folderName);
+        try {
+          const coupleStats = await fs.promises.stat(coupleFolderPath);
+          console.log(`[ImportController] Couple folder exists: ${coupleFolderPath}, isDirectory: ${coupleStats.isDirectory()}`);
+        } catch {
+          console.log(`[ImportController] Couple folder does not exist, creating: ${coupleFolderPath}`);
+          await fs.promises.mkdir(coupleFolderPath, { recursive: true });
+          console.log(`[ImportController] Created couple folder: ${coupleFolderPath}`);
+        }
+      } catch (pathErr) {
+        const e = pathErr as NodeJS.ErrnoException;
+        console.error(`[ImportController] Base storage path NOT accessible: ${baseStoragePath}`);
+        console.error(`[ImportController] Error: ${e.code} - ${e.message}`);
+        throw new Error(`Storage path not accessible: ${baseStoragePath}. Error: ${e.message}`);
+      }
 
       const copyService = createCopyService(coupleInfo, filePaths[0]);
 
@@ -412,16 +515,33 @@ export class ImportController {
         let recordedAt: string | null = null;
         let exiftoolJson: string | null = null;
         let ffprobeJson: string | null = null;
+        let ffprobeCreationTime: Date | null = null;
 
         try {
-          const videoInfo = await getVideoInfo(file.originalPath);
-          ffprobeJson = await getFFprobeJson(file.originalPath);
+          const ffprobeResult = await getVideoMetadata(file.originalPath);
+          ffprobeJson = JSON.stringify(ffprobeResult);
+          const videoInfo = {
+            duration: ffprobeResult.format.duration ? parseFloat(ffprobeResult.format.duration) : 0,
+            width: ffprobeResult.streams.find(s => s.codec_type === 'video')?.width ?? 0,
+            height: ffprobeResult.streams.find(s => s.codec_type === 'video')?.height ?? 0,
+            frameRate: 0,
+            codec: ffprobeResult.streams.find(s => s.codec_type === 'video')?.codec_name ?? 'unknown',
+            bitrate: ffprobeResult.format.bit_rate ? parseInt(ffprobeResult.format.bit_rate, 10) : null,
+          };
+          // Parse frame rate
+          const videoStream = ffprobeResult.streams.find(s => s.codec_type === 'video');
+          if (videoStream?.r_frame_rate) {
+            const [num, den] = videoStream.r_frame_rate.split('/').map(Number);
+            videoInfo.frameRate = den ? num / den : num;
+          }
           width = videoInfo.width;
           height = videoInfo.height;
           duration = videoInfo.duration;
           frameRate = videoInfo.frameRate;
           codec = videoInfo.codec;
           bitrate = videoInfo.bitrate;
+          // Extract creation_time from ffprobe as fallback for recorded_at
+          ffprobeCreationTime = parseCreationTime(ffprobeResult);
         } catch (e) {
           console.warn(`[ImportController] FFprobe failed for ${file.filename}:`, e);
         }
@@ -431,12 +551,48 @@ export class ImportController {
           const mediaInfo = await getMediaInfo(file.originalPath);
           detectedMake = mediaInfo.make;
           detectedModel = mediaInfo.model;
-          recordedAt = mediaInfo.createDate?.toISOString() || null;
+          // Try ExifTool's createDate first, then fallback to ffprobe creation_time
+          recordedAt = mediaInfo.createDate?.toISOString()
+            || ffprobeCreationTime?.toISOString()
+            || null;
           if (!width && mediaInfo.width) width = mediaInfo.width;
           if (!height && mediaInfo.height) height = mediaInfo.height;
           if (!duration && mediaInfo.duration) duration = mediaInfo.duration;
         } catch (e) {
           console.warn(`[ImportController] ExifTool failed for ${file.filename}:`, e);
+          // Even if ExifTool fails, use ffprobe creation_time if available
+          if (!recordedAt && ffprobeCreationTime) {
+            recordedAt = ffprobeCreationTime.toISOString();
+          }
+        }
+
+        // Check for XML sidecar data to supplement metadata
+        const xmlSidecar = xmlSidecarMap.get(file.filename);
+        if (xmlSidecar) {
+          console.log(`[ImportController] Found XML sidecar for ${file.filename}`);
+          // Use XML data as fallback if ExifTool/FFprobe didn't detect
+          if (!detectedMake && xmlSidecar.make) {
+            detectedMake = xmlSidecar.make;
+          }
+          if (!detectedModel && xmlSidecar.model) {
+            detectedModel = xmlSidecar.model;
+          }
+          if (!recordedAt && xmlSidecar.recordedAt) {
+            recordedAt = new Date(xmlSidecar.recordedAt).toISOString();
+          }
+          // Use XML duration/resolution if not detected
+          if (!duration && xmlSidecar.duration) {
+            duration = xmlSidecar.duration;
+          }
+          if (!width && xmlSidecar.width) {
+            width = xmlSidecar.width;
+          }
+          if (!height && xmlSidecar.height) {
+            height = xmlSidecar.height;
+          }
+          if (!frameRate && xmlSidecar.frameRate) {
+            frameRate = xmlSidecar.frameRate;
+          }
         }
 
         // Detect medium and match camera
@@ -550,6 +706,9 @@ export class ImportController {
       let skipped = 0;
       let errors = 0;
 
+      // Track earliest date_night recording for auto-setting couple.date_night_date
+      let earliestDateNightRecording: string | null = null;
+
       for (const validatedFile of validationResult.files) {
         // Skip invalid files
         if (!validatedFile.isValid) {
@@ -597,8 +756,8 @@ export class ImportController {
           }
         }
 
-        // Determine footage type
-        const footageType = determineFootageType(meta.recordedAt, couple);
+        // Determine footage type (use override if provided, else auto-detect)
+        const footageType = footageTypeOverride || determineFootageType(meta.recordedAt, couple);
 
         // Insert into database
         try {
@@ -636,6 +795,76 @@ export class ImportController {
             );
           }
 
+          // Write sidecar JSON next to the file
+          if (insertedFile.managed_path) {
+            const fileMetadata = filesRepository.getMetadata(insertedFile.id);
+            const camera = meta.cameraId ? cameras.find(c => c.id === meta.cameraId) : null;
+            await writeSidecar(insertedFile, fileMetadata, camera || null, couple);
+          }
+
+          // Generate thumbnail for video files
+          if (validatedFile.fileType === 'video' && insertedFile.managed_path) {
+            // Derive couple dir from managed_path: /base/couple-folder/source/... -> /base/couple-folder
+            const managedPathParts = insertedFile.managed_path.split(path.sep);
+            const sourceIndex = managedPathParts.indexOf('media');
+            const coupleDir = sourceIndex > 0
+              ? managedPathParts.slice(0, sourceIndex).join(path.sep)
+              : path.join(baseStoragePath, folderName);
+
+            // Get camera for LUT path (auto-apply LUT from camera profile if available)
+            const camera = meta.cameraId ? cameras.find(c => c.id === meta.cameraId) : null;
+            const lutPath = camera?.lut_path || undefined;
+            if (lutPath) {
+              console.log(`[ImportController] Using camera LUT: ${lutPath} (${camera?.name})`);
+            }
+
+            // Generate thumbnail and gallery (25%, 50%, 75% frames) with LUT applied
+            try {
+              const allThumbnailsResult = await generateAllThumbnails(
+                insertedFile.managed_path,
+                coupleDir,
+                insertedFile.blake3,
+                { lutPath }
+              );
+              // Save primary thumbnail path to database
+              if (allThumbnailsResult.thumbnail.success && allThumbnailsResult.thumbnail.thumbnailPath) {
+                filesRepository.updateThumbnailPath(insertedFile.id, allThumbnailsResult.thumbnail.thumbnailPath);
+                console.log(`[ImportController] Saved thumbnail: ${allThumbnailsResult.thumbnail.thumbnailPath}`);
+              }
+              // Log gallery results
+              if (allThumbnailsResult.gallery.success) {
+                console.log(`[ImportController] Generated ${allThumbnailsResult.gallery.galleryPaths.length} gallery images`);
+              } else if (allThumbnailsResult.gallery.errors.length > 0) {
+                console.warn(`[ImportController] Gallery errors: ${allThumbnailsResult.gallery.errors.join(', ')}`);
+              }
+            } catch (thumbError) {
+              console.warn(`[ImportController] Thumbnail generation failed (non-fatal):`, thumbError);
+            }
+
+            // Generate 1080p proxy with LUT applied
+            // Only exclude NX800 consumer cameras
+            const isNx800 = camera?.model?.includes('NX800') || camera?.name?.includes('NX800');
+
+            if (!isNx800) {
+              try {
+                console.log(`[ImportController] Generating 1080p proxy for ${validatedFile.filename}`);
+                const proxyResult = await generateCameraProxy(
+                  insertedFile.managed_path,
+                  coupleDir,
+                  insertedFile.blake3,
+                  lutPath
+                );
+                // Save proxy path to database
+                if (proxyResult.success && proxyResult.proxyPath) {
+                  filesRepository.updateProxyPath(insertedFile.id, proxyResult.proxyPath);
+                  console.log(`[ImportController] Saved proxy path: ${proxyResult.proxyPath} (${proxyResult.durationMs}ms)`);
+                }
+              } catch (proxyError) {
+                console.warn(`[ImportController] Proxy generation failed (non-fatal):`, proxyError);
+              }
+            }
+          }
+
           imported++;
           processedFiles.push({
             success: true,
@@ -643,6 +872,13 @@ export class ImportController {
             type: validatedFile.fileType as any,
             duplicate: false,
           });
+
+          // Track date_night recordings for auto-setting couple.date_night_date
+          if (footageType === 'date_night' && meta.recordedAt) {
+            if (!earliestDateNightRecording || meta.recordedAt < earliestDateNightRecording) {
+              earliestDateNightRecording = meta.recordedAt;
+            }
+          }
         } catch (error) {
           errors++;
           processedFiles.push({
@@ -655,12 +891,35 @@ export class ImportController {
         }
       }
 
+      // Auto-update couple.date_night_date if date_night footage was imported
+      // Only set if couple doesn't already have a date_night_date
+      if (earliestDateNightRecording && couple && !couple.date_night_date) {
+        try {
+          // Extract just the date portion (YYYY-MM-DD) from the recorded_at timestamp
+          const dateOnly = earliestDateNightRecording.split('T')[0];
+          console.log(`[ImportController] Auto-setting date_night_date to ${dateOnly} for couple ${coupleId}`);
+          couplesRepository.updateDateNightDate(couple.id, dateOnly);
+        } catch (dateError) {
+          console.warn(`[ImportController] Failed to update date_night_date (non-fatal):`, dateError);
+        }
+      }
+
       // Complete session
       session.status = 'completed';
       session.processedFiles = imported + duplicates;
       session.duplicateFiles = duplicates;
       session.errorFiles = errors;
       this.completeSession(sessionId, 'completed');
+
+      // Sync documents folder (manifest.json, couple.json, cameras.json, etc.)
+      if (coupleId && imported > 0) {
+        try {
+          console.log(`[ImportController] Syncing documents for couple ${coupleId}`);
+          await syncCoupleDocuments(coupleId);
+        } catch (docError) {
+          console.warn(`[ImportController] Document sync failed (non-fatal):`, docError);
+        }
+      }
 
       // Notify completion
       if (window && !window.isDestroyed()) {

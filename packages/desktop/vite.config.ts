@@ -18,7 +18,7 @@ import fs from 'fs';
  * Just copy the static .cjs file directly to dist-electron/preload/
  */
 function copyPreloadPlugin(): Plugin {
-  const srcPath = path.resolve(__dirname, 'electron/preload/preload.cjs');
+  const srcPath = path.resolve(__dirname, 'electron/preload/index.cjs');
   const destDir = path.resolve(__dirname, 'dist-electron/preload');
   const destPath = path.join(destDir, 'index.cjs');
 

@@ -63,6 +63,46 @@ export type LoanEventType = 'date_night' | 'engagement' | 'guest_cam';
 
 export type ConditionRating = 'excellent' | 'good' | 'fair' | 'damaged' | 'lost';
 
+// =============================================================================
+// COMPREHENSIVE SCHEMA ENUMS
+// =============================================================================
+
+export type VenueType = 'church' | 'barn' | 'estate' | 'hotel' | 'restaurant' | 'outdoor' | 'beach' | 'winery' | 'museum' | 'country_club' | 'rooftop' | 'other';
+
+export type VenueRating = 1 | 2 | 3 | 4 | 5;
+
+export type LightingCondition = 'excellent' | 'good' | 'challenging' | 'difficult' | 'mixed';
+
+export type VendorType = 'photographer' | 'planner' | 'coordinator' | 'dj' | 'band' | 'florist' | 'caterer' | 'baker' | 'officiant' | 'makeup' | 'hair' | 'dress' | 'suit' | 'rentals' | 'transportation' | 'other';
+
+export type VendorRelationship = 'preferred' | 'neutral' | 'avoid';
+
+export type PaymentMethod = 'check' | 'cash' | 'venmo' | 'paypal' | 'credit_card' | 'wire' | 'other';
+
+export type PaymentStatus = 'pending' | 'received' | 'deposited' | 'refunded';
+
+export type ExpenseCategory = 'equipment' | 'travel' | 'lodging' | 'film' | 'processing' | 'shipping' | 'software' | 'music' | 'assistant' | 'second_shooter' | 'other';
+
+export type LeadStatus = 'new' | 'contacted' | 'qualified' | 'proposal_sent' | 'negotiating' | 'won' | 'lost' | 'unqualified';
+
+export type LeadSource = 'website' | 'instagram' | 'tiktok' | 'facebook' | 'youtube' | 'referral' | 'vendor_referral' | 'wedding_wire' | 'the_knot' | 'google' | 'word_of_mouth' | 'repeat_client' | 'other';
+
+export type CommunicationType = 'email' | 'phone' | 'text' | 'dm' | 'in_person' | 'video_call' | 'voicemail';
+
+export type CommunicationDirection = 'inbound' | 'outbound';
+
+export type QuestionnaireType = 'initial_inquiry' | 'booking' | 'pre_wedding' | 'day_of' | 'feedback';
+
+export type MarkerType = 'select' | 'reject' | 'favorite' | 'maybe' | 'flag';
+
+export type MarkerCategory = 'ceremony' | 'reception' | 'getting_ready' | 'first_look' | 'portraits' | 'details' | 'dancing' | 'speeches' | 'cake' | 'exit' | 'other';
+
+export type ReviewPlatform = 'google' | 'wedding_wire' | 'the_knot' | 'yelp' | 'facebook' | 'instagram' | 'internal' | 'other';
+
+export type ContactRole = 'planner' | 'coordinator' | 'photographer' | 'dj' | 'florist' | 'caterer' | 'officiant' | 'venue_manager' | 'assistant' | 'family' | 'friend' | 'other';
+
+export type TimelineEventType = 'hair_makeup' | 'getting_ready' | 'first_look' | 'ceremony' | 'cocktail_hour' | 'reception_entrance' | 'first_dance' | 'parent_dances' | 'speeches' | 'dinner' | 'cake_cutting' | 'bouquet_toss' | 'garter_toss' | 'dancing' | 'last_dance' | 'exit' | 'other';
+
 // Legacy deliverable interface (deprecated - use ContractDeliverable instead)
 export interface CoupleDeliverable {
   type: DeliverableType;
@@ -122,6 +162,7 @@ export interface Camera {
   color: string | null;
   is_active: number; // 0 or 1
   is_default: number; // 0 or 1 (deprecated, kept for compatibility)
+  is_system: number; // 0 or 1 - system/seed cameras are hidden from UI but used for auto-detection
   notes: string | null;
   lut_path: string | null;
   deinterlace: number; // 0 or 1
@@ -208,6 +249,11 @@ export interface Couple {
   mailing_address: string | null;          // Shared mailing address
   // Session fields (migration 19)
   date_night_date: string | null;          // Date of engagement/date night shoot
+  // Rehearsal dinner field (migration 44)
+  has_rehearsal_dinner: number;            // 0 or 1 - whether couple has rehearsal dinner
+  // Relationship fields (migrations 40-41)
+  venue_id: number | null;                 // Link to venues table
+  lead_id: number | null;                  // Link to leads table (conversion source)
   created_at: string;
   updated_at: string;
 }
@@ -239,6 +285,8 @@ export interface File {
   recorded_at: string | null;
   imported_at: string;
   updated_at: string;
+  thumbnail_path: string | null;
+  proxy_path: string | null;
 }
 
 export interface FileMetadata {
@@ -470,6 +518,368 @@ export interface FilmUsage {
 }
 
 // =============================================================================
+// COMPREHENSIVE SCHEMA RECORDS
+// =============================================================================
+
+export interface Venue {
+  id: number;
+  name: string;
+  venue_type: VenueType;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  website: string | null;
+  phone: string | null;
+  email: string | null;
+  contact_name: string | null;
+  capacity: number | null;
+  // Shooting conditions
+  indoor_lighting: LightingCondition | null;
+  outdoor_lighting: LightingCondition | null;
+  audio_challenges: string | null;
+  power_availability: string | null;
+  load_in_notes: string | null;
+  parking_notes: string | null;
+  restrictions: string | null;
+  // Ratings and notes
+  your_rating: VenueRating | null;
+  shooting_notes: string | null;
+  notes: string | null;
+  // Tracking
+  times_shot: number;
+  last_shot_date: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Vendor {
+  id: number;
+  name: string;
+  company: string | null;
+  vendor_type: VendorType;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  instagram: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  // Relationship tracking
+  relationship: VendorRelationship;
+  your_rating: VenueRating | null;
+  referral_fee_percent: number | null;
+  referral_fee_flat: number | null;
+  notes: string | null;
+  // Stats
+  times_worked_together: number;
+  referrals_received: number;
+  referrals_given: number;
+  last_worked_date: string | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VendorCouple {
+  id: number;
+  vendor_id: number;
+  couple_id: number;
+  role: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface Package {
+  id: number;
+  name: string;
+  code: string;
+  description: string | null;
+  price: number;
+  videographer_count: number;
+  hours_coverage: number | null;
+  mediums_json: string | null;
+  deliverables_json: string | null;
+  includes_json: string | null;
+  is_active: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Contract {
+  id: number;
+  couple_id: number;
+  package_id: number | null;
+  custom_package_name: string | null;
+  contract_date: string | null;
+  wedding_date: string;
+  total_price: number;
+  deposit_amount: number | null;
+  deposit_due_date: string | null;
+  deposit_received_date: string | null;
+  balance_amount: number | null;
+  balance_due_date: string | null;
+  balance_received_date: string | null;
+  payment_schedule_json: string | null;
+  deliverables_json: string | null;
+  custom_terms: string | null;
+  signed_at: string | null;
+  signed_by: string | null;
+  contract_pdf_path: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Payment {
+  id: number;
+  couple_id: number;
+  contract_id: number | null;
+  amount: number;
+  payment_method: PaymentMethod;
+  status: PaymentStatus;
+  payment_type: string | null;
+  reference_number: string | null;
+  paid_at: string | null;
+  due_date: string | null;
+  deposited_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Expense {
+  id: number;
+  couple_id: number | null;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  vendor_id: number | null;
+  vendor_name: string | null;
+  receipt_path: string | null;
+  expense_date: string;
+  is_reimbursable: number;
+  reimbursed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Lead {
+  id: number;
+  partner_1_name: string | null;
+  partner_2_name: string | null;
+  email: string | null;
+  phone: string | null;
+  wedding_date: string | null;
+  venue_name: string | null;
+  source: LeadSource;
+  source_detail: string | null;
+  referrer_id: number | null;
+  referrer_type: string | null;
+  status: LeadStatus;
+  budget_range: string | null;
+  package_interest: string | null;
+  notes: string | null;
+  // Conversion tracking
+  first_contact_at: string | null;
+  last_contact_at: string | null;
+  qualified_at: string | null;
+  proposal_sent_at: string | null;
+  won_at: string | null;
+  lost_at: string | null;
+  lost_reason: string | null;
+  converted_couple_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Communication {
+  id: number;
+  couple_id: number | null;
+  lead_id: number | null;
+  vendor_id: number | null;
+  contact_id: number | null;
+  communication_type: CommunicationType;
+  direction: CommunicationDirection;
+  subject: string | null;
+  summary: string | null;
+  full_text: string | null;
+  attachments_json: string | null;
+  gmail_id: string | null;
+  gmail_thread_id: string | null;
+  call_duration_seconds: number | null;
+  occurred_at: string;
+  follow_up_date: string | null;
+  follow_up_completed: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Questionnaire {
+  id: number;
+  name: string;
+  questionnaire_type: QuestionnaireType;
+  description: string | null;
+  questions_json: string;
+  is_active: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuestionnaireResponse {
+  id: number;
+  questionnaire_id: number;
+  couple_id: number;
+  responses_json: string;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FootageMarker {
+  id: number;
+  file_id: number;
+  scene_id: number | null;
+  marker_type: MarkerType;
+  category: MarkerCategory | null;
+  timecode_in: number | null;
+  timecode_out: number | null;
+  rating: number | null;
+  color: string | null;
+  label: string | null;
+  notes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Review {
+  id: number;
+  couple_id: number;
+  platform: ReviewPlatform;
+  rating: number;
+  title: string | null;
+  content: string | null;
+  reviewer_name: string | null;
+  review_date: string;
+  external_url: string | null;
+  is_featured: number;
+  is_approved: number;
+  response: string | null;
+  responded_at: string | null;
+  screenshot_path: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Contact {
+  id: number;
+  name: string;
+  company: string | null;
+  role: ContactRole;
+  email: string | null;
+  phone: string | null;
+  website: string | null;
+  instagram: string | null;
+  address: string | null;
+  relationship_notes: string | null;
+  vendor_id: number | null;
+  venue_id: number | null;
+  is_active: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CoupleContact {
+  id: number;
+  couple_id: number;
+  contact_id: number;
+  role: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface TimelineEvent {
+  id: number;
+  couple_id: number;
+  event_type: TimelineEventType;
+  title: string | null;
+  scheduled_time: string | null;
+  actual_time: string | null;
+  duration_minutes: number | null;
+  location: string | null;
+  notes: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ShotListItem {
+  id: number;
+  couple_id: number;
+  category: MarkerCategory;
+  description: string;
+  is_required: number;
+  is_captured: number;
+  priority: number;
+  notes: string | null;
+  file_ids_json: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tag {
+  id: number;
+  name: string;
+  color: string | null;
+  tag_type: string | null;
+  created_at: string;
+}
+
+export interface FileTag {
+  file_id: number;
+  tag_id: number;
+  created_at: string;
+}
+
+export interface SceneTag {
+  scene_id: number;
+  tag_id: number;
+  created_at: string;
+}
+
+export interface Playlist {
+  id: number;
+  couple_id: number | null;
+  name: string;
+  description: string | null;
+  is_public: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PlaylistItem {
+  id: number;
+  playlist_id: number;
+  file_id: number | null;
+  scene_id: number | null;
+  sort_order: number;
+  notes: string | null;
+  created_at: string;
+}
+
+// =============================================================================
 // INPUT TYPES (for creating/updating records)
 // =============================================================================
 
@@ -514,6 +924,7 @@ export interface LensInput {
 export interface CoupleInput {
   name: string;
   wedding_date?: string | null;
+  folder_name?: string | null;
   notes?: string | null;
   // Workflow fields
   status?: CoupleStatus;
@@ -557,6 +968,11 @@ export interface CoupleInput {
   mailing_address?: string | null;
   // Session fields
   date_night_date?: string | null;
+  // Rehearsal dinner field
+  has_rehearsal_dinner?: boolean;
+  // Relationship fields
+  venue_id?: number | null;
+  lead_id?: number | null;
 }
 
 export interface ImportInput {
@@ -666,6 +1082,259 @@ export interface FilmUsageInput {
   scan_asset_ids?: number[] | null;
   total_cost?: number | null;
   issues?: string | null;
+  notes?: string | null;
+}
+
+// =============================================================================
+// COMPREHENSIVE SCHEMA INPUT TYPES
+// =============================================================================
+
+export interface VenueInput {
+  name: string;
+  venue_type: VenueType;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  country?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  website?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  contact_name?: string | null;
+  capacity?: number | null;
+  indoor_lighting?: LightingCondition | null;
+  outdoor_lighting?: LightingCondition | null;
+  audio_challenges?: string | null;
+  power_availability?: string | null;
+  load_in_notes?: string | null;
+  parking_notes?: string | null;
+  restrictions?: string | null;
+  your_rating?: VenueRating | null;
+  shooting_notes?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+export interface VendorInput {
+  name: string;
+  company?: string | null;
+  vendor_type: VendorType;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  relationship?: VendorRelationship;
+  your_rating?: VenueRating | null;
+  referral_fee_percent?: number | null;
+  referral_fee_flat?: number | null;
+  notes?: string | null;
+  is_active?: boolean;
+}
+
+export interface PackageInput {
+  name: string;
+  code: string;
+  description?: string | null;
+  price: number;
+  videographer_count?: number;
+  hours_coverage?: number | null;
+  mediums?: Medium[] | null;
+  deliverables?: ContractDeliverable[] | null;
+  includes?: string[] | null;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface ContractInput {
+  couple_id: number;
+  package_id?: number | null;
+  custom_package_name?: string | null;
+  contract_date?: string | null;
+  wedding_date: string;
+  total_price: number;
+  deposit_amount?: number | null;
+  deposit_due_date?: string | null;
+  balance_amount?: number | null;
+  balance_due_date?: string | null;
+  payment_schedule?: Array<{ amount: number; due_date: string; description?: string }> | null;
+  deliverables?: ContractDeliverable[] | null;
+  custom_terms?: string | null;
+  notes?: string | null;
+}
+
+export interface PaymentInput {
+  couple_id: number;
+  contract_id?: number | null;
+  amount: number;
+  payment_method: PaymentMethod;
+  status?: PaymentStatus;
+  payment_type?: string | null;
+  reference_number?: string | null;
+  paid_at?: string | null;
+  due_date?: string | null;
+  notes?: string | null;
+}
+
+export interface ExpenseInput {
+  couple_id?: number | null;
+  category: ExpenseCategory;
+  description: string;
+  amount: number;
+  vendor_id?: number | null;
+  vendor_name?: string | null;
+  receipt_path?: string | null;
+  expense_date: string;
+  is_reimbursable?: boolean;
+  notes?: string | null;
+}
+
+export interface LeadInput {
+  partner_1_name?: string | null;
+  partner_2_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  wedding_date?: string | null;
+  venue_name?: string | null;
+  source: LeadSource;
+  source_detail?: string | null;
+  referrer_id?: number | null;
+  referrer_type?: string | null;
+  status?: LeadStatus;
+  budget_range?: string | null;
+  package_interest?: string | null;
+  notes?: string | null;
+}
+
+export interface CommunicationInput {
+  couple_id?: number | null;
+  lead_id?: number | null;
+  vendor_id?: number | null;
+  contact_id?: number | null;
+  communication_type: CommunicationType;
+  direction: CommunicationDirection;
+  subject?: string | null;
+  summary?: string | null;
+  full_text?: string | null;
+  attachments?: string[] | null;
+  gmail_id?: string | null;
+  gmail_thread_id?: string | null;
+  call_duration_seconds?: number | null;
+  occurred_at: string;
+  follow_up_date?: string | null;
+  notes?: string | null;
+}
+
+export interface QuestionnaireInput {
+  name: string;
+  questionnaire_type: QuestionnaireType;
+  description?: string | null;
+  questions: Array<{
+    id: string;
+    type: 'text' | 'textarea' | 'select' | 'multiselect' | 'date' | 'time' | 'number';
+    label: string;
+    required?: boolean;
+    options?: string[];
+  }>;
+  is_active?: boolean;
+  sort_order?: number;
+}
+
+export interface QuestionnaireResponseInput {
+  questionnaire_id: number;
+  couple_id: number;
+  responses: Record<string, string | string[] | number>;
+  notes?: string | null;
+}
+
+export interface FootageMarkerInput {
+  file_id: number;
+  scene_id?: number | null;
+  marker_type: MarkerType;
+  category?: MarkerCategory | null;
+  timecode_in?: number | null;
+  timecode_out?: number | null;
+  rating?: number | null;
+  color?: string | null;
+  label?: string | null;
+  notes?: string | null;
+  created_by?: string | null;
+}
+
+export interface ReviewInput {
+  couple_id: number;
+  platform: ReviewPlatform;
+  rating: number;
+  title?: string | null;
+  content?: string | null;
+  reviewer_name?: string | null;
+  review_date: string;
+  external_url?: string | null;
+  is_featured?: boolean;
+  is_approved?: boolean;
+  response?: string | null;
+  screenshot_path?: string | null;
+  notes?: string | null;
+}
+
+export interface ContactInput {
+  name: string;
+  company?: string | null;
+  role: ContactRole;
+  email?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  address?: string | null;
+  relationship_notes?: string | null;
+  vendor_id?: number | null;
+  venue_id?: number | null;
+  is_active?: boolean;
+}
+
+export interface TimelineEventInput {
+  couple_id: number;
+  event_type: TimelineEventType;
+  title?: string | null;
+  scheduled_time?: string | null;
+  actual_time?: string | null;
+  duration_minutes?: number | null;
+  location?: string | null;
+  notes?: string | null;
+  sort_order?: number;
+}
+
+export interface ShotListItemInput {
+  couple_id: number;
+  category: MarkerCategory;
+  description: string;
+  is_required?: boolean;
+  priority?: number;
+  notes?: string | null;
+}
+
+export interface TagInput {
+  name: string;
+  color?: string | null;
+  tag_type?: string | null;
+}
+
+export interface PlaylistInput {
+  couple_id?: number | null;
+  name: string;
+  description?: string | null;
+  is_public?: boolean;
+}
+
+export interface PlaylistItemInput {
+  playlist_id: number;
+  file_id?: number | null;
+  scene_id?: number | null;
+  sort_order?: number;
   notes?: string | null;
 }
 

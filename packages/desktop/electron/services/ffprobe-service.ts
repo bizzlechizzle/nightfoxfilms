@@ -175,3 +175,78 @@ export async function getFFprobeJson(filePath: string): Promise<string> {
   const result = await getVideoMetadata(filePath);
   return JSON.stringify(result);
 }
+
+/**
+ * Get creation time from ffprobe metadata
+ * FFprobe stores creation_time in format.tags or stream tags
+ */
+export async function getCreationTime(filePath: string): Promise<Date | null> {
+  try {
+    const result = await getVideoMetadata(filePath);
+
+    // Check format.tags.creation_time first
+    const formatTags = result.format.tags as Record<string, string> | undefined;
+    if (formatTags?.creation_time) {
+      const date = new Date(formatTags.creation_time);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Check video stream tags
+    const videoStream = result.streams.find((s) => s.codec_type === 'video');
+    const videoTags = videoStream?.tags as Record<string, string> | undefined;
+    if (videoTags?.creation_time) {
+      const date = new Date(videoTags.creation_time);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    // Check for com.apple.quicktime.creationdate (Apple devices)
+    if (formatTags?.['com.apple.quicktime.creationdate']) {
+      const date = new Date(formatTags['com.apple.quicktime.creationdate']);
+      if (!isNaN(date.getTime())) {
+        return date;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Parse creation time from existing ffprobe result
+ */
+export function parseCreationTime(result: FFProbeResult): Date | null {
+  // Check format.tags.creation_time first
+  const formatTags = result.format.tags as Record<string, string> | undefined;
+  if (formatTags?.creation_time) {
+    const date = new Date(formatTags.creation_time);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // Check video stream tags
+  const videoStream = result.streams.find((s) => s.codec_type === 'video');
+  const videoTags = videoStream?.tags as Record<string, string> | undefined;
+  if (videoTags?.creation_time) {
+    const date = new Date(videoTags.creation_time);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  // Check for com.apple.quicktime.creationdate (Apple devices)
+  if (formatTags?.['com.apple.quicktime.creationdate']) {
+    const date = new Date(formatTags['com.apple.quicktime.creationdate']);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+}

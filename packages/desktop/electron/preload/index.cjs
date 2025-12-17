@@ -32,7 +32,7 @@ if (DEBUG) {
 
 // IPC timeout wrapper to prevent hanging operations
 const DEFAULT_IPC_TIMEOUT = 30000; // 30 seconds for most operations
-const LONG_IPC_TIMEOUT = 120000; // 2 minutes for import operations
+const LONG_IPC_TIMEOUT = 900000; // 15 minutes for import operations (proxies take ~15s each, 30 files = 7.5 min + copy/validate)
 
 /**
  * Wrap an IPC invoke call with a timeout
@@ -82,6 +82,7 @@ const api = {
   dialog: {
     selectFolder: () => invoke("dialog:selectFolder")(),
     selectFiles: () => invoke("dialog:selectFiles")(),
+    selectLutFile: () => invoke("dialog:selectLutFile")(),
   },
 
   // Database
@@ -154,9 +155,14 @@ const api = {
     getMetadata: (id) => invoke("files:getMetadata")(id),
     updateCamera: (id, cameraId) => invoke("files:updateCamera")(id, cameraId),
     delete: (id) => invoke("files:delete")(id),
+    getThumbnail: (fileId) => invoke("files:getThumbnail")(fileId),
+    getThumbnailByHash: (hash, coupleId) => invoke("files:getThumbnailByHash")(hash, coupleId),
+    getProxyByHash: (hash, coupleId) => invoke("files:getProxyByHash")(hash, coupleId),
+    regenerateThumbnails: (coupleId) => invokeLong("files:regenerateThumbnails")(coupleId),
   },
 
   // Import
+  // Note: options can include { coupleId, copyToManaged, managedStoragePath, footageTypeOverride }
   import: {
     files: (filePaths, options) => invokeLong("import:files")(filePaths, options),
     directory: (dirPath, options) => invokeLong("import:directory")(dirPath, options),
@@ -173,6 +179,21 @@ const api = {
       ipcRenderer.on("import:complete", listener);
       return () => ipcRenderer.removeListener("import:complete", listener);
     },
+    onPaused: (callback) => {
+      const listener = (_event, data) => callback(data);
+      ipcRenderer.on("import:paused", listener);
+      return () => ipcRenderer.removeListener("import:paused", listener);
+    },
+    onError: (callback) => {
+      const listener = (_event, data) => callback(data);
+      ipcRenderer.on("import:error", listener);
+      return () => ipcRenderer.removeListener("import:error", listener);
+    },
+  },
+
+  // Documents (folder sync)
+  documents: {
+    sync: (coupleId) => invoke("documents:sync")(coupleId),
   },
 
   // Export

@@ -5,7 +5,7 @@
  * Handles window creation, IPC registration, and app lifecycle.
  */
 
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -65,12 +65,29 @@ import {
   findCameraByUSBSerial,
   findCameraByVolumeUUID,
   findCameraForMountPoint,
+  // Document sync
+  syncCoupleDocuments,
+  // Thumbnails
+  generateAllThumbnails,
   type LiteLLMSettings,
 } from '../services';
 
 // ESM __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Register custom protocol scheme BEFORE app is ready (required by Electron)
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'media',
+    privileges: {
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      bypassCSP: true,
+    },
+  },
+]);
 
 // Determine environment
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
@@ -143,13 +160,39 @@ ipcMain.handle('dialog:selectFolder', async () => {
 
 ipcMain.handle('dialog:selectFiles', async () => {
   const result = await dialog.showOpenDialog({
-    properties: ['openFile', 'multiSelections'],
+    properties: ['openFile', 'openDirectory', 'multiSelections'],
     filters: [
-      { name: 'Video Files', extensions: ['mp4', 'mov', 'avi', 'mkv', 'mts', 'm2ts', 'mxf', 'tod', 'mod'] },
+      {
+        name: 'Video Files',
+        extensions: [
+          'mp4', 'mov', 'avi', 'mkv', 'mts', 'm2ts', 'mxf', 'tod', 'mod',
+          '3gp', 'webm', 'wmv', 'flv', 'm4v', 'mpg', 'mpeg', 'vob', 'dv', 'r3d', 'braw',
+        ],
+      },
+      {
+        name: 'Sidecar Files',
+        extensions: ['xml', 'xmp', 'srt', 'vtt', 'edl', 'fcpxml', 'aaf', 'omf', 'mhl', 'md5'],
+      },
+      {
+        name: 'Audio Files',
+        extensions: ['wav', 'mp3', 'aac', 'flac', 'm4a', 'aiff', 'ogg', 'wma'],
+      },
       { name: 'All Files', extensions: ['*'] },
     ],
   });
   return result.canceled ? [] : result.filePaths;
+});
+
+ipcMain.handle('dialog:selectLutFile', async () => {
+  const result = await dialog.showOpenDialog({
+    title: 'Select LUT File',
+    properties: ['openFile'],
+    filters: [
+      { name: 'LUT Files', extensions: ['cube', '3dlut'] },
+      { name: 'All Files', extensions: ['*'] },
+    ],
+  });
+  return result.canceled ? null : result.filePaths[0];
 });
 
 // =============================================================================
@@ -764,6 +807,190 @@ ipcMain.handle('files:delete', async (_, id: number) => {
   return filesRepository.delete(id);
 });
 
+ipcMain.handle('files:getThumbnail', async (_, fileId: number) => {
+  try {
+    const file = filesRepository.findById(fileId);
+    if (!file || !file.blake3) {
+      return null;
+    }
+
+    // Get couple info to find thumbnail path
+    if (!file.couple_id) {
+      return null;
+    }
+
+    const couple = couplesRepository.findById(file.couple_id);
+    if (!couple || !couple.working_path || !couple.folder_name) {
+      return null;
+    }
+
+    // Determine couple directory: if working_path already ends with folder_name, don't duplicate
+    let coupleDir: string;
+    if (couple.working_path.endsWith(couple.folder_name)) {
+      coupleDir = couple.working_path;
+    } else {
+      coupleDir = path.join(couple.working_path, couple.folder_name);
+    }
+
+    // Thumbnail path: {coupleDir}/thumbnails/{hash}.jpg
+    const thumbnailPath = path.join(coupleDir, 'thumbnails', `${file.blake3}.jpg`);
+
+    // Check if thumbnail exists
+    if (!fs.existsSync(thumbnailPath)) {
+      return null;
+    }
+
+    // Read and return as base64 data URL
+    const buffer = fs.readFileSync(thumbnailPath);
+    const base64 = buffer.toString('base64');
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    console.error('[files:getThumbnail] Error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('files:getThumbnailByHash', async (_, hash: string, coupleId: number) => {
+  try {
+    const couple = couplesRepository.findById(coupleId);
+    if (!couple || !couple.working_path || !couple.folder_name) {
+      return null;
+    }
+
+    // Determine couple directory: if working_path already ends with folder_name, don't duplicate
+    let coupleDir: string;
+    if (couple.working_path.endsWith(couple.folder_name)) {
+      coupleDir = couple.working_path;
+    } else {
+      coupleDir = path.join(couple.working_path, couple.folder_name);
+    }
+
+    // Thumbnail path: {coupleDir}/thumbnails/{hash}.jpg
+    const thumbnailPath = path.join(coupleDir, 'thumbnails', `${hash}.jpg`);
+
+    // Check if thumbnail exists
+    if (!fs.existsSync(thumbnailPath)) {
+      return null;
+    }
+
+    // Read and return as base64 data URL
+    const buffer = fs.readFileSync(thumbnailPath);
+    const base64 = buffer.toString('base64');
+    return `data:image/jpeg;base64,${base64}`;
+  } catch (error) {
+    console.error('[files:getThumbnailByHash] Error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('files:getProxyByHash', async (_, hash: string, coupleId: number) => {
+  try {
+    const couple = couplesRepository.findById(coupleId);
+    if (!couple || !couple.working_path || !couple.folder_name) {
+      return null;
+    }
+
+    // Determine couple directory: if working_path already ends with folder_name, don't duplicate
+    let coupleDir: string;
+    if (couple.working_path.endsWith(couple.folder_name)) {
+      coupleDir = couple.working_path;
+    } else {
+      coupleDir = path.join(couple.working_path, couple.folder_name);
+    }
+
+    // Proxy path: {coupleDir}/proxies/{hash}_proxy.mp4
+    const proxyPath = path.join(coupleDir, 'proxies', `${hash}_proxy.mp4`);
+
+    // Check if proxy exists
+    if (!fs.existsSync(proxyPath)) {
+      console.log('[files:getProxyByHash] Proxy not found:', proxyPath);
+      return null;
+    }
+
+    // Return media:// protocol URL (handled by custom protocol handler)
+    return `media://proxy/${coupleId}/${hash}`;
+  } catch (error) {
+    console.error('[files:getProxyByHash] Error:', error);
+    return null;
+  }
+});
+
+ipcMain.handle('files:regenerateThumbnails', async (_, coupleId: number) => {
+  try {
+    console.log(`[files:regenerateThumbnails] Starting for couple ${coupleId}`);
+
+    const couple = couplesRepository.findById(coupleId);
+    if (!couple || !couple.working_path || !couple.folder_name) {
+      return { success: false, error: 'Couple not found or missing working path', regenerated: 0 };
+    }
+
+    // Determine couple directory
+    let coupleDir: string;
+    if (couple.working_path.endsWith(couple.folder_name)) {
+      coupleDir = couple.working_path;
+    } else {
+      coupleDir = path.join(couple.working_path, couple.folder_name);
+    }
+
+    // Get all video files for this couple
+    const files = filesRepository.findByCouple(coupleId).filter(f => f.file_type === 'video');
+    console.log(`[files:regenerateThumbnails] Found ${files.length} video files`);
+
+    // Get all cameras for LUT lookup
+    const cameras = camerasRepository.findAll();
+    const cameraMap = new Map(cameras.map(c => [c.id, c]));
+
+    let regenerated = 0;
+    const errors: string[] = [];
+
+    for (const file of files) {
+      if (!file.managed_path) {
+        console.log(`[files:regenerateThumbnails] Skipping ${file.original_filename} - no managed path`);
+        continue;
+      }
+
+      // Get camera LUT if available
+      const camera = file.camera_id ? cameraMap.get(file.camera_id) : null;
+      const lutPath = camera?.lut_path || undefined;
+
+      if (lutPath) {
+        console.log(`[files:regenerateThumbnails] Using LUT from ${camera?.name}: ${lutPath}`);
+      }
+
+      try {
+        const result = await generateAllThumbnails(
+          file.managed_path,
+          coupleDir,
+          file.blake3,
+          { lutPath }
+        );
+
+        if (result.thumbnail.success && result.thumbnail.thumbnailPath) {
+          filesRepository.updateThumbnailPath(file.id, result.thumbnail.thumbnailPath);
+          regenerated++;
+          console.log(`[files:regenerateThumbnails] Regenerated thumbnail for ${file.original_filename}`);
+        } else if (result.thumbnail.error) {
+          errors.push(`${file.original_filename}: ${result.thumbnail.error}`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`${file.original_filename}: ${msg}`);
+      }
+    }
+
+    console.log(`[files:regenerateThumbnails] Done: ${regenerated} regenerated, ${errors.length} errors`);
+    return {
+      success: true,
+      regenerated,
+      total: files.length,
+      errors: errors.length > 0 ? errors : undefined
+    };
+  } catch (error) {
+    console.error('[files:regenerateThumbnails] Error:', error);
+    return { success: false, error: String(error), regenerated: 0 };
+  }
+});
+
 // =============================================================================
 // IPC HANDLERS - Scenes
 // =============================================================================
@@ -821,12 +1048,38 @@ ipcMain.handle('scenes:delete', async (_, sceneId: number) => {
 // IPC HANDLERS - Import
 // =============================================================================
 
-ipcMain.handle('import:files', async (_, filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => {
+ipcMain.handle('import:files', async (_, filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string; footageTypeOverride?: 'wedding' | 'date_night' | 'rehearsal' | 'other' }) => {
   try {
-    const result = await importController.importFiles(filePaths, {
+    // Expand directories to individual files (recursive)
+    const allFiles: string[] = [];
+
+    for (const inputPath of filePaths) {
+      const stat = await fs.promises.stat(inputPath);
+      if (stat.isDirectory()) {
+        // Recursively scan directory for supported files
+        const { files } = await importController.scanDirectory(inputPath);
+        allFiles.push(...files);
+      } else {
+        allFiles.push(inputPath);
+      }
+    }
+
+    if (allFiles.length === 0) {
+      return {
+        total: 0,
+        imported: 0,
+        duplicates: 0,
+        skipped: 0,
+        errors: 0,
+        files: [],
+      };
+    }
+
+    const result = await importController.importFiles(allFiles, {
       coupleId: options?.coupleId,
       copyToManaged: options?.copyToManaged,
       managedStoragePath: options?.managedStoragePath,
+      footageTypeOverride: options?.footageTypeOverride,
       window: mainWindow ?? undefined,
     });
     return result;
@@ -866,6 +1119,25 @@ ipcMain.handle('import:cancel', async () => {
 
 ipcMain.handle('import:status', async () => {
   return importController.getStatus();
+});
+
+// =============================================================================
+// IPC HANDLERS - Documents
+// =============================================================================
+
+ipcMain.handle('documents:sync', async (_, coupleId: number) => {
+  try {
+    const result = await syncCoupleDocuments(coupleId);
+    return result;
+  } catch (error) {
+    console.error('[documents:sync] Error:', error);
+    return {
+      success: false,
+      documentsPath: null,
+      filesWritten: [],
+      errors: [error instanceof Error ? error.message : String(error)],
+    };
+  }
 });
 
 // =============================================================================
@@ -1514,6 +1786,45 @@ if (!gotTheLock) {
 
   // Create window when ready
   app.whenReady().then(() => {
+    // Register media:// protocol handler for serving local video files
+    protocol.handle('media', (request) => {
+      // URL format: media://proxy/{coupleId}/{hash}
+      // For custom protocols: hostname='proxy', pathname='/{coupleId}/{hash}'
+      const url = new URL(request.url);
+      const pathParts = url.pathname.split('/').filter(Boolean);
+
+      // Check hostname is 'proxy' and we have exactly 2 path parts (coupleId, hash)
+      if (url.hostname === 'proxy' && pathParts.length === 2) {
+        const coupleId = parseInt(pathParts[0], 10);
+        const hash = pathParts[1];
+
+        const couple = couplesRepository.findById(coupleId);
+        if (!couple || !couple.working_path || !couple.folder_name) {
+          return new Response('Not found', { status: 404 });
+        }
+
+        let coupleDir: string;
+        if (couple.working_path.endsWith(couple.folder_name)) {
+          coupleDir = couple.working_path;
+        } else {
+          coupleDir = path.join(couple.working_path, couple.folder_name);
+        }
+
+        const proxyPath = path.join(coupleDir, 'proxies', `${hash}_proxy.mp4`);
+
+        if (!fs.existsSync(proxyPath)) {
+          console.log('[media://] Proxy not found:', proxyPath);
+          return new Response('Not found', { status: 404 });
+        }
+
+        // Return file using net.fetch for proper streaming
+        return net.fetch(`file://${proxyPath}`);
+      }
+
+      console.log('[media://] Invalid request - hostname:', url.hostname, 'pathParts:', pathParts);
+      return new Response('Invalid request', { status: 400 });
+    });
+
     // Initialize database first
     console.log('[Main] Initializing database...');
     initializeDatabase();

@@ -82,6 +82,7 @@ interface ElectronAPI {
   dialog: {
     selectFolder: () => Promise<string | null>;
     selectFiles: () => Promise<string[]>;
+    selectLutFile: () => Promise<string | null>;
   };
   database: {
     getLocation: () => Promise<string>;
@@ -91,6 +92,7 @@ interface ElectronAPI {
     findAll: () => Promise<Couple[]>;
     findById: (id: number) => Promise<Couple | null>;
     findWithFiles: (id: number) => Promise<CoupleWithFiles | null>;
+    findByStatus: (status: string) => Promise<Couple[]>;
     search: (query: string) => Promise<Couple[]>;
     getStats: (id: number) => Promise<CoupleStats | null>;
     getForMonth: (year: number, month: number) => Promise<Couple[]>;
@@ -126,15 +128,24 @@ interface ElectronAPI {
     getMetadata: (id: number) => Promise<FileMetadata | null>;
     updateCamera: (id: number, cameraId: number | null) => Promise<boolean>;
     delete: (id: number) => Promise<boolean>;
+    getThumbnail: (fileId: number) => Promise<string | null>;
+    getThumbnailByHash: (hash: string, coupleId: number) => Promise<string | null>;
+    getProxyByHash: (hash: string, coupleId: number) => Promise<string | null>;
+    regenerateThumbnails: (coupleId: number) => Promise<{ success: boolean; regenerated: number; total?: number; error?: string; errors?: string[] }>;
   };
   import: {
-    files: (filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => Promise<ImportBatchResult>;
-    directory: (dirPath: string, options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string }) => Promise<ImportBatchResult>;
+    files: (filePaths: string[], options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string; footageTypeOverride?: 'wedding' | 'date_night' | 'rehearsal' | 'other' }) => Promise<ImportBatchResult>;
+    directory: (dirPath: string, options?: { coupleId?: number; copyToManaged?: boolean; managedStoragePath?: string; footageTypeOverride?: 'wedding' | 'date_night' | 'rehearsal' | 'other' }) => Promise<ImportBatchResult>;
     scan: (dirPath: string) => Promise<DirectoryScanResult>;
     cancel: () => Promise<boolean>;
     status: () => Promise<ImportStatus>;
     onProgress: (callback: (progress: ImportProgress) => void) => () => void;
     onComplete: (callback: (result: ImportBatchResult) => void) => () => void;
+    onPaused: (callback: (data: { sessionId: string; error: string; canResume: boolean }) => void) => () => void;
+    onError: (callback: (data: { sessionId: string; error: string }) => void) => () => void;
+  };
+  documents: {
+    sync: (coupleId: number) => Promise<{ success: boolean; documentsUpdated: string[]; error?: string }>;
   };
   export: {
     screenshot: (input: unknown) => Promise<string | null>;

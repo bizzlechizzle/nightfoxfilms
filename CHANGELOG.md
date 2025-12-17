@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] - 2025-12-16
+
+### Fixed - Desktop App Bug Fixes
+
+**Camera Loans Section (CoupleDetail.svelte):**
+- Fixed Camera Loans section showing on ALL couples with Date Night deliverables
+- Now only shows when contract explicitly includes camera loan deliverable (`loaner_camera`, `camera_loan`, `loaner`, `guest_cam` codes)
+- Or when existing loan records exist for the couple
+
+**Import Progress Bar (Import.svelte):**
+- Fixed progress bar not updating during imports
+- Progress bar now uses correct property names from ImportController (`filesProcessed`, `filesTotal`, `currentFile`)
+- Added fallbacks for backward compatibility with older progress events
+
+**Network Error Handling (Import.svelte + preload):**
+- Added `onPaused` and `onError` event handlers to preload script
+- Import page now displays error/paused states with appropriate UI
+- Network errors (ENOTCONN, etc.) now show user-friendly "Import Paused" message
+- Added TypeScript types for new event data structures
+
+**Pre-existing Type Errors (CoupleDetail.svelte):**
+- Fixed `isDatePast` function used before declaration
+- Fixed `hasRehearsalDinner` to check deliverables instead of non-existent property
+
+**Copy Service Directory Creation (copy-service.ts):**
+- Fixed silent `.catch(() => {})` swallowing mkdir errors
+- Added comprehensive error logging for directory creation failures
+- Added path existence checks for parent and grandparent directories
+- Added logging for path construction (workingPath, folderName, tempDir)
+
+**Import Path Construction (import-controller.ts):**
+- Fixed baseStoragePath derivation to handle both cases:
+  - When `working_path` is storage root (e.g., `/Volumes/nightfox`)
+  - When `working_path` incorrectly contains folder name (e.g., `/Volumes/nightfox/couple-folder`)
+- Added pre-copy verification that storage path exists and is accessible
+- Added automatic couple folder creation if it doesn't exist
+- Added detailed logging for path construction debugging
+- Fixed thumbnail directory path derivation to use consistent baseStoragePath
+
+### Changed
+- Updated api.ts with new import event handler types
+- Added error state CSS styles to Import.svelte
+- Added fs import to import-controller.ts for path verification
+
+---
+
 ## [1.0.0] - 2025-11-18
 
 ### Added - Experience Overhaul

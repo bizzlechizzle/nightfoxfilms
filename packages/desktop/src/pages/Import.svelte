@@ -11,6 +11,8 @@
   let progress = $state<ImportProgress | null>(null);
   let importResult = $state<{ imported: number; duplicates: number; errors: number } | null>(null);
   let droppedFiles = $state<string[]>([]);
+  let errorMessage = $state<string | null>(null);
+  let isPaused = $state(false);
 
   $effect(() => {
     loadCouples();
@@ -29,12 +31,15 @@
     // Listen for import progress
     const unsubProgress = api.import.onProgress((p) => {
       progress = p;
+      errorMessage = null;
+      isPaused = false;
     });
 
     // Listen for import completion
     const unsubComplete = api.import.onComplete((result) => {
       importing = false;
       progress = null;
+      isPaused = false;
       importResult = {
         imported: result.imported,
         duplicates: result.duplicates,
@@ -42,9 +47,26 @@
       };
     });
 
+    // Listen for import paused (network failure - resumable)
+    const unsubPaused = api.import.onPaused((data) => {
+      isPaused = true;
+      importing = false;
+      errorMessage = `Network error: ${data.error}. The import has been paused and can be resumed when the connection is restored.`;
+    });
+
+    // Listen for import error (non-recoverable)
+    const unsubError = api.import.onError((data) => {
+      importing = false;
+      progress = null;
+      isPaused = false;
+      errorMessage = `Import failed: ${data.error}`;
+    });
+
     return () => {
       unsubProgress();
       unsubComplete();
+      unsubPaused();
+      unsubError();
     };
   }
 
@@ -113,13 +135,9 @@
     droppedFiles = [];
     scanResult = null;
     importResult = null;
+    errorMessage = null;
+    isPaused = false;
   }
-
-  $effect(() => {
-    // Calculate total files to import
-    const totalFiles = droppedFiles.length || scanResult?.stats.totalFiles || 0;
-    return totalFiles;
-  });
 
   const totalFiles = $derived(droppedFiles.length || scanResult?.stats.totalFiles || 0);
 </script>
@@ -196,12 +214,12 @@
       <div class="progress-bar">
         <div
           class="progress-fill"
-          style="width: {(progress.current / progress.total) * 100}%"
+          style="width: {progress.percent ?? ((progress.filesProcessed ?? progress.current ?? 0) / (progress.filesTotal ?? progress.total ?? 1) * 100)}%"
         ></div>
       </div>
       <div class="progress-info">
-        <span>{progress.current} of {progress.total}</span>
-        <span class="filename">{progress.filename}</span>
+        <span>{progress.filesProcessed ?? progress.current ?? 0} of {progress.filesTotal ?? progress.total ?? 0}</span>
+        <span class="filename">{progress.currentFile ?? progress.filename ?? ''}</span>
         <span class="status">{progress.status}</span>
       </div>
     </div>
@@ -226,6 +244,32 @@
       </div>
       <button class="btn btn-primary" onclick={clearSelection}>
         Import More
+      </button>
+    </div>
+  {/if}
+
+  {#if errorMessage}
+    <div class="import-error" class:paused={isPaused}>
+      <div class="error-icon">
+        {#if isPaused}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
+          </svg>
+        {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        {/if}
+      </div>
+      <div class="error-content">
+        <h3>{isPaused ? 'Import Paused' : 'Import Error'}</h3>
+        <p>{errorMessage}</p>
+      </div>
+      <button class="btn btn-secondary" onclick={clearSelection}>
+        Dismiss
       </button>
     </div>
   {/if}
@@ -429,5 +473,44 @@
     background: var(--color-surface);
     color: var(--color-text);
     border: 1px solid var(--color-border);
+  }
+
+  .import-error {
+    background: var(--color-surface);
+    border: 1px solid var(--color-status-error);
+    border-radius: 4px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .import-error.paused {
+    border-color: var(--color-status-warning);
+  }
+
+  .error-icon {
+    flex-shrink: 0;
+    color: var(--color-status-error);
+  }
+
+  .import-error.paused .error-icon {
+    color: var(--color-status-warning);
+  }
+
+  .error-content {
+    flex: 1;
+  }
+
+  .error-content h3 {
+    margin: 0 0 0.5rem;
+    font-size: var(--step-0);
+  }
+
+  .error-content p {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--step--1);
+    line-height: 1.5;
   }
 </style>

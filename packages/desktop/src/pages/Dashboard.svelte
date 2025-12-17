@@ -38,8 +38,9 @@
   let loading = $state(true);
   let statusBreakdownCollapsed = $state(false);
 
-  const statusLabels: Record<CoupleStatus, string> = {
+  const statusLabels: Record<string, string> = {
     booked: 'Booked',
+    ingested: 'Ingested',
     editing: 'Editing',
     delivered: 'Delivered',
     archived: 'Archived',

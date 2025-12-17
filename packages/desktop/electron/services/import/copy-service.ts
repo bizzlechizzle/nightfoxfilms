@@ -134,7 +134,7 @@ export class CopyService {
     return path.join(
       this.coupleInfo.workingPath,
       this.coupleInfo.folderName,
-      'source',
+      'media',
       medium,
       camera,
       filename
@@ -209,9 +209,45 @@ export class CopyService {
     const tempDir = path.join(
       this.coupleInfo.workingPath,
       this.coupleInfo.folderName,
-      'source'
+      'media'
     );
-    await fs.mkdir(tempDir, { recursive: true }).catch(() => {});
+
+    // Log path construction for debugging
+    console.log(`[CopyService] Path construction:`);
+    console.log(`  workingPath: ${this.coupleInfo.workingPath}`);
+    console.log(`  folderName: ${this.coupleInfo.folderName}`);
+    console.log(`  tempDir: ${tempDir}`);
+
+    // Create temp directory with proper error handling
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+      console.log(`[CopyService] Created temp directory: ${tempDir}`);
+    } catch (mkdirErr) {
+      const e = mkdirErr as NodeJS.ErrnoException;
+      if (e.code !== 'EEXIST') {
+        console.error(`[CopyService] FAILED to create temp directory: ${e.code} - ${e.message}`);
+        console.error(`[CopyService] Full error:`, e);
+        // Check if parent exists
+        const parentDir = path.dirname(tempDir);
+        try {
+          const parentStat = await fs.stat(parentDir);
+          console.log(`[CopyService] Parent exists: ${parentDir}, isDirectory: ${parentStat.isDirectory()}`);
+        } catch {
+          console.error(`[CopyService] Parent directory does NOT exist: ${parentDir}`);
+          // Check grandparent
+          const grandparent = path.dirname(parentDir);
+          try {
+            const gpStat = await fs.stat(grandparent);
+            console.log(`[CopyService] Grandparent exists: ${grandparent}, isDirectory: ${gpStat.isDirectory()}`);
+          } catch {
+            console.error(`[CopyService] Grandparent does NOT exist: ${grandparent}`);
+          }
+        }
+        result.copyError = `Cannot create directory: ${e.message}`;
+        return result;
+      }
+    }
+
     const tempPath = path.join(tempDir, `${generateTempId()}.tmp`);
 
     for (let attempt = 0; attempt <= retryConfig.maxRetries; attempt++) {
@@ -239,9 +275,18 @@ export class CopyService {
 
         // Build final destination path with the hash
         const destPath = this.buildDestinationPath(file, finalHash, medium, cameraSlug);
+        console.log(`[CopyService] Destination path: ${destPath}`);
 
         // Ensure destination directory exists
-        await fs.mkdir(path.dirname(destPath), { recursive: true }).catch(() => {});
+        try {
+          await fs.mkdir(path.dirname(destPath), { recursive: true });
+          console.log(`[CopyService] Created destination directory: ${path.dirname(destPath)}`);
+        } catch (destErr) {
+          const e = destErr as NodeJS.ErrnoException;
+          if (e.code !== 'EEXIST') {
+            console.error(`[CopyService] FAILED to create destination directory: ${e.code} - ${e.message}`);
+          }
+        }
 
         // Atomic rename from temp to final
         await fs.rename(tempPath, destPath);
@@ -277,6 +322,9 @@ export class CopyService {
         // Non-retryable or max retries exceeded
         await fs.unlink(tempPath).catch(() => {});
         result.copyError = nodeError.message || String(error);
+
+        // Log all errors for debugging
+        console.log(`[CopyService] Error copying ${file.filename}: ${errorCode} - ${result.copyError}`);
 
         // Track consecutive network errors
         if (isNetworkError(errorCode)) {
@@ -446,7 +494,7 @@ export class CopyService {
       const dirPath = path.join(
         this.coupleInfo.workingPath,
         this.coupleInfo.folderName,
-        'source',
+        'media',
         medium,
         cameraSlug || 'unknown'
       );
@@ -459,13 +507,28 @@ export class CopyService {
     if (this.isNetworkSource) {
       // Network: sequential to avoid SMB overwhelm
       for (const dir of dirList) {
-        await fs.mkdir(dir, { recursive: true }).catch(() => {});
+        try {
+          await fs.mkdir(dir, { recursive: true });
+          console.log(`[CopyService] Created directory: ${dir}`);
+        } catch (err) {
+          const e = err as NodeJS.ErrnoException;
+          if (e.code !== 'EEXIST') {
+            console.error(`[CopyService] Failed to create directory ${dir}: ${e.code} - ${e.message}`);
+          }
+        }
       }
     } else {
       // Local: parallel is fine
-      await Promise.all(dirList.map(dir =>
-        fs.mkdir(dir, { recursive: true }).catch(() => {})
-      ));
+      await Promise.all(dirList.map(async dir => {
+        try {
+          await fs.mkdir(dir, { recursive: true });
+        } catch (err) {
+          const e = err as NodeJS.ErrnoException;
+          if (e.code !== 'EEXIST') {
+            console.error(`[CopyService] Failed to create directory ${dir}: ${e.code} - ${e.message}`);
+          }
+        }
+      }));
     }
   }
 

@@ -80,6 +80,7 @@ export class SettingsRepository {
       modelLlm: this.get('litellm_model_llm') || 'local-llm',
     };
   }
+
 }
 
 export const settingsRepository = new SettingsRepository();

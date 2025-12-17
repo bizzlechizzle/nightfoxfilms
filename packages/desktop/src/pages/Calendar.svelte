@@ -21,8 +21,9 @@
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
 
-  const statusColors: Record<CoupleStatus, string> = {
+  const statusColors: Record<string, string> = {
     booked: 'var(--color-status-info)',
+    ingested: 'var(--color-status-info)',
     editing: 'var(--color-status-warning)',
     delivered: 'var(--color-status-success)',
     archived: 'var(--color-text-muted)',

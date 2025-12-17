@@ -325,6 +325,22 @@ export class CouplesRepository {
   }
 
   /**
+   * Update couple's date_night_date field
+   * Called after importing date night footage to auto-populate the timeline
+   */
+  updateDateNightDate(id: number, dateNightDate: string): Couple | null {
+    const existing = this.findById(id);
+    if (!existing) return null;
+
+    const db = getDatabase();
+    db.prepare(
+      'UPDATE couples SET date_night_date = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+    ).run(dateNightDate, id);
+
+    return this.findById(id);
+  }
+
+  /**
    * Find couples by status
    */
   findByStatus(status: CoupleStatus): Couple[] {

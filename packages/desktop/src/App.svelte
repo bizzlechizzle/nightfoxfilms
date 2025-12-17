@@ -9,11 +9,45 @@
   import Equipment from './pages/Equipment.svelte';
   import Stats from './pages/Stats.svelte';
   import Settings from './pages/Settings.svelte';
+  import ImportProgressBox from './components/ImportProgressBox.svelte';
+  import { getAPI } from './lib/api';
+  import type { ImportProgress } from './lib/types';
 
   type Page = 'dashboard' | 'couples' | 'couple-detail' | 'calendar' | 'import' | 'cameras' | 'equipment' | 'stats' | 'settings';
 
   let currentPage = $state<Page>('dashboard');
   let selectedCoupleId = $state<number | null>(null);
+
+  // Global import progress state
+  let importProgress = $state<ImportProgress | null>(null);
+  let isImporting = $state(false);
+
+  // Set up global import progress listeners
+  $effect(() => {
+    const api = getAPI();
+
+    const unsubProgress = api.import.onProgress((progress) => {
+      importProgress = progress;
+      isImporting = true;
+    });
+
+    const unsubComplete = api.import.onComplete(() => {
+      importProgress = null;
+      isImporting = false;
+    });
+
+    return () => {
+      unsubProgress();
+      unsubComplete();
+    };
+  });
+
+  async function cancelGlobalImport() {
+    const api = getAPI();
+    await api.import.cancel();
+    importProgress = null;
+    isImporting = false;
+  }
 
   // Navigation pages
   const mainPages: { id: Page; label: string }[] = [
@@ -91,6 +125,13 @@
 
   <!-- Main Content Area -->
   <main class="content">
+    <!-- Global Import Progress Box -->
+    {#if isImporting && importProgress && currentPage !== 'import'}
+      <div class="global-import-progress">
+        <ImportProgressBox progress={importProgress} oncancel={cancelGlobalImport} />
+      </div>
+    {/if}
+
     {#if currentPage === 'dashboard'}
       <Dashboard onnavigate={handleCoupleNavigate} />
     {:else if currentPage === 'couples'}
@@ -203,5 +244,10 @@
 
   :global(.page) {
     max-width: 1200px;
+  }
+
+  .global-import-progress {
+    max-width: 1200px;
+    margin-bottom: 1rem;
   }
 </style>

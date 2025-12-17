@@ -1256,6 +1256,719 @@ function runMigrations(database: SqliteDatabase): void {
         CREATE INDEX IF NOT EXISTS idx_import_sessions_can_resume ON import_sessions(can_resume);
       `,
     },
+    // Migration 28: Create venues table with shooting notes and ratings
+    {
+      id: 28,
+      name: 'create_venues_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS venues (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          venue_type TEXT NOT NULL CHECK (venue_type IN ('church', 'barn', 'estate', 'hotel', 'restaurant', 'outdoor', 'beach', 'winery', 'museum', 'country_club', 'rooftop', 'other')),
+          address TEXT,
+          city TEXT,
+          state TEXT,
+          zip TEXT,
+          country TEXT DEFAULT 'USA',
+          latitude REAL,
+          longitude REAL,
+          website TEXT,
+          phone TEXT,
+          email TEXT,
+          contact_name TEXT,
+          capacity INTEGER,
+          indoor_lighting TEXT CHECK (indoor_lighting IN ('excellent', 'good', 'challenging', 'difficult', 'mixed')),
+          outdoor_lighting TEXT CHECK (outdoor_lighting IN ('excellent', 'good', 'challenging', 'difficult', 'mixed')),
+          audio_challenges TEXT,
+          power_availability TEXT,
+          load_in_notes TEXT,
+          parking_notes TEXT,
+          restrictions TEXT,
+          your_rating INTEGER CHECK (your_rating BETWEEN 1 AND 5),
+          shooting_notes TEXT,
+          notes TEXT,
+          times_shot INTEGER DEFAULT 0,
+          last_shot_date TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_venues_name ON venues(name);
+        CREATE INDEX IF NOT EXISTS idx_venues_city_state ON venues(city, state);
+        CREATE INDEX IF NOT EXISTS idx_venues_type ON venues(venue_type);
+        CREATE INDEX IF NOT EXISTS idx_venues_active ON venues(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_venues_update_timestamp
+        AFTER UPDATE ON venues
+        BEGIN
+          UPDATE venues SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 29: Create vendors table with referral tracking
+    {
+      id: 29,
+      name: 'create_vendors_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS vendors (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          company TEXT,
+          vendor_type TEXT NOT NULL CHECK (vendor_type IN ('photographer', 'planner', 'coordinator', 'dj', 'band', 'florist', 'caterer', 'baker', 'officiant', 'makeup', 'hair', 'dress', 'suit', 'rentals', 'transportation', 'other')),
+          email TEXT,
+          phone TEXT,
+          website TEXT,
+          instagram TEXT,
+          address TEXT,
+          city TEXT,
+          state TEXT,
+          relationship TEXT DEFAULT 'neutral' CHECK (relationship IN ('preferred', 'neutral', 'avoid')),
+          your_rating INTEGER CHECK (your_rating BETWEEN 1 AND 5),
+          referral_fee_percent REAL,
+          referral_fee_flat REAL,
+          notes TEXT,
+          times_worked_together INTEGER DEFAULT 0,
+          referrals_received INTEGER DEFAULT 0,
+          referrals_given INTEGER DEFAULT 0,
+          last_worked_date TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_vendors_name ON vendors(name);
+        CREATE INDEX IF NOT EXISTS idx_vendors_type ON vendors(vendor_type);
+        CREATE INDEX IF NOT EXISTS idx_vendors_relationship ON vendors(relationship);
+        CREATE INDEX IF NOT EXISTS idx_vendors_active ON vendors(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_vendors_update_timestamp
+        AFTER UPDATE ON vendors
+        BEGIN
+          UPDATE vendors SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        -- Junction table for vendors working on specific weddings
+        CREATE TABLE IF NOT EXISTS vendor_couples (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          vendor_id INTEGER NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          role TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(vendor_id, couple_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_vendor_couples_vendor ON vendor_couples(vendor_id);
+        CREATE INDEX IF NOT EXISTS idx_vendor_couples_couple ON vendor_couples(couple_id);
+      `,
+    },
+    // Migration 30: Create packages and contracts tables
+    {
+      id: 30,
+      name: 'create_packages_contracts_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS packages (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          code TEXT NOT NULL UNIQUE,
+          description TEXT,
+          price REAL NOT NULL,
+          videographer_count INTEGER DEFAULT 1,
+          hours_coverage INTEGER,
+          mediums_json TEXT,
+          deliverables_json TEXT,
+          includes_json TEXT,
+          is_active INTEGER DEFAULT 1,
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_packages_code ON packages(code);
+        CREATE INDEX IF NOT EXISTS idx_packages_active ON packages(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_packages_update_timestamp
+        AFTER UPDATE ON packages
+        BEGIN
+          UPDATE packages SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS contracts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          package_id INTEGER REFERENCES packages(id) ON DELETE SET NULL,
+          custom_package_name TEXT,
+          contract_date TEXT,
+          wedding_date TEXT NOT NULL,
+          total_price REAL NOT NULL,
+          deposit_amount REAL,
+          deposit_due_date TEXT,
+          deposit_received_date TEXT,
+          balance_amount REAL,
+          balance_due_date TEXT,
+          balance_received_date TEXT,
+          payment_schedule_json TEXT,
+          deliverables_json TEXT,
+          custom_terms TEXT,
+          signed_at TEXT,
+          signed_by TEXT,
+          contract_pdf_path TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_contracts_couple ON contracts(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_contracts_package ON contracts(package_id);
+        CREATE INDEX IF NOT EXISTS idx_contracts_wedding_date ON contracts(wedding_date);
+
+        CREATE TRIGGER IF NOT EXISTS tr_contracts_update_timestamp
+        AFTER UPDATE ON contracts
+        BEGIN
+          UPDATE contracts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 31: Create payments and expenses tables
+    {
+      id: 31,
+      name: 'create_payments_expenses_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS payments (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          contract_id INTEGER REFERENCES contracts(id) ON DELETE SET NULL,
+          amount REAL NOT NULL,
+          payment_method TEXT NOT NULL CHECK (payment_method IN ('check', 'cash', 'venmo', 'paypal', 'credit_card', 'wire', 'other')),
+          status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'received', 'deposited', 'refunded')),
+          payment_type TEXT,
+          reference_number TEXT,
+          paid_at TEXT,
+          due_date TEXT,
+          deposited_at TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_payments_couple ON payments(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_contract ON payments(contract_id);
+        CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+        CREATE INDEX IF NOT EXISTS idx_payments_due_date ON payments(due_date);
+
+        CREATE TRIGGER IF NOT EXISTS tr_payments_update_timestamp
+        AFTER UPDATE ON payments
+        BEGIN
+          UPDATE payments SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER REFERENCES couples(id) ON DELETE SET NULL,
+          category TEXT NOT NULL CHECK (category IN ('equipment', 'travel', 'lodging', 'film', 'processing', 'shipping', 'software', 'music', 'assistant', 'second_shooter', 'other')),
+          description TEXT NOT NULL,
+          amount REAL NOT NULL,
+          vendor_id INTEGER REFERENCES vendors(id) ON DELETE SET NULL,
+          vendor_name TEXT,
+          receipt_path TEXT,
+          expense_date TEXT NOT NULL,
+          is_reimbursable INTEGER DEFAULT 0,
+          reimbursed_at TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_expenses_couple ON expenses(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
+        CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date);
+        CREATE INDEX IF NOT EXISTS idx_expenses_vendor ON expenses(vendor_id);
+
+        CREATE TRIGGER IF NOT EXISTS tr_expenses_update_timestamp
+        AFTER UPDATE ON expenses
+        BEGIN
+          UPDATE expenses SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 32: Create leads table with conversion tracking
+    {
+      id: 32,
+      name: 'create_leads_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS leads (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          partner_1_name TEXT,
+          partner_2_name TEXT,
+          email TEXT,
+          phone TEXT,
+          wedding_date TEXT,
+          venue_name TEXT,
+          source TEXT NOT NULL CHECK (source IN ('website', 'instagram', 'tiktok', 'facebook', 'youtube', 'referral', 'vendor_referral', 'wedding_wire', 'the_knot', 'google', 'word_of_mouth', 'repeat_client', 'other')),
+          source_detail TEXT,
+          referrer_id INTEGER,
+          referrer_type TEXT,
+          status TEXT DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'qualified', 'proposal_sent', 'negotiating', 'won', 'lost', 'unqualified')),
+          budget_range TEXT,
+          package_interest TEXT,
+          notes TEXT,
+          first_contact_at TEXT,
+          last_contact_at TEXT,
+          qualified_at TEXT,
+          proposal_sent_at TEXT,
+          won_at TEXT,
+          lost_at TEXT,
+          lost_reason TEXT,
+          converted_couple_id INTEGER REFERENCES couples(id) ON DELETE SET NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
+        CREATE INDEX IF NOT EXISTS idx_leads_source ON leads(source);
+        CREATE INDEX IF NOT EXISTS idx_leads_wedding_date ON leads(wedding_date);
+        CREATE INDEX IF NOT EXISTS idx_leads_converted ON leads(converted_couple_id);
+
+        CREATE TRIGGER IF NOT EXISTS tr_leads_update_timestamp
+        AFTER UPDATE ON leads
+        BEGIN
+          UPDATE leads SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 33: Create communications table for call/email logs
+    {
+      id: 33,
+      name: 'create_communications_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS communications (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER REFERENCES couples(id) ON DELETE CASCADE,
+          lead_id INTEGER REFERENCES leads(id) ON DELETE CASCADE,
+          vendor_id INTEGER REFERENCES vendors(id) ON DELETE SET NULL,
+          contact_id INTEGER REFERENCES contacts(id) ON DELETE SET NULL,
+          communication_type TEXT NOT NULL CHECK (communication_type IN ('email', 'phone', 'text', 'dm', 'in_person', 'video_call', 'voicemail')),
+          direction TEXT NOT NULL CHECK (direction IN ('inbound', 'outbound')),
+          subject TEXT,
+          summary TEXT,
+          full_text TEXT,
+          attachments_json TEXT,
+          gmail_id TEXT,
+          gmail_thread_id TEXT,
+          call_duration_seconds INTEGER,
+          occurred_at TEXT NOT NULL,
+          follow_up_date TEXT,
+          follow_up_completed INTEGER DEFAULT 0,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_communications_couple ON communications(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_communications_lead ON communications(lead_id);
+        CREATE INDEX IF NOT EXISTS idx_communications_vendor ON communications(vendor_id);
+        CREATE INDEX IF NOT EXISTS idx_communications_type ON communications(communication_type);
+        CREATE INDEX IF NOT EXISTS idx_communications_occurred ON communications(occurred_at);
+        CREATE INDEX IF NOT EXISTS idx_communications_gmail ON communications(gmail_id);
+        CREATE INDEX IF NOT EXISTS idx_communications_follow_up ON communications(follow_up_date, follow_up_completed);
+
+        CREATE TRIGGER IF NOT EXISTS tr_communications_update_timestamp
+        AFTER UPDATE ON communications
+        BEGIN
+          UPDATE communications SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 34: Create questionnaires and responses tables
+    {
+      id: 34,
+      name: 'create_questionnaires_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS questionnaires (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          questionnaire_type TEXT NOT NULL CHECK (questionnaire_type IN ('initial_inquiry', 'booking', 'pre_wedding', 'day_of', 'feedback')),
+          description TEXT,
+          questions_json TEXT NOT NULL,
+          is_active INTEGER DEFAULT 1,
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_questionnaires_type ON questionnaires(questionnaire_type);
+        CREATE INDEX IF NOT EXISTS idx_questionnaires_active ON questionnaires(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_questionnaires_update_timestamp
+        AFTER UPDATE ON questionnaires
+        BEGIN
+          UPDATE questionnaires SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS questionnaire_responses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          questionnaire_id INTEGER NOT NULL REFERENCES questionnaires(id) ON DELETE CASCADE,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          responses_json TEXT NOT NULL,
+          submitted_at TEXT,
+          reviewed_at TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_questionnaire_responses_questionnaire ON questionnaire_responses(questionnaire_id);
+        CREATE INDEX IF NOT EXISTS idx_questionnaire_responses_couple ON questionnaire_responses(couple_id);
+
+        CREATE TRIGGER IF NOT EXISTS tr_questionnaire_responses_update_timestamp
+        AFTER UPDATE ON questionnaire_responses
+        BEGIN
+          UPDATE questionnaire_responses SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 35: Create footage_markers table for selects/ratings
+    {
+      id: 35,
+      name: 'create_footage_markers_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS footage_markers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+          scene_id INTEGER REFERENCES scenes(id) ON DELETE SET NULL,
+          marker_type TEXT NOT NULL CHECK (marker_type IN ('select', 'reject', 'favorite', 'maybe', 'flag')),
+          category TEXT CHECK (category IN ('ceremony', 'reception', 'getting_ready', 'first_look', 'portraits', 'details', 'dancing', 'speeches', 'cake', 'exit', 'other')),
+          timecode_in REAL,
+          timecode_out REAL,
+          rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+          color TEXT,
+          label TEXT,
+          notes TEXT,
+          created_by TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_footage_markers_file ON footage_markers(file_id);
+        CREATE INDEX IF NOT EXISTS idx_footage_markers_scene ON footage_markers(scene_id);
+        CREATE INDEX IF NOT EXISTS idx_footage_markers_type ON footage_markers(marker_type);
+        CREATE INDEX IF NOT EXISTS idx_footage_markers_category ON footage_markers(category);
+        CREATE INDEX IF NOT EXISTS idx_footage_markers_rating ON footage_markers(rating);
+
+        CREATE TRIGGER IF NOT EXISTS tr_footage_markers_update_timestamp
+        AFTER UPDATE ON footage_markers
+        BEGIN
+          UPDATE footage_markers SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 36: Create reviews and testimonials table
+    {
+      id: 36,
+      name: 'create_reviews_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS reviews (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          platform TEXT NOT NULL CHECK (platform IN ('google', 'wedding_wire', 'the_knot', 'yelp', 'facebook', 'instagram', 'internal', 'other')),
+          rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
+          title TEXT,
+          content TEXT,
+          reviewer_name TEXT,
+          review_date TEXT NOT NULL,
+          external_url TEXT,
+          is_featured INTEGER DEFAULT 0,
+          is_approved INTEGER DEFAULT 0,
+          response TEXT,
+          responded_at TEXT,
+          screenshot_path TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_reviews_couple ON reviews(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_reviews_platform ON reviews(platform);
+        CREATE INDEX IF NOT EXISTS idx_reviews_rating ON reviews(rating);
+        CREATE INDEX IF NOT EXISTS idx_reviews_featured ON reviews(is_featured);
+        CREATE INDEX IF NOT EXISTS idx_reviews_approved ON reviews(is_approved);
+
+        CREATE TRIGGER IF NOT EXISTS tr_reviews_update_timestamp
+        AFTER UPDATE ON reviews
+        BEGIN
+          UPDATE reviews SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 37: Create contacts table with role management
+    {
+      id: 37,
+      name: 'create_contacts_table',
+      sql: `
+        CREATE TABLE IF NOT EXISTS contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          company TEXT,
+          role TEXT NOT NULL CHECK (role IN ('planner', 'coordinator', 'photographer', 'dj', 'florist', 'caterer', 'officiant', 'venue_manager', 'assistant', 'family', 'friend', 'other')),
+          email TEXT,
+          phone TEXT,
+          website TEXT,
+          instagram TEXT,
+          address TEXT,
+          relationship_notes TEXT,
+          vendor_id INTEGER REFERENCES vendors(id) ON DELETE SET NULL,
+          venue_id INTEGER REFERENCES venues(id) ON DELETE SET NULL,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_contacts_name ON contacts(name);
+        CREATE INDEX IF NOT EXISTS idx_contacts_role ON contacts(role);
+        CREATE INDEX IF NOT EXISTS idx_contacts_vendor ON contacts(vendor_id);
+        CREATE INDEX IF NOT EXISTS idx_contacts_venue ON contacts(venue_id);
+        CREATE INDEX IF NOT EXISTS idx_contacts_active ON contacts(is_active);
+
+        CREATE TRIGGER IF NOT EXISTS tr_contacts_update_timestamp
+        AFTER UPDATE ON contacts
+        BEGIN
+          UPDATE contacts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        -- Junction table for contacts associated with specific weddings
+        CREATE TABLE IF NOT EXISTS couple_contacts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          contact_id INTEGER NOT NULL REFERENCES contacts(id) ON DELETE CASCADE,
+          role TEXT,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(couple_id, contact_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_couple_contacts_couple ON couple_contacts(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_couple_contacts_contact ON couple_contacts(contact_id);
+      `,
+    },
+    // Migration 38: Create timeline_events and shot_lists tables
+    {
+      id: 38,
+      name: 'create_timeline_shotlist_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS timeline_events (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          event_type TEXT NOT NULL CHECK (event_type IN ('hair_makeup', 'getting_ready', 'first_look', 'ceremony', 'cocktail_hour', 'reception_entrance', 'first_dance', 'parent_dances', 'speeches', 'dinner', 'cake_cutting', 'bouquet_toss', 'garter_toss', 'dancing', 'last_dance', 'exit', 'other')),
+          title TEXT,
+          scheduled_time TEXT,
+          actual_time TEXT,
+          duration_minutes INTEGER,
+          location TEXT,
+          notes TEXT,
+          sort_order INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_timeline_events_couple ON timeline_events(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_timeline_events_type ON timeline_events(event_type);
+        CREATE INDEX IF NOT EXISTS idx_timeline_events_sort ON timeline_events(couple_id, sort_order);
+
+        CREATE TRIGGER IF NOT EXISTS tr_timeline_events_update_timestamp
+        AFTER UPDATE ON timeline_events
+        BEGIN
+          UPDATE timeline_events SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS shot_list_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER NOT NULL REFERENCES couples(id) ON DELETE CASCADE,
+          category TEXT NOT NULL CHECK (category IN ('ceremony', 'reception', 'getting_ready', 'first_look', 'portraits', 'details', 'dancing', 'speeches', 'cake', 'exit', 'other')),
+          description TEXT NOT NULL,
+          is_required INTEGER DEFAULT 0,
+          is_captured INTEGER DEFAULT 0,
+          priority INTEGER DEFAULT 0,
+          notes TEXT,
+          file_ids_json TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_shot_list_items_couple ON shot_list_items(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_shot_list_items_category ON shot_list_items(category);
+        CREATE INDEX IF NOT EXISTS idx_shot_list_items_required ON shot_list_items(is_required);
+        CREATE INDEX IF NOT EXISTS idx_shot_list_items_captured ON shot_list_items(is_captured);
+
+        CREATE TRIGGER IF NOT EXISTS tr_shot_list_items_update_timestamp
+        AFTER UPDATE ON shot_list_items
+        BEGIN
+          UPDATE shot_list_items SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+      `,
+    },
+    // Migration 39: Create tags and playlists tables
+    {
+      id: 39,
+      name: 'create_tags_playlists_tables',
+      sql: `
+        CREATE TABLE IF NOT EXISTS tags (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          color TEXT,
+          tag_type TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+        CREATE INDEX IF NOT EXISTS idx_tags_type ON tags(tag_type);
+
+        CREATE TABLE IF NOT EXISTS file_tags (
+          file_id INTEGER NOT NULL REFERENCES files(id) ON DELETE CASCADE,
+          tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (file_id, tag_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_file_tags_file ON file_tags(file_id);
+        CREATE INDEX IF NOT EXISTS idx_file_tags_tag ON file_tags(tag_id);
+
+        CREATE TABLE IF NOT EXISTS scene_tags (
+          scene_id INTEGER NOT NULL REFERENCES scenes(id) ON DELETE CASCADE,
+          tag_id INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (scene_id, tag_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_scene_tags_scene ON scene_tags(scene_id);
+        CREATE INDEX IF NOT EXISTS idx_scene_tags_tag ON scene_tags(tag_id);
+
+        CREATE TABLE IF NOT EXISTS playlists (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          couple_id INTEGER REFERENCES couples(id) ON DELETE SET NULL,
+          name TEXT NOT NULL,
+          description TEXT,
+          is_public INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_playlists_couple ON playlists(couple_id);
+        CREATE INDEX IF NOT EXISTS idx_playlists_public ON playlists(is_public);
+
+        CREATE TRIGGER IF NOT EXISTS tr_playlists_update_timestamp
+        AFTER UPDATE ON playlists
+        BEGIN
+          UPDATE playlists SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+
+        CREATE TABLE IF NOT EXISTS playlist_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          playlist_id INTEGER NOT NULL REFERENCES playlists(id) ON DELETE CASCADE,
+          file_id INTEGER REFERENCES files(id) ON DELETE CASCADE,
+          scene_id INTEGER REFERENCES scenes(id) ON DELETE CASCADE,
+          sort_order INTEGER DEFAULT 0,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_playlist_items_playlist ON playlist_items(playlist_id);
+        CREATE INDEX IF NOT EXISTS idx_playlist_items_file ON playlist_items(file_id);
+        CREATE INDEX IF NOT EXISTS idx_playlist_items_scene ON playlist_items(scene_id);
+        CREATE INDEX IF NOT EXISTS idx_playlist_items_sort ON playlist_items(playlist_id, sort_order);
+      `,
+    },
+    // Migration 40: Add venue_id to couples for linking
+    {
+      id: 40,
+      name: 'add_venue_id_to_couples',
+      sql: `
+        ALTER TABLE couples ADD COLUMN venue_id INTEGER REFERENCES venues(id) ON DELETE SET NULL;
+        CREATE INDEX IF NOT EXISTS idx_couples_venue_id ON couples(venue_id);
+      `,
+    },
+    // Migration 41: Add lead_id to couples for tracking conversion source
+    {
+      id: 41,
+      name: 'add_lead_id_to_couples',
+      sql: `
+        ALTER TABLE couples ADD COLUMN lead_id INTEGER REFERENCES leads(id) ON DELETE SET NULL;
+        CREATE INDEX IF NOT EXISTS idx_couples_lead_id ON couples(lead_id);
+      `,
+    },
+    // Migration 42: Fix folder_name format (replace colons with dashes) and reset stale file_count
+    {
+      id: 42,
+      name: 'fix_folder_names_and_file_counts',
+      sql: `
+        -- Fix folder_name format: replace colons with dashes (macOS doesn't allow colons)
+        UPDATE couples SET folder_name = REPLACE(folder_name, ':', '-') WHERE folder_name LIKE '%:%';
+
+        -- Reset file_count to match actual file count (sync with files table)
+        UPDATE couples SET file_count = (
+          SELECT COUNT(*) FROM files WHERE files.couple_id = couples.id
+        );
+
+        -- Reset total_duration_seconds to match actual duration
+        UPDATE couples SET total_duration_seconds = COALESCE((
+          SELECT SUM(duration_seconds) FROM files WHERE files.couple_id = couples.id
+        ), 0);
+      `,
+    },
+    // Migration 43: Populate working_path for all couples from global storage_path setting
+    {
+      id: 43,
+      name: 'populate_couple_working_paths',
+      sql: `
+        -- Set working_path for all couples that have a folder_name but no working_path
+        -- Uses the global storage_path setting as the base directory
+        UPDATE couples
+        SET working_path = (
+          SELECT value || '/' || couples.folder_name
+          FROM settings
+          WHERE key = 'storage_path' AND value IS NOT NULL
+        )
+        WHERE folder_name IS NOT NULL
+          AND working_path IS NULL
+          AND EXISTS (SELECT 1 FROM settings WHERE key = 'storage_path' AND value IS NOT NULL);
+      `,
+    },
+    // Migration 44: Add has_rehearsal_dinner field
+    {
+      id: 44,
+      name: 'add_has_rehearsal_dinner',
+      sql: `
+        -- Boolean flag for whether couple has a rehearsal dinner event
+        ALTER TABLE couples ADD COLUMN has_rehearsal_dinner INTEGER DEFAULT 0;
+      `,
+    },
+    // Migration 45: Add proxy_path for transcoded preview files
+    {
+      id: 45,
+      name: 'add_proxy_path',
+      sql: `
+        -- Path to 720p proxy with LUT baked in (for S-Log footage)
+        ALTER TABLE files ADD COLUMN proxy_path TEXT;
+      `,
+    },
+    // Migration 46: Add is_system flag to cameras for seed profiles
+    {
+      id: 46,
+      name: 'add_camera_is_system',
+      sql: `
+        -- Flag to identify system/seed cameras (hidden from UI but used for auto-detection)
+        ALTER TABLE cameras ADD COLUMN is_system INTEGER DEFAULT 0;
+        CREATE INDEX IF NOT EXISTS idx_cameras_is_system ON cameras(is_system);
+
+        -- Mark all existing seeded cameras as system cameras (by checking make/model combinations)
+        UPDATE cameras SET is_system = 1 WHERE
+          (make = 'Sony' AND model IN ('ILCE-7SM3', 'ZV-E1', 'ILCE-7RM5', 'ILCE-7M3', 'HXR-NX800', 'HDR-CX210', 'HDR-PJ340')) OR
+          (make = 'DJI' AND model = 'Mavic 3') OR
+          (make = 'Apple' AND model = 'iPhone 15 Pro Max') OR
+          (make = 'JVC' AND model IN ('Everio HD', 'Everio')) OR
+          (make IS NULL AND model IS NULL AND medium = 'super8');
+      `,
+    },
   ];
 
   // Apply pending migrations

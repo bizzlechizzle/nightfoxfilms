@@ -36,6 +36,8 @@ export interface FileCreateInput {
   codec?: string | null;
   bitrate?: number | null;
   recorded_at?: string | null;
+  thumbnail_path?: string | null;
+  proxy_path?: string | null;
 }
 
 export interface FileFilters {
@@ -302,6 +304,24 @@ export class FilesRepository {
   setHidden(id: number, hidden: boolean): boolean {
     const db = getDatabase();
     const result = db.prepare('UPDATE files SET is_hidden = ? WHERE id = ?').run(hidden ? 1 : 0, id);
+    return result.changes > 0;
+  }
+
+  /**
+   * Update thumbnail path for a file
+   */
+  updateThumbnailPath(id: number, thumbnailPath: string | null): boolean {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE files SET thumbnail_path = ? WHERE id = ?').run(thumbnailPath, id);
+    return result.changes > 0;
+  }
+
+  /**
+   * Update proxy path for a file
+   */
+  updateProxyPath(id: number, proxyPath: string | null): boolean {
+    const db = getDatabase();
+    const result = db.prepare('UPDATE files SET proxy_path = ? WHERE id = ?').run(proxyPath, id);
     return result.changes > 0;
   }
 

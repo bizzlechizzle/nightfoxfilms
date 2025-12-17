@@ -69,22 +69,69 @@ export interface MediaInfo {
  * Parse metadata into simplified MediaInfo
  */
 export function parseMediaInfo(tags: Tags): MediaInfo {
-  // Parse create date
+  // Parse create date - check many possible fields
+  // Different cameras use different metadata fields for creation date
   let createDate: Date | null = null;
-  const dateFields = ['CreateDate', 'DateTimeOriginal', 'MediaCreateDate', 'ModifyDate'];
+  const dateFields = [
+    'CreateDate',           // Most common for video
+    'DateTimeOriginal',     // Common for photos, some video
+    'MediaCreateDate',      // QuickTime/MP4
+    'TrackCreateDate',      // Some video formats
+    'CreationDate',         // Alternative field
+    'ContentCreateDate',    // XMP field
+    'DateCreated',          // IPTC field
+    'DateTime',             // Generic EXIF
+    'SubSecCreateDate',     // High precision date
+    'GPSDateTime',          // If has GPS timestamp
+    'FileModifyDate',       // Fallback to file modification
+    'ModifyDate',           // Last resort modification date
+  ];
+
+  let fallbackDate: Date | null = null;
+
   for (const field of dateFields) {
     const value = (tags as any)[field];
     if (value) {
-      if (value instanceof Date) {
-        createDate = value;
-      } else if (typeof value === 'string') {
-        createDate = new Date(value);
-      } else if (value.rawValue) {
-        createDate = new Date(value.rawValue);
+      try {
+        let parsedDate: Date | null = null;
+
+        if (value instanceof Date) {
+          parsedDate = value;
+        } else if (typeof value === 'string') {
+          // Handle various date formats
+          // ExifTool may return "YYYY:MM:DD HH:MM:SS" format
+          const normalized = value.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+          parsedDate = new Date(normalized);
+        } else if (value.rawValue) {
+          const normalized = String(value.rawValue).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+          parsedDate = new Date(normalized);
+        } else if (typeof value === 'object' && value.year) {
+          // ExifDateTime object
+          parsedDate = new Date(value.year, (value.month || 1) - 1, value.day || 1,
+            value.hour || 0, value.minute || 0, value.second || 0);
+        }
+
+        if (parsedDate && !isNaN(parsedDate.getTime())) {
+          // FileModifyDate/ModifyDate are fallbacks - save but keep looking
+          if (field === 'FileModifyDate' || field === 'ModifyDate') {
+            if (!fallbackDate) {
+              fallbackDate = parsedDate;
+            }
+            continue;
+          }
+          // Found a better date field - use it
+          createDate = parsedDate;
+          break;
+        }
+      } catch {
+        // Date parsing failed, try next field
       }
-      if (createDate && !isNaN(createDate.getTime())) break;
-      createDate = null;
     }
+  }
+
+  // Use fallback if no better date found
+  if (!createDate && fallbackDate) {
+    createDate = fallbackDate;
   }
 
   // Parse duration (can be in various formats)

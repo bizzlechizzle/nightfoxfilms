@@ -45,6 +45,76 @@ export type {
   // Film usage types
   FilmUsage,
   FilmUsageInput,
+  // Comprehensive schema types - Venues
+  Venue,
+  VenueInput,
+  VenueType,
+  VenueRating,
+  LightingCondition,
+  // Comprehensive schema types - Vendors
+  Vendor,
+  VendorInput,
+  VendorType,
+  VendorRelationship,
+  VendorCouple,
+  // Comprehensive schema types - Packages & Contracts
+  Package,
+  PackageInput,
+  Contract,
+  ContractInput,
+  // Comprehensive schema types - Payments & Expenses
+  Payment,
+  PaymentInput,
+  PaymentMethod,
+  PaymentStatus,
+  Expense,
+  ExpenseInput,
+  ExpenseCategory,
+  // Comprehensive schema types - Leads
+  Lead,
+  LeadInput,
+  LeadStatus,
+  LeadSource,
+  // Comprehensive schema types - Communications
+  Communication,
+  CommunicationInput,
+  CommunicationType,
+  CommunicationDirection,
+  // Comprehensive schema types - Questionnaires
+  Questionnaire,
+  QuestionnaireInput,
+  QuestionnaireResponse,
+  QuestionnaireResponseInput,
+  QuestionnaireType,
+  // Comprehensive schema types - Footage Markers
+  FootageMarker,
+  FootageMarkerInput,
+  MarkerType,
+  MarkerCategory,
+  // Comprehensive schema types - Reviews
+  Review,
+  ReviewInput,
+  ReviewPlatform,
+  // Comprehensive schema types - Contacts
+  Contact,
+  ContactInput,
+  ContactRole,
+  CoupleContact,
+  // Comprehensive schema types - Timeline & Shot Lists
+  TimelineEvent,
+  TimelineEventInput,
+  TimelineEventType,
+  ShotListItem,
+  ShotListItemInput,
+  // Comprehensive schema types - Tags & Playlists
+  Tag,
+  TagInput,
+  FileTag,
+  SceneTag,
+  Playlist,
+  PlaylistInput,
+  PlaylistItem,
+  PlaylistItemInput,
 } from '@nightfox/core';
 
 /**

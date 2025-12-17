@@ -125,7 +125,6 @@
 <div class="page">
   <header class="page-header">
     <h2>Settings</h2>
-    <p class="subtitle">Configure application preferences</p>
   </header>
 
   {#if loading}
@@ -134,9 +133,13 @@
     <div class="settings-sections">
       <section class="settings-section">
         <h3>Storage</h3>
+
         <div class="setting-row">
           <div class="setting-info">
-            <label>Managed Storage Path</label>
+            <label>Nightfox Storage Root</label>
+            <p class="setting-description">
+              Base folder for all wedding projects and app data
+            </p>
           </div>
           <div class="setting-control">
             <div class="path-input">
@@ -151,6 +154,25 @@
             </div>
           </div>
         </div>
+
+        {#if storagePath}
+          <div class="folder-structure">
+            <div class="structure-header">Folder Structure</div>
+            <div class="structure-tree">
+              <div class="tree-item root">{storagePath.split('/').pop()}/</div>
+              <div class="tree-item level-1">weddings/</div>
+              <div class="tree-item level-2">{new Date().getFullYear()}/</div>
+              <div class="tree-item level-3">MM-DD Couple Name/</div>
+              <div class="tree-item level-4">media/</div>
+              <div class="tree-item level-4">thumbnails/</div>
+              <div class="tree-item level-4">documents/</div>
+              <div class="tree-item level-1">app-data/</div>
+              <div class="tree-item level-2">luts/</div>
+              <div class="tree-item level-2">camera-signatures/</div>
+            </div>
+          </div>
+        {/if}
+
       </section>
 
       <section class="settings-section">
@@ -337,8 +359,7 @@
     margin-bottom: 2rem;
   }
 
-  .page-header h2 { margin-bottom: 0.25rem; }
-  .subtitle { color: var(--color-text-muted); margin: 0; }
+  .page-header h2 { margin-bottom: 0; }
 
   .loading {
     padding: 3rem;
@@ -394,12 +415,6 @@
     margin: 0;
   }
 
-  .setting-path {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    word-break: break-all;
-  }
-
   .setting-control {
     flex-shrink: 0;
     min-width: 220px;
@@ -434,29 +449,6 @@
     margin-top: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--color-border);
-  }
-
-  .db-stats {
-    display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .db-stat {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .db-stat .stat-value {
-    font-size: var(--step-1);
-    font-weight: 600;
-  }
-
-  .db-stat .stat-label {
-    font-size: var(--step--1);
-    color: var(--color-text-muted);
   }
 
   .about-info {
@@ -539,7 +531,6 @@
   }
 
   .status-ok { background: #10b981; }
-  .status-warn { background: #f59e0b; }
   .status-error { background: #ef4444; }
 
   .ai-warning {
@@ -586,4 +577,44 @@
     font-family: var(--font-mono);
     font-size: var(--step--1);
   }
+
+  /* Folder structure visualization */
+  .folder-structure {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .structure-header {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+
+  .structure-tree {
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    background: var(--color-bg-alt);
+    border-radius: 4px;
+    padding: 1rem;
+    line-height: 1.6;
+  }
+
+  .tree-item {
+    color: var(--color-text-muted);
+  }
+
+  .tree-item.root {
+    color: var(--color-text);
+    font-weight: 500;
+  }
+
+  .tree-item.level-1 { padding-left: 1rem; }
+  .tree-item.level-2 { padding-left: 2rem; }
+  .tree-item.level-3 { padding-left: 3rem; }
+  .tree-item.level-4 { padding-left: 4rem; }
+
 </style>
