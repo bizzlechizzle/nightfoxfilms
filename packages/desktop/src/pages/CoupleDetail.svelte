@@ -64,12 +64,14 @@
     is_audio_peak: number;
     audio_type: string | null;
     is_selected: number;
+    rating: number;
     selection_reasons?: string[];
   }
   let screenshots = $state<ScreenshotData[]>([]);
   let loadingScreenshots = $state(false);
   let showScreenshotsTab = $state(false);
   let screenshotFilter = $state<'all' | 'selected' | 'faces' | 'broll'>('all');
+  let minRating = $state<number>(0); // 0 = show all, 1-5 = minimum rating threshold
   let selectedForExport = $state<Set<number>>(new Set());
 
   // Screenshot images cache: screenshotId -> data URL
@@ -453,16 +455,27 @@
 
   // Filtered screenshots based on current filter
   const filteredScreenshots = $derived.by(() => {
+    let result = screenshots;
+
+    // Apply category filter
     switch (screenshotFilter) {
       case 'selected':
-        return screenshots.filter(s => s.is_selected === 1);
+        result = result.filter(s => s.is_selected === 1);
+        break;
       case 'faces':
-        return screenshots.filter(s => s.face_count > 0);
+        result = result.filter(s => s.face_count > 0);
+        break;
       case 'broll':
-        return screenshots.filter(s => s.is_broll === 1);
-      default:
-        return screenshots;
+        result = result.filter(s => s.is_broll === 1);
+        break;
     }
+
+    // Apply rating threshold filter
+    if (minRating > 0) {
+      result = result.filter(s => s.rating >= minRating);
+    }
+
+    return result;
   });
 
   // Screenshot stats
@@ -486,6 +499,20 @@
     screenshots = screenshots.map(s =>
       s.id === id ? { ...s, is_selected: newSelected ? 1 : 0 } : s
     );
+  }
+
+  async function setScreenshotRating(id: number, rating: number) {
+    await window.electronAPI.screenshots.setRating(id, rating);
+
+    // Update local state
+    screenshots = screenshots.map(s =>
+      s.id === id ? { ...s, rating } : s
+    );
+
+    // Also update lightbox if open
+    if (screenshotLightbox && screenshotLightbox.id === id) {
+      screenshotLightbox = { ...screenshotLightbox, rating };
+    }
   }
 
   function toggleExportSelection(id: number) {
@@ -647,6 +674,12 @@
   }
 
   // Screenshot lightbox functions
+  // Svelte action to focus element on mount
+  function focusOnMount(node: HTMLElement) {
+    node.focus();
+    return {};
+  }
+
   function openScreenshotLightbox(screenshot: ScreenshotData) {
     screenshotLightbox = screenshot;
   }
@@ -686,6 +719,17 @@
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
       navigateScreenshotLightbox('next');
+    } else if (screenshotLightbox && ['1', '2', '3', '4', '5'].includes(e.key)) {
+      // Rating via number keys 1-5
+      e.preventDefault();
+      const rating = parseInt(e.key);
+      // Toggle: if same rating, clear it; otherwise set it
+      const newRating = screenshotLightbox.rating === rating ? 0 : rating;
+      setScreenshotRating(screenshotLightbox.id, newRating);
+    } else if (screenshotLightbox && (e.key === '0' || e.key === 'Backspace')) {
+      // Clear rating with 0 or Backspace
+      e.preventDefault();
+      setScreenshotRating(screenshotLightbox.id, 0);
     }
   }
 
@@ -1326,13 +1370,6 @@
       <section class="card screenshots-card">
         <div class="card-header-row">
           <h2 class="card-label">Screenshots ({screenshotStats.total})</h2>
-          <button
-            class="btn btn-small"
-            onclick={extractAllScreenshots}
-            disabled={extractingScreenshots || videoFiles.length === 0}
-          >
-            {extractingScreenshots ? 'Queuing...' : 'Extract All'}
-          </button>
           <div class="screenshot-filters">
             <button
               class="filter-btn"
@@ -1363,6 +1400,23 @@
               B-Roll ({screenshotStats.broll})
             </button>
           </div>
+          <div class="rating-filter">
+            <span class="rating-filter-label">RATING</span>
+            <div class="rating-filter-buttons">
+              <button
+                class="rating-filter-btn"
+                class:active={minRating === 0}
+                onclick={() => minRating = 0}
+              >All</button>
+              {#each [1, 2, 3, 4, 5] as r}
+                <button
+                  class="rating-filter-btn"
+                  class:active={minRating === r}
+                  onclick={() => minRating = r}
+                >{r}+</button>
+              {/each}
+            </div>
+          </div>
         </div>
 
         {#if loadingScreenshots}
@@ -1372,10 +1426,13 @@
         {:else}
           <div class="screenshots-grid">
             {#each filteredScreenshots as screenshot (screenshot.id)}
-              <button
+              <div
                 class="screenshot-item"
                 class:selected={screenshot.is_selected === 1}
+                role="button"
+                tabindex="0"
                 onclick={() => openScreenshotLightbox(screenshot)}
+                onkeydown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openScreenshotLightbox(screenshot); } }}
               >
                 <div class="screenshot-thumb">
                   {#if screenshotImages.get(screenshot.id)}
@@ -1409,7 +1466,29 @@
                     <span class="screenshot-smile" title="High smile score">:)</span>
                   {/if}
                 </div>
-              </button>
+                <div class="screenshot-rating" role="group" aria-label="Rating" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+                  {#each [1, 2, 3, 4, 5] as r}
+                    <button
+                      class="rating-num"
+                      class:active={screenshot.rating >= r}
+                      onclick={(e) => { e.stopPropagation(); setScreenshotRating(screenshot.id, screenshot.rating === r ? 0 : r); }}
+                      title="Rate {r}"
+                    >{r}</button>
+                  {/each}
+                  {#if screenshot.rating > 0}
+                    <button
+                      class="rating-clear"
+                      onclick={(e) => { e.stopPropagation(); setScreenshotRating(screenshot.id, 0); }}
+                      title="Clear rating"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  {/if}
+                </div>
+              </div>
             {/each}
           </div>
         {/if}
@@ -1884,6 +1963,7 @@
     role="dialog"
     aria-modal="true"
     tabindex="-1"
+    use:focusOnMount
   >
     <!-- Navigation: Previous -->
     {#if filteredScreenshots.length > 1}
@@ -1937,6 +2017,32 @@
             >
               {screenshotLightbox.is_selected === 1 ? 'Selected' : 'Select'}
             </button>
+          </div>
+
+          <div class="lightbox-rating">
+            <span class="lightbox-rating-label">RATING</span>
+            <div class="lightbox-rating-row">
+              {#each [1, 2, 3, 4, 5] as r}
+                <button
+                  class="lightbox-rating-num"
+                  class:active={screenshotLightbox.rating >= r}
+                  onclick={() => setScreenshotRating(screenshotLightbox!.id, screenshotLightbox!.rating === r ? 0 : r)}
+                  title="Rate {r} (press {r} key)"
+                >{r}</button>
+              {/each}
+              {#if screenshotLightbox.rating > 0}
+                <button
+                  class="lightbox-rating-clear"
+                  onclick={() => setScreenshotRating(screenshotLightbox!.id, 0)}
+                  title="Clear rating (press 0 or Backspace)"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              {/if}
+            </div>
           </div>
 
           <dl class="info-grid">
@@ -2993,6 +3099,76 @@
     background: var(--color-accent-hover, #1d4ed8);
   }
 
+  /* Lightbox Rating */
+  .lightbox-rating {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #333;
+  }
+
+  .lightbox-rating-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #888;
+    margin-bottom: 0.5rem;
+  }
+
+  .lightbox-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .lightbox-rating-num {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-rating-num:hover {
+    border-color: #666;
+    color: #fff;
+  }
+
+  .lightbox-rating-num.active {
+    background: #fff;
+    color: #1a1a1a;
+    border-color: #fff;
+  }
+
+  .lightbox-rating-clear {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: 1px solid #444;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+  }
+
+  .lightbox-rating-clear:hover {
+    border-color: #666;
+    color: #fff;
+  }
+
   @media (max-width: 768px) {
     .screenshot-lightbox-body {
       flex-direction: column;
@@ -3051,6 +3227,49 @@
   }
 
   .filter-btn.active {
+    background: var(--color-text);
+    color: var(--color-surface);
+    border-color: var(--color-text);
+  }
+
+  /* Rating Filter (Header) */
+  .rating-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+  }
+
+  .rating-filter-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--color-text-muted);
+  }
+
+  .rating-filter-buttons {
+    display: flex;
+    gap: 2px;
+  }
+
+  .rating-filter-btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .rating-filter-btn:hover {
+    border-color: var(--color-text-muted);
+  }
+
+  .rating-filter-btn.active {
     background: var(--color-text);
     color: var(--color-surface);
     border-color: var(--color-text);
@@ -3164,6 +3383,75 @@
 
   .screenshot-smile {
     font-size: 0.75rem;
+  }
+
+  /* Grid Item Rating */
+  .screenshot-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0.25rem 0.5rem;
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border-subtle);
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .screenshot-item:hover .screenshot-rating,
+  .screenshot-item:focus-within .screenshot-rating {
+    opacity: 1;
+  }
+
+  /* Always show if rated */
+  .screenshot-item:has(.rating-num.active) .screenshot-rating {
+    opacity: 1;
+  }
+
+  .rating-num {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    font-size: 0.625rem;
+    font-weight: 500;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rating-num:hover {
+    border-color: var(--color-text-muted);
+    color: var(--color-text);
+  }
+
+  .rating-num.active {
+    background: var(--color-text);
+    color: var(--color-surface);
+    border-color: var(--color-text);
+  }
+
+  .rating-clear {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 4px;
+  }
+
+  .rating-clear:hover {
+    color: var(--color-text);
   }
 
   .screenshot-actions {

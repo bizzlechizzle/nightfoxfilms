@@ -268,6 +268,18 @@ export class ScreenshotsRepository {
   }
 
   /**
+   * Set rating for a screenshot (0-5 scale, 0 = unrated)
+   */
+  setRating(id: number, rating: number): boolean {
+    const db = getDatabase();
+    const clampedRating = Math.max(0, Math.min(5, Math.floor(rating)));
+    const result = db
+      .prepare('UPDATE screenshots SET rating = ? WHERE id = ?')
+      .run(clampedRating, id);
+    return result.changes > 0;
+  }
+
+  /**
    * Set a screenshot as the thumbnail for its file (clears previous)
    */
   setAsThumbnail(fileId: number, screenshotId: number): boolean {

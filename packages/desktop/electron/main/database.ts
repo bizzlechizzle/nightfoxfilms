@@ -309,6 +309,7 @@ CREATE TABLE IF NOT EXISTS screenshots (
     -- Selection state
     is_selected INTEGER DEFAULT 0,        -- User marked as favorite
     is_thumbnail INTEGER DEFAULT 0,       -- Currently used as video thumbnail
+    rating INTEGER DEFAULT 0,             -- User rating 0-5 (0=unrated)
 
     -- ML analysis data (JSON)
     faces_json TEXT,                      -- Face detection results
@@ -2059,6 +2060,16 @@ function runMigrations(database: SqliteDatabase): void {
         -- detail: Close-up objects (rings, flowers, cake, dress)
         ALTER TABLE screenshots ADD COLUMN frame_category TEXT DEFAULT 'broll' CHECK (frame_category IN ('people_face', 'people_roll', 'broll', 'detail'));
         CREATE INDEX IF NOT EXISTS idx_screenshots_category ON screenshots(frame_category);
+      `,
+    },
+    // Migration 48: Add rating column for photo culling (1-5 scale)
+    {
+      id: 48,
+      name: 'add_screenshot_rating',
+      sql: `
+        -- Rating for photo culling: 0=unrated, 1-5 scale
+        ALTER TABLE screenshots ADD COLUMN rating INTEGER DEFAULT 0;
+        CREATE INDEX IF NOT EXISTS idx_screenshots_rating ON screenshots(rating);
       `,
     },
   ];

@@ -85,6 +85,12 @@ const api = {
     selectLutFile: () => invoke("dialog:selectLutFile")(),
   },
 
+  // LUT files
+  luts: {
+    getAvailable: () => invoke("luts:getAvailable")(),
+    resolveSuggested: (suggestedLut) => invoke("luts:resolveSuggested")(suggestedLut),
+  },
+
   // Database
   database: {
     getLocation: () => invoke("database:getLocation")(),
@@ -259,6 +265,7 @@ const api = {
     findByFile: (fileId) => invoke("screenshots:findByFile")(fileId),
     findByCouple: (coupleId) => invoke("screenshots:findByCouple")(coupleId),
     setSelected: (id, selected) => invoke("screenshots:setSelected")(id, selected),
+    setRating: (id, rating) => invoke("screenshots:setRating")(id, rating),
     setAsThumbnail: (fileId, screenshotId) => invoke("screenshots:setAsThumbnail")(fileId, screenshotId),
     getImage: (screenshotId) => invoke("screenshots:getImage")(screenshotId),
   },

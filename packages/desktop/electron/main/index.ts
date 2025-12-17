@@ -198,6 +198,53 @@ ipcMain.handle('dialog:selectLutFile', async () => {
 });
 
 // =============================================================================
+// IPC HANDLERS - LUT Files
+// =============================================================================
+
+// Bundled LUT mapping: suggestedLut string -> actual file path
+const BUNDLED_LUTS: Record<string, string> = {
+  'Sony S-Log3 to Rec.709': 'Sony_Special_Sauce.cube',
+  'Sony S-Log3': 'Sony_Special_Sauce.cube',
+  'Sony Secret Sauce': 'Sony_Special_Sauce.cube',
+  'Fuji F-Log2 to Rec.709': 'XH2S_FLog2_FGamut_to_WDR_BT.709_33grid.cube',
+  'Fuji F-Log2': 'XH2S_FLog2_FGamut_to_WDR_BT.709_33grid.cube',
+};
+
+function getLutsDir(): string {
+  // Development: resources/luts relative to project root
+  const devPath = path.join(__dirname, '../../../resources/luts');
+  if (fs.existsSync(devPath)) {
+    return devPath;
+  }
+  // Production: resources/luts in app resources
+  const prodPath = path.join(process.resourcesPath || '', 'luts');
+  if (fs.existsSync(prodPath)) {
+    return prodPath;
+  }
+  return devPath;
+}
+
+ipcMain.handle('luts:getAvailable', async () => {
+  const lutsDir = getLutsDir();
+  if (!fs.existsSync(lutsDir)) {
+    return [];
+  }
+  const files = fs.readdirSync(lutsDir).filter(f => f.endsWith('.cube') || f.endsWith('.3dlut'));
+  return files.map(f => ({
+    name: f.replace(/\.(cube|3dlut)$/, '').replace(/_/g, ' '),
+    path: path.join(lutsDir, f),
+  }));
+});
+
+ipcMain.handle('luts:resolveSuggested', async (_, suggestedLut: string) => {
+  if (!suggestedLut) return null;
+  const lutFile = BUNDLED_LUTS[suggestedLut];
+  if (!lutFile) return null;
+  const lutPath = path.join(getLutsDir(), lutFile);
+  return fs.existsSync(lutPath) ? lutPath : null;
+});
+
+// =============================================================================
 // IPC HANDLERS - Shell
 // =============================================================================
 
@@ -1022,6 +1069,10 @@ ipcMain.handle('screenshots:getStats', async (_, coupleId: number) => {
 
 ipcMain.handle('screenshots:setSelected', async (_, id: number, selected: boolean) => {
   return screenshotsRepository.setSelected(id, selected);
+});
+
+ipcMain.handle('screenshots:setRating', async (_, id: number, rating: number) => {
+  return screenshotsRepository.setRating(id, rating);
 });
 
 ipcMain.handle('screenshots:setAsThumbnail', async (_, fileId: number, screenshotId: number) => {

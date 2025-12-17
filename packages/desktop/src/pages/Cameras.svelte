@@ -438,6 +438,13 @@
     if (!trainingResult?.signature) return;
 
     try {
+      // Resolve suggested LUT to actual file path
+      const suggestedLut = trainingResult.signature.processing?.suggestedLut;
+      let lutPath: string | null = null;
+      if (suggestedLut) {
+        lutPath = await api.luts.resolveSuggested(suggestedLut);
+      }
+
       // Create camera from signature
       const input: CameraInput = {
         name: editedName,
@@ -448,7 +455,7 @@
         color_profile: trainingResult.signature.colorProfile || null,
         notes: `Auto-trained from ${trainingResult.filesAnalyzed} sample files.`,
         deinterlace: trainingResult.signature.processing?.deinterlace || false,
-        lut_path: trainingResult.signature.processing?.suggestedLut || null,
+        lut_path: lutPath,
       };
 
       await api.cameras.create(input);

@@ -250,17 +250,77 @@ class FaceDetector:
                 pose=face.pose.tolist() if face.pose is not None else None,
             )
 
-            # Estimate smile from landmarks
-            if face_data.landmarks and len(face_data.landmarks) >= 5:
-                face_data.smile_score = self._estimate_smile(face_data.landmarks)
+            # Estimate smile - prefer 106-point landmarks if available
+            landmark_106 = getattr(face, 'landmark_2d_106', None)
+            if landmark_106 is not None:
+                face_data.smile_score = self._estimate_smile_106(landmark_106)
+            elif face_data.landmarks and len(face_data.landmarks) >= 5:
+                face_data.smile_score = self._estimate_smile_5pt(face_data.landmarks)
 
             results.append(face_data)
 
         return results
 
-    def _estimate_smile(self, landmarks: List[List[float]]) -> float:
+    def _estimate_smile_106(self, landmarks: np.ndarray) -> float:
         """
-        Estimate smile score from 5-point landmarks.
+        Estimate smile score from 106-point landmarks.
+
+        Uses mouth shape analysis:
+        - Lip curvature (corners up = smile)
+        - Mouth openness
+        - Lip stretch ratio
+
+        106-point landmark indices for mouth:
+        - 52-71: Outer lip contour
+        - 72-82: Inner lip contour (upper)
+        - 84-90: Inner lip contour (lower)
+        """
+        try:
+            if landmarks is None or len(landmarks) < 106:
+                return 0.0
+
+            # Key mouth points
+            left_corner = np.array(landmarks[52])   # Left mouth corner
+            right_corner = np.array(landmarks[61])  # Right mouth corner
+            upper_lip_center = np.array(landmarks[57])  # Upper lip center
+            lower_lip_center = np.array(landmarks[66])  # Lower lip center
+
+            # Eye points for face height reference
+            left_eye = np.array(landmarks[38])   # Left eye center
+            right_eye = np.array(landmarks[88])  # Right eye center
+
+            # Calculate metrics
+            mouth_width = np.linalg.norm(right_corner - left_corner)
+            eye_distance = np.linalg.norm(right_eye - left_eye)
+
+            # 1. Mouth width to eye distance ratio (wider = more smile)
+            width_ratio = mouth_width / eye_distance if eye_distance > 0 else 0
+            width_score = np.clip((width_ratio - 0.9) * 3, 0.0, 1.0)
+
+            # 2. Corner elevation (corners up relative to center = smile)
+            mouth_center_y = (upper_lip_center[1] + lower_lip_center[1]) / 2
+            left_corner_lift = mouth_center_y - left_corner[1]
+            right_corner_lift = mouth_center_y - right_corner[1]
+            avg_lift = (left_corner_lift + right_corner_lift) / 2
+            face_height = eye_distance * 1.5  # Approximate
+            lift_score = np.clip(avg_lift / (face_height * 0.03) + 0.5, 0.0, 1.0)
+
+            # 3. Mouth openness (teeth showing = often smiling)
+            mouth_height = np.linalg.norm(upper_lip_center - lower_lip_center)
+            openness_ratio = mouth_height / mouth_width if mouth_width > 0 else 0
+            openness_score = np.clip(openness_ratio * 2, 0.0, 0.5)  # Cap contribution
+
+            # Combined score: weighted average
+            smile_score = width_score * 0.4 + lift_score * 0.4 + openness_score * 0.2
+            return float(np.clip(smile_score, 0.0, 1.0))
+
+        except Exception as e:
+            logger.warning(f"Error in smile estimation: {e}")
+            return 0.0
+
+    def _estimate_smile_5pt(self, landmarks: List[List[float]]) -> float:
+        """
+        Fallback: Estimate smile score from 5-point landmarks.
 
         Landmarks order: left_eye, right_eye, nose, left_mouth, right_mouth
         """
@@ -269,7 +329,6 @@ class FaceDetector:
 
         left_eye = np.array(landmarks[0])
         right_eye = np.array(landmarks[1])
-        nose = np.array(landmarks[2])
         left_mouth = np.array(landmarks[3])
         right_mouth = np.array(landmarks[4])
 
@@ -1830,13 +1889,24 @@ def run_full_pipeline(
 
 if __name__ == "__main__":
     import sys
+    import argparse
 
-    if len(sys.argv) < 3:
-        print("Usage: python pipeline.py <video_path> <output_dir>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Extract screenshots from video')
+    parser.add_argument('video_path', help='Path to video file')
+    parser.add_argument('output_dir', help='Output directory for screenshots')
+    parser.add_argument('--options', type=str, default='{}', help='JSON options string')
 
-    video_path = sys.argv[1]
-    output_dir = sys.argv[2]
+    args = parser.parse_args()
 
-    results = run_full_pipeline(video_path, output_dir)
+    # Parse options JSON
+    try:
+        options = json.loads(args.options)
+    except json.JSONDecodeError:
+        options = {}
+
+    # Log LUT path if provided
+    if options.get('lut_path'):
+        logger.info(f"Using LUT: {options['lut_path']}")
+
+    results = run_full_pipeline(args.video_path, args.output_dir, options)
     print(f"Done. Found {len(results)} candidates.")

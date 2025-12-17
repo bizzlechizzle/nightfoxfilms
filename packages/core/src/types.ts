@@ -429,6 +429,7 @@ export interface Screenshot {
   frame_category: FrameCategory;
   is_selected: number;
   is_thumbnail: number;
+  rating: number;
   faces_json: string | null;
   crops_json: string | null;
   tags_json: string | null;
