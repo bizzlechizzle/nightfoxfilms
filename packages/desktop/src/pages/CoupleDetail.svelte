@@ -15,7 +15,7 @@
     Equipment,
   } from '@nightfox/core';
   import { getAPI, type CameraLoanWithDetails } from '../lib/api';
-  import { generateFolderName, formatMedium } from '../lib/format';
+  import { generateFolderName, formatMedium, FOOTAGE_TYPE_LABELS } from '../lib/format';
 
   interface Props {
     coupleId: number;
@@ -850,6 +850,18 @@
     }
     return `${size.toFixed(1)} ${units[unitIndex]}`;
   }
+
+  function formatPhone(phone: string | null): string {
+    if (!phone) return '';
+    // Strip non-digits
+    const digits = phone.replace(/\D/g, '');
+    // Format 10-digit US numbers as xxx-xxx-xxxx
+    if (digits.length === 10) {
+      return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    }
+    // Return as-is if not 10 digits
+    return phone;
+  }
 </script>
 
 <div class="page">
@@ -1051,39 +1063,50 @@
       </section>
     {/if}
 
-    <!-- Footage Gallery -->
-    {#if couple.files.filter(f => f.file_type === 'video').length > 0}
-      <section class="card footage-card">
-        <h2 class="card-label">Footage ({couple.files.filter(f => f.file_type === 'video').length})</h2>
-        <div class="footage-grid">
-          {#each couple.files.filter(f => f.file_type === 'video') as file (file.id)}
-            <button class="footage-item" title={file.original_filename} onclick={() => openVideoLightbox(file)}>
-              <div class="footage-thumb">
-                {#if thumbnails.get(file.id)}
-                  <img src={thumbnails.get(file.id)} alt={file.original_filename} />
-                {:else}
-                  <div class="footage-placeholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-                    </svg>
-                  </div>
-                {/if}
-                {#if file.duration_seconds}
-                  <span class="footage-duration">{formatDuration(file.duration_seconds)}</span>
-                {/if}
-              </div>
-              <div class="footage-info">
-                <span class="footage-name">{file.original_filename}</span>
-                <span class="footage-meta">{formatMedium(file.medium)}</span>
-              </div>
-            </button>
-          {/each}
-        </div>
-        {#if loadingThumbnails}
-          <p class="loading-thumbs">Loading thumbnails...</p>
-        {/if}
-      </section>
+    <!-- Footage Gallery - Grouped by Type -->
+    {@const videoFiles = couple.files.filter(f => f.file_type === 'video')}
+    {@const footageTypeOrder = ['date_night', 'rehearsal', 'wedding', 'other', null] as const}
+    {@const groupedFootage = footageTypeOrder
+      .map(type => ({
+        type,
+        label: type ? FOOTAGE_TYPE_LABELS[type] || type : 'Unknown',
+        files: videoFiles.filter(f => (f.footage_type || null) === type)
+      }))
+      .filter(group => group.files.length > 0)}
+    {#if videoFiles.length > 0}
+      {#each groupedFootage as group (group.type)}
+        <section class="card footage-card">
+          <h2 class="card-label">{group.label} Footage ({group.files.length})</h2>
+          <div class="footage-grid">
+            {#each group.files as file (file.id)}
+              <button class="footage-item" title={file.original_filename} onclick={() => openVideoLightbox(file)}>
+                <div class="footage-thumb">
+                  {#if thumbnails.get(file.id)}
+                    <img src={thumbnails.get(file.id)} alt={file.original_filename} />
+                  {:else}
+                    <div class="footage-placeholder">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                      </svg>
+                    </div>
+                  {/if}
+                  {#if file.duration_seconds}
+                    <span class="footage-duration">{formatDuration(file.duration_seconds)}</span>
+                  {/if}
+                </div>
+                <div class="footage-info">
+                  <span class="footage-name">{file.original_filename}</span>
+                  <span class="footage-meta">{formatMedium(file.medium)}</span>
+                </div>
+              </button>
+            {/each}
+          </div>
+          {#if loadingThumbnails}
+            <p class="loading-thumbs">Loading thumbnails...</p>
+          {/if}
+        </section>
+      {/each}
     {/if}
 
     <!-- Contact Section: Partner 1 | Partner 2 -->
@@ -1096,7 +1119,7 @@
             {#if couple.phone}
               <div class="detail-row">
                 <dt>Phone</dt>
-                <dd><a href="tel:{couple.phone}">{couple.phone}</a></dd>
+                <dd>{formatPhone(couple.phone)}</dd>
               </div>
             {/if}
             {#if couple.partner_1_email}
@@ -1137,7 +1160,7 @@
             {#if couple.phone_2}
               <div class="detail-row">
                 <dt>Phone</dt>
-                <dd><a href="tel:{couple.phone_2}">{couple.phone_2}</a></dd>
+                <dd>{formatPhone(couple.phone_2)}</dd>
               </div>
             {/if}
             {#if couple.partner_2_email}
