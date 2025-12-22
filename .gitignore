@@ -57,3 +57,8 @@ temp/
 
 # Local reference (not part of project)
 au archive /
+
+# SMB temp files
+.smbdelete*
+*/.smbdelete*
+**/.smbdelete*
